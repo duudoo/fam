@@ -5,9 +5,6 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Calendar, CreditCard, FileCheck, CheckCircle, Shield, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Adding framer-motion for animations
-<lov-add-dependency>framer-motion@latest</lov-add-dependency>
-
 const Index = () => {
   const [mounted, setMounted] = useState(false);
 
