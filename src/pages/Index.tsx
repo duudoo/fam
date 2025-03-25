@@ -19,7 +19,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-famacle-blue-light/30">
+    <div id="top" className="min-h-screen bg-gradient-to-b from-white to-famacle-blue-light/30">
       {/* Header with Auth Links */}
       <HomeHeader />
 
