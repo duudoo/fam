@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { Event } from '@/utils/types';
 import EventDetail from './EventDetail';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
-import { DayProps } from 'react-day-picker';
+import type { DayProps } from 'react-day-picker';
 
 interface MonthViewProps {
   date: Date;
@@ -31,7 +31,7 @@ const MonthView = ({ date, setDate, events }: MonthViewProps) => {
           hasEvents && !props.selected && "font-medium text-famacle-blue"
         )}
         style={{ textAlign: "center" }}
-        onClick={props.onClick}
+        onClick={() => props.onClick && props.onClick(dayDate)}
       >
         <div className="absolute top-0 left-0 right-0 flex justify-center">
           {hasEvents && !isSameDay(dayDate, date) && (
