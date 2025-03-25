@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { Event } from '@/utils/types';
 import EventDetail from './EventDetail';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
-import { type DayContentProps } from 'react-day-picker';
+import { DayContentProps } from 'react-day-picker';
 
 interface MonthViewProps {
   date: Date;
@@ -26,13 +26,13 @@ const MonthView = ({ date, setDate, events }: MonthViewProps) => {
       <div
         className={cn(
           "relative p-3 transition-colors hover:bg-muted/50",
-          props.today && "font-bold",
-          props.selected && "bg-primary text-primary-foreground hover:bg-primary/90",
+          props.isToday && "font-bold",
+          props.isSelected && "bg-primary text-primary-foreground hover:bg-primary/90",
           props.outside && "text-muted-foreground opacity-50",
-          hasEvents && !props.selected && "font-medium text-famacle-blue"
+          hasEvents && !props.isSelected && "font-medium text-famacle-blue"
         )}
         style={{ textAlign: "center" }}
-        onClick={() => props.onClick?.(dayDate)}
+        onClick={() => props.onDayClick?.(dayDate)}
       >
         <div className="absolute top-0 left-0 right-0 flex justify-center">
           {hasEvents && !isSameDay(dayDate, date) && (

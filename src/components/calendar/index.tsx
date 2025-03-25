@@ -5,11 +5,13 @@ import MonthView from './MonthView';
 import WeekView from './WeekView';
 import AddEventCard from './AddEventCard';
 import { mockEvents } from '@/utils/mockData';
+import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 
 const CalendarView = () => {
   const [date, setDate] = useState<Date>(new Date());
   const [view, setView] = useState<'month' | 'week'>('month');
-  
+  const events = mockEvents;
+
   const toggleView = () => {
     setView(view === 'month' ? 'week' : 'month');
   };
@@ -27,12 +29,12 @@ const CalendarView = () => {
         <MonthView 
           date={date}
           setDate={setDate}
-          events={mockEvents}
+          events={events}
         />
       ) : (
         <WeekView 
           date={date}
-          events={mockEvents}
+          events={events}
         />
       )}
       
