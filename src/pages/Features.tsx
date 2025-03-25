@@ -1,7 +1,7 @@
 
 import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
-import { FeaturesSection } from '@/components/home/FeaturesSection';
+import FeaturesSection from '@/components/home/FeaturesSection';
 
 const Features = () => {
   return (
