@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { Event } from '@/utils/types';
 import EventDetail from './EventDetail';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
-import type { DayProps } from 'react-day-picker';
+import { type DayContentProps } from 'react-day-picker';
 
 interface MonthViewProps {
   date: Date;
@@ -16,8 +16,8 @@ interface MonthViewProps {
 const MonthView = ({ date, setDate, events }: MonthViewProps) => {
   const { getEventsByDate, eventForDate } = useCalendarEvents(events);
   
-  // Custom day component for the calendar that works with DayProps
-  const CustomDay = (props: DayProps) => {
+  // Custom day component for the calendar that works with DayContentProps
+  const CustomDay = (props: DayContentProps) => {
     const dayDate = props.date;
     const hasEvents = getEventsByDate(dayDate).length > 0;
     const dayEvents = getEventsByDate(dayDate);
@@ -26,12 +26,13 @@ const MonthView = ({ date, setDate, events }: MonthViewProps) => {
       <div
         className={cn(
           "relative p-3 transition-colors hover:bg-muted/50",
+          props.today && "font-bold",
           props.selected && "bg-primary text-primary-foreground hover:bg-primary/90",
-          props.disabled && "text-muted-foreground opacity-50",
+          props.outside && "text-muted-foreground opacity-50",
           hasEvents && !props.selected && "font-medium text-famacle-blue"
         )}
         style={{ textAlign: "center" }}
-        onClick={() => props.onClick && props.onClick(dayDate)}
+        onClick={() => props.onClick?.(dayDate)}
       >
         <div className="absolute top-0 left-0 right-0 flex justify-center">
           {hasEvents && !isSameDay(dayDate, date) && (
