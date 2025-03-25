@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { format, addDays, differenceInDays, isWithinInterval, isSameDay, parseISO } from 'date-fns';
+import { format, addDays, isWithinInterval, isSameDay, parseISO } from 'date-fns';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -204,27 +204,25 @@ const CalendarView = () => {
               event: "has-event",
             }}
             components={{
-              Day: (props) => {
-                const events = getEventsByDate(props.date);
+              Day: ({ date: dayDate, ...props }) => {
+                const events = getEventsByDate(dayDate);
                 const hasEvents = events.length > 0;
                 
                 return (
                   <div
                     className={cn(
                       "relative p-3 transition-colors hover:bg-muted/50",
-                      props.selected && "bg-primary text-primary-foreground hover:bg-primary/90",
-                      props.disabled && "text-muted-foreground opacity-50",
-                      hasEvents && !props.selected && "font-medium text-famacle-blue"
+                      props.className
                     )}
                     style={{ textAlign: "center" }}
-                    onClick={() => props.onSelect?.()}
+                    onClick={() => props.onClick?.()}
                   >
                     <div className="absolute top-0 left-0 right-0 flex justify-center">
-                      {hasEvents && !props.selected && (
+                      {hasEvents && !isSameDay(dayDate, date) && (
                         <div className="w-1 h-1 bg-famacle-blue rounded-full mt-1" />
                       )}
                     </div>
-                    <span className="text-sm">{format(props.date, "d")}</span>
+                    <span className="text-sm">{format(dayDate, "d")}</span>
                     
                     {hasEvents && events.length > 0 && (
                       <div className="mt-1 space-y-1">
@@ -233,7 +231,7 @@ const CalendarView = () => {
                             key={event.id} 
                             className={cn(
                               "text-xs truncate rounded px-1 py-0.5",
-                              props.selected 
+                              isSameDay(dayDate, date)
                                 ? "bg-white/20 text-white" 
                                 : "bg-famacle-blue-light text-famacle-blue"
                             )}
