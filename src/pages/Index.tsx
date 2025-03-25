@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -72,8 +73,33 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-famacle-blue-light/30">
+      {/* Header with Auth Links */}
+      <header className="py-4 px-6">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center">
+            <div className="bg-famacle-blue rounded-xl w-8 h-8 flex items-center justify-center mr-2">
+              <span className="text-white font-bold text-lg">F</span>
+            </div>
+            <h2 className="font-semibold text-famacle-slate text-xl">Famacle</h2>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <Button asChild variant="outline">
+              <Link to="/landing">
+                Sign In
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link to="/landing">
+                Sign Up
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
-      <section className="pt-32 pb-24 px-4">
+      <section className="pt-24 pb-24 px-4">
         <motion.div 
           className="max-w-5xl mx-auto text-center"
           initial={{ opacity: 0, y: 20 }}
@@ -116,7 +142,7 @@ const Index = () => {
             transition={{ delay: 0.5, duration: 0.5 }}
           >
             <Button asChild size="lg" className="text-md px-8">
-              <Link to="/dashboard">
+              <Link to="/landing">
                 Get Started
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
@@ -193,7 +219,7 @@ const Index = () => {
               Join thousands of parents who use Famacle to manage childcare responsibilities seamlessly.
             </p>
             <Button asChild size="lg" className="bg-white text-famacle-slate hover:bg-gray-100 text-md px-8">
-              <Link to="/dashboard">
+              <Link to="/landing">
                 Get Started Now
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
