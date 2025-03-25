@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { format, addDays, isWithinInterval, isSameDay, parseISO } from 'date-fns';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
@@ -26,7 +25,6 @@ const CalendarView = () => {
   const [date, setDate] = useState<Date>(new Date());
   const [view, setView] = useState<'month' | 'week'>('month');
   
-  // Helper functions for the calendar
   const getPriorityColor = (priority: EventPriority) => {
     switch(priority) {
       case 'high':
@@ -55,12 +53,10 @@ const CalendarView = () => {
     return eventsToday.length > 0;
   };
   
-  // View toggle
   const toggleView = () => {
     setView(view === 'month' ? 'week' : 'month');
   };
   
-  // Navigation
   const goToPreviousPeriod = () => {
     if (view === 'month') {
       const previousMonth = new Date(date);
@@ -85,10 +81,8 @@ const CalendarView = () => {
     setDate(new Date());
   };
   
-  // Week view helper
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(date, i - date.getDay()));
   
-  // Event detail component
   const EventDetail = ({ event }: { event: Event }) => {
     const startTime = format(parseISO(event.startDate), 'h:mm a');
     const endTime = event.endDate ? format(parseISO(event.endDate), 'h:mm a') : '';
@@ -204,15 +198,18 @@ const CalendarView = () => {
               event: "has-event",
             }}
             components={{
-              Day: ({ date: dayDate, ...props }) => {
+              Day: (props) => {
+                const dayDate = props.date;
+                const hasEvents = getEventsByDate(dayDate).length > 0;
                 const events = getEventsByDate(dayDate);
-                const hasEvents = events.length > 0;
                 
                 return (
                   <div
                     className={cn(
                       "relative p-3 transition-colors hover:bg-muted/50",
-                      props.className
+                      props.selected && "bg-primary text-primary-foreground hover:bg-primary/90",
+                      props.disabled && "text-muted-foreground opacity-50",
+                      hasEvents && !props.selected && "font-medium text-famacle-blue"
                     )}
                     style={{ textAlign: "center" }}
                     onClick={() => props.onClick?.()}
@@ -252,7 +249,6 @@ const CalendarView = () => {
             }}
           />
           
-          {/* Event list for selected date */}
           <div className="mt-4">
             <h3 className="text-lg font-medium mb-2">
               Events for {format(date, 'MMMM d, yyyy')}
@@ -270,7 +266,6 @@ const CalendarView = () => {
           </div>
         </div>
       ) : (
-        // Week view
         <div className="grid grid-cols-7 gap-2 mt-4">
           {weekDays.map((day, index) => (
             <div key={index} className="min-h-[200px]">
