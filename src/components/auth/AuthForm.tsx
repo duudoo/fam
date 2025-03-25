@@ -1,16 +1,18 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import SignInForm from "./SignInForm";
-import SignUpForm from "./SignUpForm";
 import ForgotPasswordForm from "./ForgotPasswordForm";
 import VerifyEmailForm from "./VerifyEmailForm";
 
-type AuthMode = "signin" | "signup" | "forgot-password" | "verify-email";
+type AuthMode = "signin" | "forgot-password" | "verify-email";
 
-const AuthForm = () => {
+interface AuthFormProps {
+  mode?: "signin" | "signup";
+}
+
+const AuthForm = ({ mode = "signin" }: AuthFormProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [authMode, setAuthMode] = useState<AuthMode>("signin");
@@ -20,16 +22,6 @@ const AuthForm = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
-
-  // Check for tab query parameter
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const tabParam = searchParams.get('tab');
-    
-    if (tabParam === 'signup') {
-      setAuthMode('signup');
-    }
-  }, [location.search]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,10 +35,6 @@ const AuthForm = () => {
         case "signin":
           toast.success("Signed in successfully!");
           navigate("/dashboard");
-          break;
-        case "signup":
-          toast.success("Account created! Please verify your email.");
-          setAuthMode("verify-email");
           break;
         case "forgot-password":
           toast.success("Password reset link sent to your email!");
@@ -79,55 +67,26 @@ const AuthForm = () => {
           handleSubmit={handleSubmit}
           onBackToSignIn={handleBackToSignIn}
         />
+      ) : authMode === "forgot-password" ? (
+        <ForgotPasswordForm 
+          email={email}
+          setEmail={setEmail}
+          isSubmitting={isSubmitting}
+          handleSubmit={handleSubmit}
+          onBackToSignIn={handleBackToSignIn}
+        />
       ) : (
-        <Tabs 
-          defaultValue="signin" 
-          className="w-full"
-          value={authMode}
-          onValueChange={(value) => setAuthMode(value as AuthMode)}
-        >
-          <TabsList className="grid grid-cols-2 w-full rounded-none">
-            <TabsTrigger value="signin" className="py-4">Sign In</TabsTrigger>
-            <TabsTrigger value="signup" className="py-4">Sign Up</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="signin" className="p-6">
-            <SignInForm 
-              email={email}
-              setEmail={setEmail}
-              password={password}
-              setPassword={setPassword}
-              isSubmitting={isSubmitting}
-              handleSubmit={handleSubmit}
-              onForgotPassword={handleForgotPassword}
-            />
-          </TabsContent>
-          
-          <TabsContent value="signup" className="p-6">
-            <SignUpForm
-              email={email}
-              setEmail={setEmail}
-              password={password}
-              setPassword={setPassword}
-              name={name}
-              setName={setName}
-              agreedToTerms={agreedToTerms}
-              setAgreedToTerms={setAgreedToTerms}
-              isSubmitting={isSubmitting}
-              handleSubmit={handleSubmit}
-            />
-          </TabsContent>
-          
-          <TabsContent value="forgot-password" className="p-6">
-            <ForgotPasswordForm 
-              email={email}
-              setEmail={setEmail}
-              isSubmitting={isSubmitting}
-              handleSubmit={handleSubmit}
-              onBackToSignIn={handleBackToSignIn}
-            />
-          </TabsContent>
-        </Tabs>
+        <div className="p-6">
+          <SignInForm 
+            email={email}
+            setEmail={setEmail}
+            password={password}
+            setPassword={setPassword}
+            isSubmitting={isSubmitting}
+            handleSubmit={handleSubmit}
+            onForgotPassword={handleForgotPassword}
+          />
+        </div>
       )}
     </div>
   );

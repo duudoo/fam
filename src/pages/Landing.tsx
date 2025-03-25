@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { ArrowRight, Shield, MessageCircle, Calendar, CreditCard, FileCheck } from "lucide-react";
-import AuthForm from "@/components/auth/AuthForm";
 
 const LandingPage = () => {
   useEffect(() => {
@@ -48,7 +47,7 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-famacle-blue-light/30">
-      {/* Hero Section with Auth Form */}
+      {/* Hero Section with Auth CTA */}
       <section className="pt-12 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -93,13 +92,34 @@ const LandingPage = () => {
               </div>
             </motion.div>
             
-            {/* Right column - Auth form */}
+            {/* Right column - Auth CTA */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
+              className="bg-white p-8 rounded-xl shadow-soft text-center"
             >
-              <AuthForm />
+              <h2 className="text-2xl font-bold text-famacle-slate mb-4">
+                Ready to simplify co-parenting?
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Join thousands of parents who use Famacle to make co-parenting 
+                easier, more organized, and less stressful.
+              </p>
+              <div className="space-y-4">
+                <Button asChild variant="default" size="lg" className="w-full">
+                  <Link to="/signup">
+                    Sign up for free
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <p className="text-sm text-gray-500">
+                  Already have an account?{" "}
+                  <Link to="/signin" className="text-famacle-blue hover:underline">
+                    Sign in
+                  </Link>
+                </p>
+              </div>
             </motion.div>
           </div>
         </div>
@@ -159,7 +179,7 @@ const LandingPage = () => {
           </p>
           <div className="flex justify-center">
             <Button asChild size="lg" className="text-md px-8">
-              <Link to="/dashboard">
+              <Link to="/signup">
                 Get Started Now
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
