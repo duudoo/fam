@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import CalendarView from "@/components/calendar";
+import { Toaster } from "@/components/ui/toaster";
 
 const CalendarPage = () => {
   useEffect(() => {
@@ -24,6 +25,7 @@ const CalendarPage = () => {
           <CalendarView />
         </div>
       </main>
+      <Toaster />
     </div>
   );
 };
