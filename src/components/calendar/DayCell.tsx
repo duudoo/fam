@@ -22,14 +22,19 @@ const DayCell = ({
   const hasEvents = getEventsByDate(dayDate).length > 0;
   const dayEvents = getEventsByDate(dayDate);
   
+  // Access the correct properties from DayContentProps
+  const isToday = props.activeModifiers?.today ?? false;
+  const isSelected = props.activeModifiers?.selected ?? false;
+  const isOutside = props.activeModifiers?.outside ?? false;
+  
   return (
     <div
       className={cn(
         "relative p-3 transition-colors hover:bg-muted/50",
-        props.today && "font-bold",
-        props.selected && "bg-primary text-primary-foreground hover:bg-primary/90",
-        props.outside && "text-muted-foreground opacity-50",
-        hasEvents && !props.selected && "font-medium text-famacle-blue"
+        isToday && "font-bold",
+        isSelected && "bg-primary text-primary-foreground hover:bg-primary/90",
+        isOutside && "text-muted-foreground opacity-50",
+        hasEvents && !isSelected && "font-medium text-famacle-blue"
       )}
       style={{ textAlign: "center" }}
       onClick={() => dayDate && props.onClick?.(dayDate)}
