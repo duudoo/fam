@@ -21,12 +21,12 @@ const HomeHeader = () => {
           </nav>
           
           <Button asChild variant="outline">
-            <Link to="/landing">
+            <Link to="/signin">
               Sign In
             </Link>
           </Button>
           <Button asChild>
-            <Link to="/landing">
+            <Link to="/signup">
               Sign Up
             </Link>
           </Button>

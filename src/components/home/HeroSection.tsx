@@ -50,7 +50,7 @@ const HeroSection = () => {
           transition={{ delay: 0.5, duration: 0.5 }}
         >
           <Button asChild size="lg" className="text-md px-8">
-            <Link to="/landing">
+            <Link to="/signup">
               Get Started
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
