@@ -1,6 +1,6 @@
 
 import { useEffect } from "react";
-import DashboardComponent from "@/components/Dashboard";
+import DashboardComponent from "@/components/dashboard";
 import Navbar from "@/components/Navbar";
 
 const DashboardPage = () => {

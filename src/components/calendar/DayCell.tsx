@@ -37,7 +37,6 @@ const DayCell = ({
         hasEvents && !isSelected && "font-medium text-famacle-blue"
       )}
       style={{ textAlign: "center" }}
-      onClick={() => dayDate && props.onClick?.(dayDate)}
     >
       <div className="absolute top-0 left-0 right-0 flex justify-center">
         {hasEvents && !isSameDay(dayDate, selectedDate) && (
