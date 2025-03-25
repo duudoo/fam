@@ -80,7 +80,7 @@ const PricingSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className={`rounded-2xl p-6 border ${
+              className={`rounded-2xl p-6 border flex flex-col ${
                 plan.highlighted 
                   ? 'border-famacle-blue shadow-lg relative bg-famacle-blue-light/10' 
                   : 'border-gray-200'
@@ -100,7 +100,7 @@ const PricingSection = () => {
                 <p className="mt-2 text-gray-600">{plan.description}</p>
               </div>
               
-              <ul className="mt-6 space-y-3">
+              <ul className="mt-6 space-y-3 flex-grow">
                 {plan.features.map((feature, idx) => (
                   <li key={idx} className="flex items-start">
                     <Check className="h-5 w-5 text-famacle-teal flex-shrink-0 mr-2" />
