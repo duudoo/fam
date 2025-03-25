@@ -12,14 +12,13 @@ interface DayCellProps extends DayContentProps {
 
 const DayCell = ({ 
   date: dayDate, 
-  isToday, 
-  isSelected, 
-  outside,
-  onDayClick,
   events, 
   getEventsByDate,
-  selectedDate 
+  selectedDate,
+  ...props
 }: DayCellProps) => {
+  if (!dayDate) return null;
+  
   const hasEvents = getEventsByDate(dayDate).length > 0;
   const dayEvents = getEventsByDate(dayDate);
   
@@ -27,13 +26,13 @@ const DayCell = ({
     <div
       className={cn(
         "relative p-3 transition-colors hover:bg-muted/50",
-        isToday && "font-bold",
-        isSelected && "bg-primary text-primary-foreground hover:bg-primary/90",
-        outside && "text-muted-foreground opacity-50",
-        hasEvents && !isSelected && "font-medium text-famacle-blue"
+        props.today && "font-bold",
+        props.selected && "bg-primary text-primary-foreground hover:bg-primary/90",
+        props.outside && "text-muted-foreground opacity-50",
+        hasEvents && !props.selected && "font-medium text-famacle-blue"
       )}
       style={{ textAlign: "center" }}
-      onClick={() => onDayClick?.(dayDate)}
+      onClick={() => dayDate && props.onClick?.(dayDate)}
     >
       <div className="absolute top-0 left-0 right-0 flex justify-center">
         {hasEvents && !isSameDay(dayDate, selectedDate) && (
