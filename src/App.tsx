@@ -13,6 +13,7 @@ import Landing from "./pages/Landing";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import VerifyEmail from "./pages/VerifyEmail";
+import Demo from "./pages/Demo";
 
 // Create a QueryClient
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/demo" element={<Demo />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/expenses" element={<Expenses />} />
         <Route path="/calendar" element={<Calendar />} />

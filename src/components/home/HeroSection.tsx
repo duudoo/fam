@@ -56,7 +56,7 @@ const HeroSection = () => {
             </Link>
           </Button>
           <Button asChild variant="outline" size="lg" className="text-md">
-            <Link to="/dashboard">
+            <Link to="/demo">
               View Demo
             </Link>
           </Button>
