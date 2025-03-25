@@ -209,9 +209,9 @@ const CalendarView = () => {
                   <div
                     className={cn(
                       "relative p-3 transition-colors hover:bg-muted/50",
-                      props.isSelected && "bg-primary text-primary-foreground hover:bg-primary/90",
-                      props.isDisabled && "text-muted-foreground opacity-50",
-                      hasEvents && !props.isSelected && "font-medium text-famacle-blue"
+                      props.selected && "bg-primary text-primary-foreground hover:bg-primary/90",
+                      props.disabled && "text-muted-foreground opacity-50",
+                      hasEvents && !props.selected && "font-medium text-famacle-blue"
                     )}
                     style={{ textAlign: "center" }}
                     onClick={props.onClick}
