@@ -1,7 +1,7 @@
 
 import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
-import CalendarView from "@/components/Calendar";
+import CalendarView from "@/components/calendar";
 
 const CalendarPage = () => {
   useEffect(() => {
