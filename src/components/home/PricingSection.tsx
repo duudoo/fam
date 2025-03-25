@@ -118,7 +118,7 @@ const PricingSection = () => {
                       : ''
                   }`}
                 >
-                  <Link to="/landing">
+                  <Link to="/landing?tab=signup">
                     {plan.cta}
                   </Link>
                 </Button>
