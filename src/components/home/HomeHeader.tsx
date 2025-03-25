@@ -14,6 +14,11 @@ const HomeHeader = () => {
         </div>
         
         <div className="flex items-center gap-4">
+          <nav className="hidden md:flex items-center mr-4">
+            <Link to="/" className="px-3 py-2 text-famacle-slate hover:text-famacle-blue transition-colors">Home</Link>
+            <Link to="/features" className="px-3 py-2 text-famacle-slate hover:text-famacle-blue transition-colors">Features</Link>
+          </nav>
+          
           <Button asChild variant="outline">
             <Link to="/landing">
               Sign In
