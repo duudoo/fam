@@ -16,7 +16,8 @@ const HomeHeader = () => {
         <div className="flex items-center gap-4">
           <nav className="hidden md:flex items-center mr-4">
             <a href="#top" className="px-3 py-2 text-famacle-slate hover:text-famacle-blue transition-colors">Home</a>
-            <a href="/#features" className="px-3 py-2 text-famacle-slate hover:text-famacle-blue transition-colors">Features</a>
+            <a href="#features" className="px-3 py-2 text-famacle-slate hover:text-famacle-blue transition-colors">Features</a>
+            <a href="#pricing" className="px-3 py-2 text-famacle-slate hover:text-famacle-blue transition-colors">Pricing</a>
           </nav>
           
           <Button asChild variant="outline">

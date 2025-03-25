@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import HomeHeader from '@/components/home/HomeHeader';
 import HeroSection from '@/components/home/HeroSection';
 import FeaturesSection from '@/components/home/FeaturesSection';
+import PricingSection from '@/components/home/PricingSection';
 import CTASection from '@/components/home/CTASection';
 import HomeFooter from '@/components/home/HomeFooter';
 
@@ -33,6 +34,9 @@ const Index = () => {
       
       {/* Features Section */}
       <FeaturesSection />
+      
+      {/* Pricing Section */}
+      <PricingSection />
       
       {/* CTA Section */}
       <CTASection />
