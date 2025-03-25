@@ -10,7 +10,6 @@ import Calendar from "./pages/Calendar";
 import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
-import Features from "./pages/Features";
 
 // Create a QueryClient
 const queryClient = new QueryClient();
@@ -23,7 +22,6 @@ const App = () => (
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/landing" element={<Landing />} />
-        <Route path="/features" element={<Features />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/expenses" element={<Expenses />} />
         <Route path="/calendar" element={<Calendar />} />
