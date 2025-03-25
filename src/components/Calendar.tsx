@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { format, addDays, isWithinInterval, isSameDay, parseISO } from 'date-fns';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
@@ -20,6 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from '@/components/ui/badge';
+import { DayProps } from 'react-day-picker';
 
 const CalendarView = () => {
   const [date, setDate] = useState<Date>(new Date());
@@ -198,7 +200,7 @@ const CalendarView = () => {
               event: "has-event",
             }}
             components={{
-              Day: (props) => {
+              Day: (props: DayProps) => {
                 const dayDate = props.date;
                 const hasEvents = getEventsByDate(dayDate).length > 0;
                 const events = getEventsByDate(dayDate);
@@ -207,12 +209,12 @@ const CalendarView = () => {
                   <div
                     className={cn(
                       "relative p-3 transition-colors hover:bg-muted/50",
-                      props.selected && "bg-primary text-primary-foreground hover:bg-primary/90",
-                      props.disabled && "text-muted-foreground opacity-50",
-                      hasEvents && !props.selected && "font-medium text-famacle-blue"
+                      props.isSelected && "bg-primary text-primary-foreground hover:bg-primary/90",
+                      props.isDisabled && "text-muted-foreground opacity-50",
+                      hasEvents && !props.isSelected && "font-medium text-famacle-blue"
                     )}
                     style={{ textAlign: "center" }}
-                    onClick={() => props.onClick?.()}
+                    onClick={props.onClick}
                   >
                     <div className="absolute top-0 left-0 right-0 flex justify-center">
                       {hasEvents && !isSameDay(dayDate, date) && (
