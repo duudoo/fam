@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bell, Calendar, DollarSign, Home, Menu, X } from 'lucide-react';
+import { Bell, Calendar, DollarSign, Home, Menu, MessageCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const Navbar = () => {
@@ -16,6 +16,7 @@ const Navbar = () => {
     { path: '/dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
     { path: '/expenses', label: 'Expenses', icon: <DollarSign className="w-5 h-5" /> },
     { path: '/calendar', label: 'Calendar', icon: <Calendar className="w-5 h-5" /> },
+    { path: '/communications', label: 'Communications', icon: <MessageCircle className="w-5 h-5" /> },
     { path: '/notifications', label: 'Notifications', icon: <Bell className="w-5 h-5" /> }
   ];
 
