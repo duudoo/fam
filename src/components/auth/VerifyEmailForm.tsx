@@ -9,6 +9,7 @@ interface VerifyEmailFormProps {
   verificationCode: string;
   setVerificationCode: (code: string) => void;
   isSubmitting: boolean;
+  isResending?: boolean;
   handleSubmit: (e: React.FormEvent) => void;
   onBackToSignIn: () => void;
   onResendCode: () => void;
@@ -19,6 +20,7 @@ const VerifyEmailForm = ({
   verificationCode,
   setVerificationCode,
   isSubmitting,
+  isResending = false,
   handleSubmit,
   onBackToSignIn,
   onResendCode,
@@ -61,8 +63,9 @@ const VerifyEmailForm = ({
               type="button"
               className="text-famacle-blue hover:underline font-medium"
               onClick={onResendCode}
+              disabled={isResending}
             >
-              Resend Code
+              {isResending ? "Sending..." : "Resend Code"}
             </button>
           </p>
           

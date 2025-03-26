@@ -10,6 +10,7 @@ const VerifyEmailPage = () => {
   const location = useLocation();
   const [verificationCode, setVerificationCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [email, setEmail] = useState("");
   
   useEffect(() => {
@@ -39,12 +40,16 @@ const VerifyEmailPage = () => {
     setIsSubmitting(true);
 
     try {
+      console.log("Verifying email with code:", verificationCode, "for email:", email);
+      
       // Use Supabase to verify the OTP
-      const { error } = await supabase.auth.verifyOtp({
+      const { error, data } = await supabase.auth.verifyOtp({
         email,
         token: verificationCode,
         type: 'signup'
       });
+
+      console.log("Verification response:", data);
 
       if (error) {
         throw error;
@@ -66,11 +71,17 @@ const VerifyEmailPage = () => {
       return;
     }
 
+    setIsResending(true);
+
     try {
-      const { error } = await supabase.auth.resend({
+      console.log("Resending verification code to:", email);
+      
+      const { error, data } = await supabase.auth.resend({
         type: 'signup',
         email: email,
       });
+
+      console.log("Resend code response:", data);
 
       if (error) {
         throw error;
@@ -80,6 +91,8 @@ const VerifyEmailPage = () => {
     } catch (error: any) {
       console.error("Resend code error:", error);
       toast.error(error.message || "Failed to resend code. Please try again.");
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -108,6 +121,7 @@ const VerifyEmailPage = () => {
             handleSubmit={handleSubmit}
             onBackToSignIn={handleBackToSignIn}
             onResendCode={handleResendCode}
+            isResending={isResending}
           />
         </div>
       </div>

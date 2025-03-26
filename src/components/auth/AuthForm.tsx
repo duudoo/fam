@@ -22,6 +22,7 @@ const AuthForm = ({ mode = "signin" }: AuthFormProps) => {
   const [name, setName] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -62,12 +63,16 @@ const AuthForm = ({ mode = "signin" }: AuthFormProps) => {
             return;
           }
 
+          console.log("Verifying email with code:", verificationCode, "for email:", email);
+
           // Use Supabase to verify the OTP
-          const { error: verifyError } = await supabase.auth.verifyOtp({
+          const { error: verifyError, data } = await supabase.auth.verifyOtp({
             email,
             token: verificationCode,
             type: 'signup'
           });
+
+          console.log("Verification response:", data);
 
           if (verifyError) throw verifyError;
 
@@ -97,11 +102,17 @@ const AuthForm = ({ mode = "signin" }: AuthFormProps) => {
       return;
     }
 
+    setIsResending(true);
+
     try {
-      const { error } = await supabase.auth.resend({
+      console.log("Resending verification code to:", email);
+      
+      const { error, data } = await supabase.auth.resend({
         type: 'signup',
         email: email,
       });
+
+      console.log("Resend code response:", data);
 
       if (error) {
         throw error;
@@ -111,6 +122,8 @@ const AuthForm = ({ mode = "signin" }: AuthFormProps) => {
     } catch (error: any) {
       console.error("Resend code error:", error);
       toast.error(error.message || "Failed to resend code. Please try again.");
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -122,6 +135,7 @@ const AuthForm = ({ mode = "signin" }: AuthFormProps) => {
           verificationCode={verificationCode}
           setVerificationCode={setVerificationCode}
           isSubmitting={isSubmitting}
+          isResending={isResending}
           handleSubmit={handleSubmit}
           onBackToSignIn={handleBackToSignIn}
           onResendCode={handleResendCode}
