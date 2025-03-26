@@ -20,13 +20,38 @@ import {
 } from "@/components/ui/dialog";
 import { PlusCircle } from 'lucide-react';
 import EventForm from './EventForm';
+import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 
 const AddEventCard = () => {
   const [open, setOpen] = useState(false);
+  const { createEvent, isPending } = useCalendarEvents();
 
   const handleCreateEvent = (formData: any) => {
-    console.log('New event:', formData);
-    // Here you would typically save the event to your data store
+    const newEvent = {
+      title: formData.title,
+      description: formData.description,
+      startDate: new Date(
+        formData.date.getFullYear(),
+        formData.date.getMonth(),
+        formData.date.getDate(),
+        formData.allDay ? 0 : parseInt(formData.startTime.split(':')[0]),
+        formData.allDay ? 0 : parseInt(formData.startTime.split(':')[1])
+      ).toISOString(),
+      endDate: formData.allDay 
+        ? null 
+        : new Date(
+            formData.date.getFullYear(),
+            formData.date.getMonth(),
+            formData.date.getDate(),
+            parseInt(formData.endTime.split(':')[0]),
+            parseInt(formData.endTime.split(':')[1])
+          ).toISOString(),
+      allDay: formData.allDay,
+      location: formData.location,
+      priority: formData.priority
+    };
+
+    createEvent(newEvent);
     setOpen(false);
   };
 
@@ -50,7 +75,7 @@ const AddEventCard = () => {
         <CardFooter>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="w-full">
+              <Button className="w-full" disabled={isPending}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add New Event
               </Button>
@@ -65,6 +90,7 @@ const AddEventCard = () => {
               <EventForm 
                 onSubmit={handleCreateEvent}
                 onCancel={() => setOpen(false)}
+                isPending={isPending}
               />
             </DialogContent>
           </Dialog>

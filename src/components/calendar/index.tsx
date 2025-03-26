@@ -4,13 +4,17 @@ import CalendarNav from './CalendarNav';
 import MonthView from './MonthView';
 import WeekView from './WeekView';
 import AddEventCard from './AddEventCard';
-import { mockEvents } from '@/utils/mockData';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 
 const CalendarView = () => {
-  const [date, setDate] = useState<Date>(new Date());
-  const [view, setView] = useState<'month' | 'week'>('month');
-  const events = mockEvents;
+  const { 
+    events, 
+    selectedDate,
+    setSelectedDate,
+    view,
+    setView,
+    isLoading
+  } = useCalendarEvents();
 
   const toggleView = () => {
     setView(view === 'month' ? 'week' : 'month');
@@ -19,21 +23,25 @@ const CalendarView = () => {
   return (
     <div className="space-y-4 animate-fade-in">
       <CalendarNav 
-        date={date}
+        date={selectedDate}
         view={view}
-        setDate={setDate}
+        setDate={setSelectedDate}
         toggleView={toggleView}
       />
       
-      {view === 'month' ? (
+      {isLoading ? (
+        <div className="flex justify-center items-center h-96">
+          <div className="text-famacle-slate animate-spin h-8 w-8 border-4 border-famacle-blue border-t-transparent rounded-full"></div>
+        </div>
+      ) : view === 'month' ? (
         <MonthView 
-          date={date}
-          setDate={setDate}
+          date={selectedDate}
+          setDate={setSelectedDate}
           events={events}
         />
       ) : (
         <WeekView 
-          date={date}
+          date={selectedDate}
           events={events}
         />
       )}

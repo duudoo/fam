@@ -116,6 +116,52 @@ export interface Database {
           read?: boolean;
         };
       };
+      events: {
+        Row: {
+          id: string;
+          title: string;
+          description: string | null;
+          start_date: string;
+          end_date: string | null;
+          all_day: boolean;
+          location: string | null;
+          priority: string;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          description?: string | null;
+          start_date: string;
+          end_date?: string | null;
+          all_day?: boolean;
+          location?: string | null;
+          priority?: string;
+          created_by: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      reminders: {
+        Row: {
+          id: string;
+          event_id: string;
+          time: string;
+          type: string;
+          sent: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          time: string;
+          type?: string;
+          sent?: boolean;
+          created_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

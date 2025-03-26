@@ -33,7 +33,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
@@ -51,10 +50,10 @@ type FormValues = z.infer<typeof formSchema>;
 interface EventFormProps {
   onSubmit: (values: FormValues) => void;
   onCancel: () => void;
+  isPending?: boolean;
 }
 
-const EventForm = ({ onSubmit, onCancel }: EventFormProps) => {
-  const { toast } = useToast();
+const EventForm = ({ onSubmit, onCancel, isPending = false }: EventFormProps) => {
   const [isAllDay, setIsAllDay] = useState(false);
 
   const form = useForm<FormValues>({
@@ -73,10 +72,6 @@ const EventForm = ({ onSubmit, onCancel }: EventFormProps) => {
 
   const handleSubmit = (values: FormValues) => {
     onSubmit(values);
-    toast({
-      title: "Event created",
-      description: "Your event has been successfully created.",
-    });
   };
 
   return (
@@ -284,10 +279,20 @@ const EventForm = ({ onSubmit, onCancel }: EventFormProps) => {
             type="button"
             variant="outline"
             onClick={onCancel}
+            disabled={isPending}
           >
             Cancel
           </Button>
-          <Button type="submit">Create Event</Button>
+          <Button type="submit" disabled={isPending}>
+            {isPending ? (
+              <>
+                <div className="animate-spin h-4 w-4 mr-2 border-2 border-b-transparent rounded-full"></div>
+                Saving...
+              </>
+            ) : (
+              'Create Event'
+            )}
+          </Button>
         </div>
       </form>
     </Form>
