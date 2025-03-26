@@ -5,8 +5,10 @@ import Navbar from "@/components/Navbar";
 import NotificationHeader from "@/components/notifications/NotificationHeader";
 import NotificationFilter from "@/components/notifications/NotificationFilter";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useAuth } from "@/hooks/useAuth";
 
 const NotificationsPage = () => {
+  const { loading: authLoading } = useAuth();
   const {
     filter,
     setFilter,
@@ -24,7 +26,7 @@ const NotificationsPage = () => {
         <div className="mb-8 animate-fade-in">
           <NotificationHeader 
             markAllAsRead={markAllAsRead} 
-            isLoading={isLoading}
+            isLoading={isLoading || authLoading}
             isPending={isPending}
           />
           
@@ -41,7 +43,7 @@ const NotificationsPage = () => {
                 setFilter={setFilter}
                 filteredNotifications={filteredNotifications}
                 markAsRead={markAsRead}
-                isLoading={isLoading}
+                isLoading={isLoading || authLoading}
                 isPending={isPending}
               />
             </CardContent>

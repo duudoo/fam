@@ -8,12 +8,17 @@ import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getNotificationIcon } from '@/components/notifications/NotificationIcon';
+import { useAuth } from '@/hooks/useAuth';
 
 const NotificationsCard = () => {
+  const { user } = useAuth();
+  
   // Fetch recent notifications from Supabase
   const { data: notifications = [] } = useQuery({
-    queryKey: ['dashboard-notifications'],
+    queryKey: ['dashboard-notifications', user?.id],
     queryFn: async () => {
+      if (!user) return [];
+      
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -29,7 +34,8 @@ const NotificationsCard = () => {
         createdAt: notification.created_at,
         read: notification.read
       }));
-    }
+    },
+    enabled: !!user
   });
     
   return (
