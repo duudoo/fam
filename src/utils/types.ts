@@ -1,10 +1,31 @@
-
 export type Parent = {
   id: string;
   name: string;
   avatar?: string;
   email: string;
   phone?: string;
+};
+
+export type Child = {
+  id: string;
+  initials: string;
+  name?: string;
+  dateOfBirth?: string;
+  parentIds: string[];
+};
+
+export type InviteStatus = 
+  | 'pending'
+  | 'accepted'
+  | 'declined';
+
+export type CoParentInvite = {
+  id: string;
+  email: string;
+  status: InviteStatus;
+  invitedBy: string; // parent ID
+  invitedAt: string;
+  respondedAt?: string;
 };
 
 export type ExpenseCategory = 
@@ -79,7 +100,8 @@ export type NotificationType =
   | 'expense_paid'
   | 'event_added'
   | 'event_reminder'
-  | 'payment_reminder';
+  | 'payment_reminder'
+  | 'coparent_invite';
 
 export type Notification = {
   id: string;

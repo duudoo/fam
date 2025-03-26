@@ -15,6 +15,7 @@ import SignUp from "./pages/SignUp";
 import VerifyEmail from "./pages/VerifyEmail";
 import Demo from "./pages/Demo";
 import Communications from "./pages/Communications";
+import UserManagement from "./pages/UserManagement";
 
 // Create a QueryClient
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/communications" element={<Communications />} />
         <Route path="/notifications" element={<Notifications />} />
+        <Route path="/user-management" element={<UserManagement />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
