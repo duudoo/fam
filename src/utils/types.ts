@@ -89,3 +89,44 @@ export type Notification = {
   createdAt: string;
   read: boolean;
 };
+
+export type MessageStatus = 
+  | 'sending'
+  | 'sent'
+  | 'delivered'
+  | 'seen'
+  | 'failed';
+
+export type Message = {
+  id: string;
+  senderId: string;
+  text: string;
+  timestamp: string;
+  status: string;
+  attachments?: Attachment[];
+};
+
+export type AttachmentType = 
+  | 'image'
+  | 'document'
+  | 'audio'
+  | 'video'
+  | 'other';
+
+export type Attachment = {
+  id: string;
+  type: AttachmentType;
+  url: string;
+  name: string;
+  size?: number;
+  thumbnailUrl?: string;
+};
+
+export type Conversation = {
+  id: string;
+  participants: string[]; // parent IDs
+  lastMessage?: Message;
+  unreadCount: number;
+  createdAt: string;
+  updatedAt: string;
+};
