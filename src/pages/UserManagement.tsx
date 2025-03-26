@@ -29,7 +29,7 @@ const UserManagementPage = () => {
 
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select<string, DbProfile>('*')
         .eq('id', user.id)
         .single();
 
@@ -52,25 +52,27 @@ const UserManagementPage = () => {
 
   const fetchChildren = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
       const { data, error } = await supabase
         .from('children')
-        .select(`
+        .select<string, DbChild>(`
           id,
           name,
           date_of_birth,
           initials,
           parent_children!inner (parent_id)
-        `) as any;
+        `)
+        .eq('parent_children.parent_id', user?.id);
 
       if (error) throw error;
 
       if (data) {
-        setChildren(data.map((child: any) => ({
+        setChildren(data.map((child) => ({
           id: child.id,
-          name: child.name,
-          dateOfBirth: child.date_of_birth,
+          name: child.name || undefined,
+          dateOfBirth: child.date_of_birth || undefined,
           initials: child.initials,
-          parentIds: [child.parent_children[0].parent_id]
+          parentIds: child.parent_children ? [child.parent_children[0].parent_id] : []
         })));
       }
     } catch (error) {
@@ -86,19 +88,19 @@ const UserManagementPage = () => {
       const { data: { user } } = await supabase.auth.getUser();
       const { data, error } = await supabase
         .from('co_parent_invites')
-        .select('*')
-        .eq('invited_by', user?.id) as any;
+        .select<string, DbCoParentInvite>('*')
+        .eq('invited_by', user?.id);
 
       if (error) throw error;
 
       if (data) {
-        setInvites(data.map((invite: any) => ({
+        setInvites(data.map((invite) => ({
           id: invite.id,
           email: invite.email,
-          status: invite.status,
+          status: invite.status as any,
           invitedBy: invite.invited_by,
           invitedAt: invite.invited_at,
-          respondedAt: invite.responded_at
+          respondedAt: invite.responded_at || undefined
         })));
       }
     } catch (error) {

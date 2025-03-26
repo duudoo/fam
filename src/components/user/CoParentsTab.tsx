@@ -29,11 +29,11 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
 
       const { error } = await supabase
         .from('co_parent_invites')
-        .insert([{
+        .insert<DbCoParentInvite>({
           email,
           invited_by: user.id,
           status: 'pending'
-        }] as any);
+        });
 
       if (error) throw error;
 

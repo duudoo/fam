@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -7,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { supabase } from "@/integrations/supabase/client";
 import ChildForm from "@/components/user/ChildForm";
 import { Child } from "@/utils/types";
+import { DbChild } from "@/types/database";
 
 interface ChildrenTabProps {
   children: Child[];
@@ -26,27 +26,26 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
         return;
       }
 
-      // Insert child with type assertion
       const { data: newChild, error: childError } = await supabase
         .from('children')
-        .insert([{
+        .insert<DbChild>({
           name: child.name,
           date_of_birth: child.dateOfBirth,
           initials: child.initials
-        }] as any)
+        })
         .select()
         .single();
 
       if (childError) throw childError;
+      if (!newChild) throw new Error("Failed to create child");
 
-      // Create parent-child relationship with type assertion
       const { error: relationError } = await supabase
         .from('parent_children')
-        .insert([{
+        .insert({
           parent_id: user.id,
-          child_id: newChild?.id,
+          child_id: newChild.id,
           is_primary: true
-        }] as any);
+        });
 
       if (relationError) throw relationError;
 
