@@ -7,13 +7,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ChildForm from "@/components/user/ChildForm";
 import CoParentInvite from "@/components/user/CoParentInvite";
-import { Child, CoParentInvite as CoParentInviteType } from "@/utils/types";
+import CoParentsList from "@/components/user/CoParentsList";
+import { Child, CoParentInvite as CoParentInviteType, Parent } from "@/utils/types";
 
 const UserManagementPage = () => {
   const [children, setChildren] = useState<Child[]>([]);
   const [invites, setInvites] = useState<CoParentInviteType[]>([]);
   const [addingChild, setAddingChild] = useState(false);
   const [addingCoParent, setAddingCoParent] = useState(false);
+  const [currentUser, setCurrentUser] = useState<Parent>({
+    id: "current-user-id",
+    name: "John Doe",
+    email: "john.doe@example.com",
+    phone: "+1 (555) 123-4567"
+  });
 
   // Mock data initialization for demonstration
   useEffect(() => {
@@ -183,29 +190,10 @@ const UserManagementPage = () => {
                 </Button>
               </Card>
             ) : (
-              <div className="grid md:grid-cols-2 gap-4">
-                {invites.map(invite => (
-                  <Card key={invite.id}>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle>{invite.email}</CardTitle>
-                          <CardDescription>
-                            Status: <span className="capitalize">{invite.status}</span>
-                          </CardDescription>
-                          <CardDescription>
-                            Invited: {new Date(invite.invitedAt).toLocaleDateString()}
-                          </CardDescription>
-                        </div>
-                        <div className="flex items-center justify-center h-10 px-4 rounded-full bg-yellow-100 text-yellow-800">
-                          {invite.status === "pending" ? "Pending" : 
-                            invite.status === "accepted" ? "Accepted" : "Declined"}
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                ))}
-              </div>
+              <CoParentsList 
+                currentUser={currentUser}
+                invites={invites}
+              />
             )}
           </div>
         </TabsContent>
