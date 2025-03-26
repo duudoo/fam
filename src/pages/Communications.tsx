@@ -8,46 +8,57 @@ import { ConversationHeader } from "@/components/communication/ConversationHeade
 import { Message } from "@/utils/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const CommunicationsPage = () => {
   const queryClient = useQueryClient();
-  const [currentReceiverId, setCurrentReceiverId] = useState<string | null>(null);
+  const { user, loading: authLoading } = useAuth();
+  const [currentReceiverId, setCurrentReceiverId] = useState<string | null>("Sarah"); // Hardcoded for demo
   
   // Fetch messages for the current conversation
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ['messages', currentReceiverId],
     queryFn: async () => {
-      if (!currentReceiverId) return [];
+      if (!currentReceiverId || !user) return [];
       
-      const { data: messages, error } = await supabase
-        .from('messages')
-        .select('*')
-        .or(`sender_id.eq.${currentReceiverId},receiver_id.eq.${currentReceiverId}`)
-        .order('timestamp', { ascending: true });
+      try {
+        const { data: messages, error } = await supabase
+          .from('messages')
+          .select('*')
+          .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+          .order('timestamp', { ascending: true });
 
-      if (error) throw error;
-      return messages.map(msg => ({
-        id: msg.id,
-        senderId: msg.sender_id,
-        text: msg.text,
-        timestamp: new Date(msg.timestamp).toLocaleTimeString([], { 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        }),
-        status: msg.status,
-        attachments: msg.attachments
-      }));
+        if (error) throw error;
+        
+        return messages.map(msg => ({
+          id: msg.id,
+          senderId: msg.sender_id === user.id ? "user" : "Sarah",
+          text: msg.text,
+          timestamp: new Date(msg.timestamp).toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }),
+          status: msg.status,
+          attachments: msg.attachments
+        }));
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+        return [];
+      }
     },
-    enabled: !!currentReceiverId
+    enabled: !!currentReceiverId && !!user
   });
 
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async (newMsg: Omit<Message, "id" | "status">) => {
+      if (!user) throw new Error("User not authenticated");
+      
       const { error } = await supabase
         .from('messages')
         .insert({
-          sender_id: (await supabase.auth.getUser()).data.user?.id,
+          sender_id: user.id,
           receiver_id: currentReceiverId,
           text: newMsg.text,
           attachments: newMsg.attachments
@@ -57,12 +68,16 @@ const CommunicationsPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messages', currentReceiverId] });
+    },
+    onError: (error) => {
+      console.error('Error sending message:', error);
+      toast.error("Failed to send message. Please try again.");
     }
   });
 
   // Subscribe to real-time updates
   useEffect(() => {
-    if (!currentReceiverId) return;
+    if (!currentReceiverId || !user) return;
 
     const channel = supabase
       .channel('messages-channel')
@@ -72,7 +87,19 @@ const CommunicationsPage = () => {
           event: '*',
           schema: 'public',
           table: 'messages',
-          filter: `receiver_id=eq.${currentReceiverId}`
+          filter: `sender_id=eq.${user.id}` // Listen for messages sent by this user
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['messages', currentReceiverId] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+          filter: `receiver_id=eq.${user.id}` // Listen for messages received by this user
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ['messages', currentReceiverId] });
@@ -83,13 +110,36 @@ const CommunicationsPage = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentReceiverId, queryClient]);
+  }, [currentReceiverId, user, queryClient]);
 
   const handleSendMessage = async (newMsg: Omit<Message, "id" | "status">) => {
-    if (!currentReceiverId) return;
+    if (!currentReceiverId) {
+      toast.error("No recipient selected");
+      return;
+    }
+    
+    if (!user) {
+      toast.error("You must be logged in to send messages");
+      return;
+    }
     
     try {
       await sendMessageMutation.mutateAsync(newMsg);
+      
+      // Optimistically add message to UI
+      queryClient.setQueryData(['messages', currentReceiverId], (oldData: Message[] = []) => {
+        return [
+          ...oldData,
+          {
+            id: `temp-${Date.now()}`,
+            senderId: "user",
+            text: newMsg.text,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            status: 'sending',
+            attachments: newMsg.attachments
+          }
+        ];
+      });
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -112,7 +162,7 @@ const CommunicationsPage = () => {
 
           <div className="flex flex-col h-[600px]">
             <div className="flex-1 overflow-y-auto mb-4 pr-2">
-              {isLoading ? (
+              {authLoading || isLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <p>Loading messages...</p>
                 </div>
