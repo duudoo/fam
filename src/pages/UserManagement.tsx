@@ -35,13 +35,15 @@ const UserManagementPage = () => {
 
       if (error) throw error;
 
-      setCurrentUser({
-        id: profile.id,
-        name: profile.name,
-        email: profile.email,
-        phone: profile.phone || undefined,
-        avatar: profile.avatar_url,
-      });
+      if (profile) {
+        setCurrentUser({
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          phone: profile.phone || undefined,
+          avatar: profile.avatar_url,
+        });
+      }
     } catch (error) {
       console.error('Error fetching user:', error);
       toast.error("Failed to load user profile");
@@ -58,18 +60,19 @@ const UserManagementPage = () => {
           date_of_birth,
           initials,
           parent_children!inner (parent_id)
-        `)
-        .eq('parent_children.parent_id', (await supabase.auth.getUser()).data.user?.id);
+        `) as any;
 
       if (error) throw error;
 
-      setChildren(data.map(child => ({
-        id: child.id,
-        name: child.name,
-        dateOfBirth: child.date_of_birth,
-        initials: child.initials,
-        parentIds: [child.parent_children[0].parent_id]
-      })));
+      if (data) {
+        setChildren(data.map((child: any) => ({
+          id: child.id,
+          name: child.name,
+          dateOfBirth: child.date_of_birth,
+          initials: child.initials,
+          parentIds: [child.parent_children[0].parent_id]
+        })));
+      }
     } catch (error) {
       console.error('Error fetching children:', error);
       toast.error("Failed to load children");
@@ -80,21 +83,24 @@ const UserManagementPage = () => {
 
   const fetchInvites = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
       const { data, error } = await supabase
         .from('co_parent_invites')
         .select('*')
-        .eq('invited_by', (await supabase.auth.getUser()).data.user?.id);
+        .eq('invited_by', user?.id) as any;
 
       if (error) throw error;
 
-      setInvites(data.map(invite => ({
-        id: invite.id,
-        email: invite.email,
-        status: invite.status,
-        invitedBy: invite.invited_by,
-        invitedAt: invite.invited_at,
-        respondedAt: invite.responded_at
-      })));
+      if (data) {
+        setInvites(data.map((invite: any) => ({
+          id: invite.id,
+          email: invite.email,
+          status: invite.status,
+          invitedBy: invite.invited_by,
+          invitedAt: invite.invited_at,
+          respondedAt: invite.responded_at
+        })));
+      }
     } catch (error) {
       console.error('Error fetching invites:', error);
       toast.error("Failed to load co-parent invites");

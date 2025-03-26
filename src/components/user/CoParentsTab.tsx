@@ -33,7 +33,7 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
           email,
           invited_by: user.id,
           status: 'pending'
-        }]);
+        }] as any);
 
       if (error) throw error;
 

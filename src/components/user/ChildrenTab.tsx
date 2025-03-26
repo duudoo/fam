@@ -26,27 +26,27 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
         return;
       }
 
-      // Insert child
+      // Insert child with type assertion
       const { data: newChild, error: childError } = await supabase
         .from('children')
         .insert([{
           name: child.name,
           date_of_birth: child.dateOfBirth,
           initials: child.initials
-        }])
+        }] as any)
         .select()
         .single();
 
       if (childError) throw childError;
 
-      // Create parent-child relationship
+      // Create parent-child relationship with type assertion
       const { error: relationError } = await supabase
         .from('parent_children')
         .insert([{
           parent_id: user.id,
-          child_id: newChild.id,
+          child_id: newChild?.id,
           is_primary: true
-        }]);
+        }] as any);
 
       if (relationError) throw relationError;
 
