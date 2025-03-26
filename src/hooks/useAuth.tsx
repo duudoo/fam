@@ -2,11 +2,74 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
+import { toast } from 'sonner';
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name?: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+  phone?: string;
+}
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
+
+  // Fetch user profile data from the profiles table
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      setProfileLoading(true);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+      
+      setProfile(data);
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error);
+      return null;
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  // Update user profile data
+  const updateUserProfile = async (updates: Partial<UserProfile>) => {
+    try {
+      if (!user) throw new Error('No user logged in');
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id);
+      
+      if (error) throw error;
+      
+      // Refetch the profile to get the updated data
+      const updatedProfile = await fetchUserProfile(user.id);
+      
+      toast.success('Profile updated successfully');
+      return updatedProfile;
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      toast.error(error.message || 'Failed to update profile');
+      return null;
+    }
+  };
 
   useEffect(() => {
     console.log("Setting up auth state listener");
@@ -17,6 +80,17 @@ export const useAuth = () => {
         console.log("Auth state changed:", event, session);
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // If user logged in, fetch their profile
+        if (session?.user) {
+          // Use setTimeout to avoid potential recursive issues with Supabase auth
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+          }, 0);
+        } else {
+          setProfile(null);
+        }
+        
         setLoading(false);
       }
     );
@@ -26,6 +100,12 @@ export const useAuth = () => {
       console.log("Initial session check:", session);
       setSession(session);
       setUser(session?.user ?? null);
+      
+      // If user is already logged in, fetch their profile
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      }
+      
       setLoading(false);
     });
 
@@ -39,17 +119,24 @@ export const useAuth = () => {
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
+      setProfile(null);
       console.log("User signed out");
+      toast.success("Signed out successfully");
     } catch (error) {
       console.error('Error signing out:', error);
+      toast.error("Failed to sign out");
     }
   };
 
   return {
     user,
     session,
+    profile,
     loading,
+    profileLoading,
     signOut,
+    updateUserProfile,
+    refreshProfile: () => user ? fetchUserProfile(user.id) : Promise.resolve(null),
   };
 };
 
