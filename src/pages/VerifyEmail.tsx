@@ -17,6 +17,7 @@ const VerifyEmailPage = () => {
     // Get the email from location state
     if (location.state?.email) {
       setEmail(location.state.email);
+      console.log("Email from state:", location.state.email);
     } else {
       // If no email is provided, redirect to sign in
       toast.error("No email provided for verification");
@@ -76,6 +77,7 @@ const VerifyEmailPage = () => {
     try {
       console.log("Resending verification code to:", email);
       
+      // Explicitly request a new signup OTP
       const { error, data } = await supabase.auth.resend({
         type: 'signup',
         email: email,

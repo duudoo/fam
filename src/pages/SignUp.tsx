@@ -28,7 +28,9 @@ const SignUpPage = () => {
       const firstName = nameParts[0] || "";
       const lastName = nameParts.slice(1).join(" ") || "";
 
-      // Sign up with Supabase
+      console.log("Attempting to sign up user:", email);
+      
+      // Sign up with Supabase - explicitly requesting a signup OTP email
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -46,9 +48,16 @@ const SignUpPage = () => {
       
       console.log("Signup response:", data);
 
-      // If signup successful, redirect to verify email page
-      toast.success("Account created! Please verify your email.");
-      navigate("/verify-email", { state: { email } });
+      // Check if confirmation was sent
+      if (data.user && !data.user.confirmed_at) {
+        console.log("Email verification required, redirecting to verify page");
+        toast.success("Verification code sent to your email. Please check your inbox.");
+        navigate("/verify-email", { state: { email } });
+      } else {
+        console.log("User already confirmed or auto-confirmed, redirecting to dashboard");
+        toast.success("Account created successfully!");
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       console.error("Signup error:", error);
       toast.error(error.message || "Failed to create account. Please try again.");

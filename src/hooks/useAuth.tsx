@@ -9,6 +9,8 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("Setting up auth state listener");
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -29,6 +31,7 @@ export const useAuth = () => {
 
     // Cleanup on unmount
     return () => {
+      console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
   }, []);
@@ -36,6 +39,7 @@ export const useAuth = () => {
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
+      console.log("User signed out");
     } catch (error) {
       console.error('Error signing out:', error);
     }
