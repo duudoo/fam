@@ -6,6 +6,12 @@ import { toast } from "sonner";
 import ChildrenTab from "@/components/user/ChildrenTab";
 import CoParentsTab from "@/components/user/CoParentsTab";
 import { Child, CoParentInvite, Parent } from "@/utils/types";
+import type { Database } from "@/integrations/supabase/database.types";
+
+type Tables = Database['public']['Tables'];
+type ProfileRow = Tables['profiles']['Row'];
+type ChildRow = Tables['children']['Row'];
+type CoParentInviteRow = Tables['co_parent_invites']['Row'];
 
 const UserManagementPage = () => {
   const [children, setChildren] = useState<Child[]>([]);
@@ -29,7 +35,7 @@ const UserManagementPage = () => {
 
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select<string, DbProfile>('*')
+        .select()
         .eq('id', user.id)
         .single();
 
@@ -53,16 +59,18 @@ const UserManagementPage = () => {
   const fetchChildren = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { data, error } = await supabase
         .from('children')
-        .select<string, DbChild>(`
+        .select(`
           id,
           name,
           date_of_birth,
           initials,
           parent_children!inner (parent_id)
         `)
-        .eq('parent_children.parent_id', user?.id);
+        .eq('parent_children.parent_id', user.id);
 
       if (error) throw error;
 
@@ -86,10 +94,12 @@ const UserManagementPage = () => {
   const fetchInvites = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { data, error } = await supabase
         .from('co_parent_invites')
-        .select<string, DbCoParentInvite>('*')
-        .eq('invited_by', user?.id);
+        .select()
+        .eq('invited_by', user.id);
 
       if (error) throw error;
 

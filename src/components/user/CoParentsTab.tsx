@@ -8,6 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import CoParentInvite from "@/components/user/CoParentInvite";
 import CoParentsList from "@/components/user/CoParentsList";
 import { CoParentInvite as CoParentInviteType, Parent } from "@/utils/types";
+import type { Database } from "@/integrations/supabase/database.types";
+
+type Tables = Database['public']['Tables'];
+type CoParentInviteRow = Tables['co_parent_invites']['Row'];
 
 interface CoParentsTabProps {
   currentUser: Parent;
@@ -29,7 +33,7 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
 
       const { error } = await supabase
         .from('co_parent_invites')
-        .insert<DbCoParentInvite>({
+        .insert({
           email,
           invited_by: user.id,
           status: 'pending'
