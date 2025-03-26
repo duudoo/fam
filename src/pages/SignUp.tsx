@@ -43,6 +43,8 @@ const SignUpPage = () => {
       });
 
       if (error) throw error;
+      
+      console.log("Signup response:", data);
 
       // If signup successful, redirect to verify email page
       toast.success("Account created! Please verify your email.");

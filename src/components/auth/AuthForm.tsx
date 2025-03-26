@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client';
 import SignInForm from "./SignInForm";
 import ForgotPasswordForm from "./ForgotPasswordForm";
 import VerifyEmailForm from "./VerifyEmailForm";
@@ -23,29 +24,63 @@ const AuthForm = ({ mode = "signin" }: AuthFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate authentication process
-    setTimeout(() => {
-      setIsSubmitting(false);
-
+    try {
       switch (authMode) {
         case "signin":
+          // Sign in with Supabase
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+          if (signInError) throw signInError;
+
           toast.success("Signed in successfully!");
           navigate("/dashboard");
           break;
+          
         case "forgot-password":
+          // Send password reset email
+          const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/reset-password`,
+          });
+
+          if (resetError) throw resetError;
+
           toast.success("Password reset link sent to your email!");
           setAuthMode("signin");
           break;
+          
         case "verify-email":
+          if (!verificationCode) {
+            toast.error("Verification code is required");
+            setIsSubmitting(false);
+            return;
+          }
+
+          // Use Supabase to verify the OTP
+          const { error: verifyError } = await supabase.auth.verifyOtp({
+            email,
+            token: verificationCode,
+            type: 'signup'
+          });
+
+          if (verifyError) throw verifyError;
+
           toast.success("Email verified successfully!");
           navigate("/dashboard");
           break;
       }
-    }, 1500);
+    } catch (error: any) {
+      console.error(`Error in ${authMode} mode:`, error);
+      toast.error(error.message || "An error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleForgotPassword = () => {
@@ -56,9 +91,27 @@ const AuthForm = ({ mode = "signin" }: AuthFormProps) => {
     setAuthMode("signin");
   };
 
-  const handleResendCode = () => {
-    // Implement resend code logic here
-    toast.success("Verification code resent to your email");
+  const handleResendCode = async () => {
+    if (!email) {
+      toast.error("Email is required to resend code");
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success("Verification code resent to your email");
+    } catch (error: any) {
+      console.error("Resend code error:", error);
+      toast.error(error.message || "Failed to resend code. Please try again.");
+    }
   };
 
   return (

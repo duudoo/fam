@@ -78,6 +78,7 @@ const VerifyEmailPage = () => {
 
       toast.success("Verification code resent to your email");
     } catch (error: any) {
+      console.error("Resend code error:", error);
       toast.error(error.message || "Failed to resend code. Please try again.");
     }
   };
