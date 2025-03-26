@@ -60,6 +60,62 @@ export interface Database {
           responded_at?: string | null;
         };
       };
+      messages: {
+        Row: {
+          id: string;
+          sender_id: string;
+          receiver_id: string;
+          text: string;
+          timestamp: string;
+          status: string;
+          attachments: any | null;
+          conversation_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          sender_id: string;
+          receiver_id: string;
+          text: string;
+          timestamp?: string;
+          status?: string;
+          attachments?: any | null;
+          conversation_id?: string | null;
+        };
+      };
+      conversations: {
+        Row: {
+          id: string;
+          participants: string[];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          participants: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: string;
+          message: string;
+          related_id: string | null;
+          created_at: string;
+          read: boolean;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          type: string;
+          message: string;
+          related_id?: string | null;
+          created_at?: string;
+          read?: boolean;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

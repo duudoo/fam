@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
-import { Bell, Calendar, Check, DollarSign, Receipt } from "lucide-react";
+import { Bell, Calendar, Check, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,35 +15,108 @@ import {
   TabsTrigger,
   TabsContent,
 } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { mockNotifications } from "@/utils/mockData";
 import { Notification, NotificationType } from "@/utils/types";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const NotificationsPage = () => {
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
   const [filter, setFilter] = useState("all");
+  const queryClient = useQueryClient();
   
+  // Fetch notifications from Supabase
+  const { data: notifications = [], isLoading } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => {
+      const { data: notificationsData, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        toast.error("Failed to load notifications");
+        throw error;
+      }
+      
+      return notificationsData.map(notification => ({
+        id: notification.id,
+        type: notification.type as NotificationType,
+        message: notification.message,
+        relatedId: notification.related_id || undefined,
+        createdAt: notification.created_at,
+        read: notification.read
+      }));
+    }
+  });
+  
+  // Mark notification as read mutation
+  const markAsReadMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+    onError: () => {
+      toast.error("Failed to mark notification as read");
+    }
+  });
+  
+  // Mark all notifications as read mutation
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('read', false);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      toast.success("All notifications marked as read");
+    },
+    onError: () => {
+      toast.error("Failed to mark all notifications as read");
+    }
+  });
+  
+  // Listen for real-time notifications updates
   useEffect(() => {
-    // Set page title
-    document.title = "Notifications | Famacle";
-  }, []);
+    const channel = supabase
+      .channel('notifications-channel')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
   
   const markAllAsRead = () => {
-    const updatedNotifications = notifications.map(notification => ({
-      ...notification,
-      read: true
-    }));
-    setNotifications(updatedNotifications);
+    markAllAsReadMutation.mutate();
   };
   
   const markAsRead = (id: string) => {
-    const updatedNotifications = notifications.map(notification => 
-      notification.id === id ? { ...notification, read: true } : notification
-    );
-    setNotifications(updatedNotifications);
+    markAsReadMutation.mutate(id);
   };
   
   const getNotificationIcon = (type: NotificationType) => {
@@ -79,7 +152,11 @@ const NotificationsPage = () => {
               <p className="text-gray-500 mt-1">Stay up-to-date with activities and expenses</p>
             </div>
             
-            <Button variant="outline" onClick={markAllAsRead}>
+            <Button 
+              variant="outline" 
+              onClick={markAllAsRead}
+              disabled={isLoading || markAllAsReadMutation.isPending}
+            >
               <Check className="w-4 h-4 mr-2" />
               Mark all as read
             </Button>
@@ -106,6 +183,8 @@ const NotificationsPage = () => {
                     notifications={filteredNotifications} 
                     markAsRead={markAsRead}
                     getNotificationIcon={getNotificationIcon}
+                    isLoading={isLoading}
+                    isPending={markAsReadMutation.isPending}
                   />
                 </TabsContent>
                 
@@ -114,6 +193,8 @@ const NotificationsPage = () => {
                     notifications={filteredNotifications} 
                     markAsRead={markAsRead}
                     getNotificationIcon={getNotificationIcon}
+                    isLoading={isLoading}
+                    isPending={markAsReadMutation.isPending}
                   />
                 </TabsContent>
                 
@@ -122,6 +203,8 @@ const NotificationsPage = () => {
                     notifications={filteredNotifications} 
                     markAsRead={markAsRead}
                     getNotificationIcon={getNotificationIcon}
+                    isLoading={isLoading}
+                    isPending={markAsReadMutation.isPending}
                   />
                 </TabsContent>
                 
@@ -130,6 +213,8 @@ const NotificationsPage = () => {
                     notifications={filteredNotifications} 
                     markAsRead={markAsRead}
                     getNotificationIcon={getNotificationIcon}
+                    isLoading={isLoading}
+                    isPending={markAsReadMutation.isPending}
                   />
                 </TabsContent>
               </Tabs>
@@ -145,13 +230,26 @@ interface NotificationListProps {
   notifications: Notification[];
   markAsRead: (id: string) => void;
   getNotificationIcon: (type: NotificationType) => JSX.Element;
+  isLoading: boolean;
+  isPending: boolean;
 }
 
 const NotificationList = ({ 
   notifications, 
   markAsRead,
-  getNotificationIcon 
+  getNotificationIcon,
+  isLoading,
+  isPending
 }: NotificationListProps) => {
+  if (isLoading) {
+    return (
+      <div className="text-center py-10">
+        <Bell className="w-12 h-12 text-gray-300 mx-auto mb-4 animate-pulse" />
+        <p className="text-gray-500">Loading notifications...</p>
+      </div>
+    );
+  }
+  
   if (notifications.length === 0) {
     return (
       <div className="text-center py-10">
@@ -199,6 +297,7 @@ const NotificationList = ({
                     size="sm" 
                     className="h-8 text-gray-500 hover:text-famacle-blue"
                     onClick={() => markAsRead(notification.id)}
+                    disabled={isPending}
                   >
                     <Check className="w-4 h-4" />
                   </Button>
