@@ -4,7 +4,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Event } from '@/utils/types';
 import EventDetail from './EventDetail';
-import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import { DayContentProps } from 'react-day-picker';
 import DayCell from './DayCell';
 
@@ -15,7 +14,29 @@ interface MonthViewProps {
 }
 
 const MonthView = ({ date, setDate, events }: MonthViewProps) => {
-  const { getEventsByDate, eventForDate } = useCalendarEvents(events);
+  // Helper function to determine if a date has events
+  const eventForDate = (day: Date) => {
+    return events.some(event => {
+      const eventStartDate = new Date(event.startDate);
+      const eventEndDate = event.endDate ? new Date(event.endDate) : eventStartDate;
+      
+      return event.allDay 
+        ? isSameDay(eventStartDate, day)
+        : isSameDay(eventStartDate, day) || isSameDay(eventEndDate, day);
+    });
+  };
+  
+  // Helper function to get events for a specific date
+  const getEventsByDate = (day: Date) => {
+    return events.filter(event => {
+      const eventStartDate = new Date(event.startDate);
+      const eventEndDate = event.endDate ? new Date(event.endDate) : eventStartDate;
+      
+      return event.allDay 
+        ? isSameDay(eventStartDate, day)
+        : isSameDay(eventStartDate, day) || isSameDay(eventEndDate, day);
+    });
+  };
   
   // Custom day component wrapper that passes our props to DayCell
   const CustomDay = (props: DayContentProps) => {
@@ -37,7 +58,7 @@ const MonthView = ({ date, setDate, events }: MonthViewProps) => {
         onSelect={(newDate) => newDate && setDate(newDate)}
         className="rounded-md border"
         modifiers={{
-          event: (date) => eventForDate(date),
+          event: (day) => eventForDate(day),
         }}
         modifiersClassNames={{
           event: "has-event",
