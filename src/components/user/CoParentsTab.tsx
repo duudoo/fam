@@ -4,6 +4,7 @@ import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 import CoParentInvite from "@/components/user/CoParentInvite";
 import CoParentsList from "@/components/user/CoParentsList";
 import { CoParentInvite as CoParentInviteType, Parent } from "@/utils/types";
@@ -12,23 +13,37 @@ interface CoParentsTabProps {
   currentUser: Parent;
   invites: CoParentInviteType[];
   setInvites: React.Dispatch<React.SetStateAction<CoParentInviteType[]>>;
+  onInviteSent?: () => void;
 }
 
-const CoParentsTab = ({ currentUser, invites, setInvites }: CoParentsTabProps) => {
+const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoParentsTabProps) => {
   const [addingCoParent, setAddingCoParent] = useState(false);
 
-  const handleInviteCoParent = (email: string, message?: string) => {
-    const newInvite: CoParentInviteType = {
-      id: `invite-${Date.now()}`,
-      email,
-      status: "pending",
-      invitedBy: "current-user-id",
-      invitedAt: new Date().toISOString(),
-    };
-    
-    setInvites([...invites, newInvite]);
-    setAddingCoParent(false);
-    toast.success(`Invitation sent to ${email}`);
+  const handleInviteCoParent = async (email: string, message?: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Please sign in to send invites");
+        return;
+      }
+
+      const { error } = await supabase
+        .from('co_parent_invites')
+        .insert([{
+          email,
+          invited_by: user.id,
+          status: 'pending'
+        }]);
+
+      if (error) throw error;
+
+      setAddingCoParent(false);
+      toast.success(`Invitation sent to ${email}`);
+      onInviteSent?.();
+    } catch (error) {
+      console.error('Error sending invite:', error);
+      toast.error("Failed to send invitation");
+    }
   };
 
   return (

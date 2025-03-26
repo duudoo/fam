@@ -1,6 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import ChildrenTab from "@/components/user/ChildrenTab";
 import CoParentsTab from "@/components/user/CoParentsTab";
 import { Child, CoParentInvite, Parent } from "@/utils/types";
@@ -8,39 +10,104 @@ import { Child, CoParentInvite, Parent } from "@/utils/types";
 const UserManagementPage = () => {
   const [children, setChildren] = useState<Child[]>([]);
   const [invites, setInvites] = useState<CoParentInvite[]>([]);
-  const [currentUser, setCurrentUser] = useState<Parent>({
-    id: "current-user-id",
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+1 (555) 123-4567"
-  });
+  const [currentUser, setCurrentUser] = useState<Parent | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data initialization for demonstration
   useEffect(() => {
-    // In a real app, this would fetch from an API or database
-    const mockChildren: Child[] = [
-      {
-        id: "1",
-        initials: "JD",
-        name: "Jane Doe",
-        dateOfBirth: "2018-05-12",
-        parentIds: ["current-user-id"]
-      }
-    ];
-
-    const mockInvites: CoParentInvite[] = [
-      {
-        id: "1",
-        email: "coparent@example.com",
-        status: "pending",
-        invitedBy: "current-user-id",
-        invitedAt: new Date().toISOString(),
-      }
-    ];
-
-    setChildren(mockChildren);
-    setInvites(mockInvites);
+    fetchUserData();
+    fetchChildren();
+    fetchInvites();
   }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Please sign in to access this page");
+        return;
+      }
+
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      setCurrentUser({
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        phone: profile.phone || undefined,
+        avatar: profile.avatar_url,
+      });
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      toast.error("Failed to load user profile");
+    }
+  };
+
+  const fetchChildren = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('children')
+        .select(`
+          id,
+          name,
+          date_of_birth,
+          initials,
+          parent_children!inner (parent_id)
+        `)
+        .eq('parent_children.parent_id', (await supabase.auth.getUser()).data.user?.id);
+
+      if (error) throw error;
+
+      setChildren(data.map(child => ({
+        id: child.id,
+        name: child.name,
+        dateOfBirth: child.date_of_birth,
+        initials: child.initials,
+        parentIds: [child.parent_children[0].parent_id]
+      })));
+    } catch (error) {
+      console.error('Error fetching children:', error);
+      toast.error("Failed to load children");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchInvites = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('co_parent_invites')
+        .select('*')
+        .eq('invited_by', (await supabase.auth.getUser()).data.user?.id);
+
+      if (error) throw error;
+
+      setInvites(data.map(invite => ({
+        id: invite.id,
+        email: invite.email,
+        status: invite.status,
+        invitedBy: invite.invited_by,
+        invitedAt: invite.invited_at,
+        respondedAt: invite.responded_at
+      })));
+    } catch (error) {
+      console.error('Error fetching invites:', error);
+      toast.error("Failed to load co-parent invites");
+    }
+  };
+
+  if (!currentUser) {
+    return (
+      <div className="container mx-auto py-6 text-center">
+        Please sign in to access this page
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6 max-w-5xl">
@@ -58,6 +125,8 @@ const UserManagementPage = () => {
           <ChildrenTab 
             children={children}
             setChildren={setChildren}
+            loading={loading}
+            onChildAdded={fetchChildren}
           />
         </TabsContent>
         
@@ -66,6 +135,7 @@ const UserManagementPage = () => {
             currentUser={currentUser}
             invites={invites}
             setInvites={setInvites}
+            onInviteSent={fetchInvites}
           />
         </TabsContent>
       </Tabs>

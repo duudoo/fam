@@ -4,28 +4,64 @@ import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 import ChildForm from "@/components/user/ChildForm";
 import { Child } from "@/utils/types";
 
 interface ChildrenTabProps {
   children: Child[];
   setChildren: React.Dispatch<React.SetStateAction<Child[]>>;
+  loading?: boolean;
+  onChildAdded?: () => void;
 }
 
-const ChildrenTab = ({ children, setChildren }: ChildrenTabProps) => {
+const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: ChildrenTabProps) => {
   const [addingChild, setAddingChild] = useState(false);
 
-  const handleAddChild = (child: Omit<Child, "id" | "parentIds">) => {
-    const newChild: Child = {
-      id: `child-${Date.now()}`,
-      ...child,
-      parentIds: ["current-user-id"]
-    };
-    
-    setChildren([...children, newChild]);
-    setAddingChild(false);
-    toast.success(`Child ${child.initials} added successfully`);
+  const handleAddChild = async (child: Omit<Child, "id" | "parentIds">) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Please sign in to add a child");
+        return;
+      }
+
+      // Insert child
+      const { data: newChild, error: childError } = await supabase
+        .from('children')
+        .insert([{
+          name: child.name,
+          date_of_birth: child.dateOfBirth,
+          initials: child.initials
+        }])
+        .select()
+        .single();
+
+      if (childError) throw childError;
+
+      // Create parent-child relationship
+      const { error: relationError } = await supabase
+        .from('parent_children')
+        .insert([{
+          parent_id: user.id,
+          child_id: newChild.id,
+          is_primary: true
+        }]);
+
+      if (relationError) throw relationError;
+
+      setAddingChild(false);
+      toast.success(`Child ${child.name || child.initials} added successfully`);
+      onChildAdded?.();
+    } catch (error) {
+      console.error('Error adding child:', error);
+      toast.error("Failed to add child");
+    }
   };
+
+  if (loading) {
+    return <div className="text-center py-4">Loading...</div>;
+  }
 
   return (
     <div className="grid gap-4">
