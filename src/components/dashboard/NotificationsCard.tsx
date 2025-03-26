@@ -1,12 +1,13 @@
 
 import { Link } from 'react-router-dom';
-import { Bell, ChevronRight, Receipt } from 'lucide-react';
+import { Bell, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getNotificationIcon } from '@/components/notifications/NotificationIcon';
 
 const NotificationsCard = () => {
   // Fetch recent notifications from Supabase
@@ -67,11 +68,7 @@ const NotificationsCard = () => {
                     ? "bg-famacle-blue-light text-famacle-blue" 
                     : "bg-famacle-coral-light text-famacle-coral"
                 )}>
-                  {notification.type.includes('expense') ? (
-                    <Receipt className="w-4 h-4" />
-                  ) : (
-                    <Bell className="w-4 h-4" />
-                  )}
+                  {getNotificationIcon(notification.type)}
                 </div>
                 
                 <div>
