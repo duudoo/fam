@@ -11,6 +11,7 @@ interface VerifyEmailFormProps {
   isSubmitting: boolean;
   handleSubmit: (e: React.FormEvent) => void;
   onBackToSignIn: () => void;
+  onResendCode: () => void;
 }
 
 const VerifyEmailForm = ({
@@ -20,6 +21,7 @@ const VerifyEmailForm = ({
   isSubmitting,
   handleSubmit,
   onBackToSignIn,
+  onResendCode,
 }: VerifyEmailFormProps) => {
   return (
     <div className="p-6">
@@ -58,6 +60,7 @@ const VerifyEmailForm = ({
             <button
               type="button"
               className="text-famacle-blue hover:underline font-medium"
+              onClick={onResendCode}
             >
               Resend Code
             </button>

@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import SignInForm from "@/components/auth/SignInForm";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
+import { supabase } from "@/integrations/supabase/client";
 
 const SignInPage = () => {
   const navigate = useNavigate();
@@ -12,22 +13,39 @@ const SignInPage = () => {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate authentication process
-    setTimeout(() => {
-      setIsSubmitting(false);
-
+    try {
       if (mode === "signin") {
+        // Sign in with Supabase
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
         toast.success("Signed in successfully!");
         navigate("/dashboard");
       } else if (mode === "forgot-password") {
+        // Send password reset email
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+
+        if (error) throw error;
+
         toast.success("Password reset link sent to your email!");
         setMode("signin");
       }
-    }, 1500);
+    } catch (error: any) {
+      console.error(mode === "signin" ? "Login error:" : "Reset password error:", error);
+      toast.error(error.message || "An error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleForgotPassword = () => {

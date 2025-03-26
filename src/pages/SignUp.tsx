@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import SignUpForm from "@/components/auth/SignUpForm";
+import { supabase } from "@/integrations/supabase/client";
 
 const SignUpPage = () => {
   const navigate = useNavigate();
@@ -12,16 +13,46 @@ const SignUpPage = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!agreedToTerms) {
+      toast.error("You must agree to the Terms of Service and Privacy Policy");
+      return;
+    }
+
     setIsSubmitting(true);
 
-    // Simulate authentication process
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // Split name into first and last name for metadata
+      const nameParts = name.trim().split(/\s+/);
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
+
+      // Sign up with Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            full_name: name
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) throw error;
+
+      // If signup successful, redirect to verify email page
       toast.success("Account created! Please verify your email.");
       navigate("/verify-email", { state: { email } });
-    }, 1500);
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      toast.error(error.message || "Failed to create account. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
