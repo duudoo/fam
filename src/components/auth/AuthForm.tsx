@@ -56,6 +56,11 @@ const AuthForm = ({ mode = "signin" }: AuthFormProps) => {
     setAuthMode("signin");
   };
 
+  const handleResendCode = () => {
+    // Implement resend code logic here
+    toast.success("Verification code resent to your email");
+  };
+
   return (
     <div className="w-full max-w-md mx-auto rounded-xl overflow-hidden shadow-soft bg-white">
       {authMode === "verify-email" ? (
@@ -66,6 +71,7 @@ const AuthForm = ({ mode = "signin" }: AuthFormProps) => {
           isSubmitting={isSubmitting}
           handleSubmit={handleSubmit}
           onBackToSignIn={handleBackToSignIn}
+          onResendCode={handleResendCode}
         />
       ) : authMode === "forgot-password" ? (
         <ForgotPasswordForm 
