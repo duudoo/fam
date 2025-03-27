@@ -1,8 +1,8 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Expense, ExpenseStatus } from "@/utils/types";
+import { expensesAPI } from "@/lib/api/expenses";
 
 export const useExpenseMutations = (userId: string | undefined) => {
   const queryClient = useQueryClient();
@@ -11,25 +11,7 @@ export const useExpenseMutations = (userId: string | undefined) => {
   const createExpense = useMutation({
     mutationFn: async (newExpense: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => {
       if (!userId) throw new Error("User not authenticated");
-
-      const { data, error } = await supabase
-        .from('expenses')
-        .insert({
-          description: newExpense.description,
-          amount: newExpense.amount,
-          date: newExpense.date,
-          category: newExpense.category,
-          paid_by: userId,
-          receipt_url: newExpense.receiptUrl,
-          status: newExpense.status,
-          split_method: newExpense.splitMethod,
-          notes: newExpense.notes
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      return await expensesAPI.createExpense(userId, newExpense);
     },
     onSuccess: () => {
       toast.success("Expense created successfully");
@@ -51,28 +33,7 @@ export const useExpenseMutations = (userId: string | undefined) => {
       updates: Partial<Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>> 
     }) => {
       if (!userId) throw new Error("User not authenticated");
-
-      // Transform from our app's model to the database model
-      const dbUpdates: Record<string, any> = {};
-      
-      if (updates.description !== undefined) dbUpdates.description = updates.description;
-      if (updates.amount !== undefined) dbUpdates.amount = updates.amount;
-      if (updates.date !== undefined) dbUpdates.date = updates.date;
-      if (updates.category !== undefined) dbUpdates.category = updates.category;
-      if (updates.receiptUrl !== undefined) dbUpdates.receipt_url = updates.receiptUrl;
-      if (updates.status !== undefined) dbUpdates.status = updates.status;
-      if (updates.splitMethod !== undefined) dbUpdates.split_method = updates.splitMethod;
-      if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
-
-      const { data, error } = await supabase
-        .from('expenses')
-        .update(dbUpdates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      return await expensesAPI.updateExpense(id, updates);
     },
     onSuccess: () => {
       toast.success("Expense updated successfully");
@@ -88,14 +49,7 @@ export const useExpenseMutations = (userId: string | undefined) => {
   const deleteExpense = useMutation({
     mutationFn: async (id: string) => {
       if (!userId) throw new Error("User not authenticated");
-
-      const { error } = await supabase
-        .from('expenses')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      return id;
+      return await expensesAPI.deleteExpense(id);
     },
     onSuccess: (id) => {
       toast.success("Expense deleted successfully");

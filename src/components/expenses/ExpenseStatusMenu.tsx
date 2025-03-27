@@ -1,4 +1,3 @@
-
 import { FC } from 'react';
 import { 
   DropdownMenu, 
@@ -15,8 +14,8 @@ import {
   Trash 
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { expensesAPI } from '@/lib/api/expenses';
 
 interface ExpenseStatusMenuProps {
   expenseId: string;
@@ -38,13 +37,7 @@ const ExpenseStatusMenu: FC<ExpenseStatusMenuProps> = ({
   const updateExpenseStatus = async (status: 'approved' | 'disputed' | 'paid' | 'pending') => {
     onStatusChange();
     try {
-      const { error } = await supabase
-        .from('expenses')
-        .update({ status })
-        .eq('id', expenseId);
-        
-      if (error) throw error;
-      
+      await expensesAPI.updateExpenseStatus(expenseId, status);
       toast.success(`Expense marked as ${status}`);
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
     } catch (error) {

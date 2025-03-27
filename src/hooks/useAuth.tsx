@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { authAPI } from '@/lib/api/auth';
 
 export interface UserProfile {
   id: string;
@@ -21,22 +21,11 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
 
-  // Fetch user profile data from the profiles table
+  // Fetch user profile data
   const fetchUserProfile = async (userId: string) => {
     try {
       setProfileLoading(true);
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return null;
-      }
-      
+      const data = await authAPI.getUserProfile(userId);
       setProfile(data);
       return data;
     } catch (error) {
@@ -52,15 +41,7 @@ export const useAuth = () => {
     try {
       if (!user) throw new Error('No user logged in');
       
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', user.id);
-      
-      if (error) throw error;
-      
-      // Refetch the profile to get the updated data
-      const updatedProfile = await fetchUserProfile(user.id);
+      const updatedProfile = await authAPI.updateUserProfile(user.id, updates);
       
       toast.success('Profile updated successfully');
       return updatedProfile;
@@ -75,15 +56,15 @@ export const useAuth = () => {
     console.log("Setting up auth state listener");
     
     // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+    const { data: { subscription } } = authAPI.onAuthStateChange(
+      (event: string, session: Session | null) => {
         console.log("Auth state changed:", event, session);
         setSession(session);
         setUser(session?.user ?? null);
         
         // If user logged in, fetch their profile
         if (session?.user) {
-          // Use setTimeout to avoid potential recursive issues with Supabase auth
+          // Use setTimeout to avoid potential recursive issues
           setTimeout(() => {
             fetchUserProfile(session.user.id);
           }, 0);
@@ -96,7 +77,7 @@ export const useAuth = () => {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    authAPI.getSession().then(({ data: { session } }) => {
       console.log("Initial session check:", session);
       setSession(session);
       setUser(session?.user ?? null);
@@ -118,7 +99,7 @@ export const useAuth = () => {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await authAPI.signOut();
       setProfile(null);
       console.log("User signed out");
       toast.success("Signed out successfully");

@@ -1,7 +1,6 @@
-
 import { useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { RealtimeChannel } from "@supabase/supabase-js";
 
 export const useExpenseSubscription = (userId: string | undefined) => {
