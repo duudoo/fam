@@ -19,7 +19,7 @@ export const useExpenses = () => {
   } = useExpenseFilters();
   
   // Get queries
-  const { expenses, isLoading } = useExpenseQueries(
+  const expenseQuery = useExpenseQueries(
     user?.id, 
     filter, 
     categoryFilter, 
@@ -39,8 +39,8 @@ export const useExpenses = () => {
 
   return {
     // Data
-    expenses,
-    isLoading,
+    expenses: expenseQuery.data,
+    isLoading: expenseQuery.isLoading,
     
     // Filters
     filter,

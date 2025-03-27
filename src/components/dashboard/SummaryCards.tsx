@@ -3,21 +3,116 @@ import { DollarSign, FileText, Calendar, CreditCard, Bell } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format, parseISO } from 'date-fns';
-import { mockEvents, mockExpenses, mockParents } from '@/utils/mockData';
-import { Event, Expense } from '@/utils/types';
+import { Event, Expense, ExpenseStatus } from '@/utils/types';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const SummaryCards = () => {
-  const totalExpenses = mockExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const pendingExpenses = mockExpenses.filter(exp => exp.status === 'pending');
-  const upcomingEvents = mockEvents
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  
+  useEffect(() => {
+    if (user) {
+      fetchData();
+    }
+  }, [user]);
+  
+  const fetchData = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      
+      // Fetch expenses
+      const { data: expensesData, error: expensesError } = await supabase
+        .from('expenses')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (expensesError) throw expensesError;
+      
+      // Fetch events
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('events')
+        .select('*')
+        .order('start_date', { ascending: true });
+        
+      if (eventsError) throw eventsError;
+      
+      if (expensesData) {
+        setExpenses(expensesData.map(exp => ({
+          id: exp.id,
+          description: exp.description,
+          amount: parseFloat(exp.amount),
+          date: exp.date,
+          category: exp.category,
+          paidBy: exp.paid_by,
+          receiptUrl: exp.receipt_url || undefined,
+          status: exp.status as ExpenseStatus,
+          splitMethod: exp.split_method,
+          notes: exp.notes || undefined,
+          createdAt: exp.created_at,
+          updatedAt: exp.updated_at
+        })));
+      }
+      
+      if (eventsData) {
+        setEvents(eventsData.map(event => ({
+          id: event.id,
+          title: event.title,
+          description: event.description || undefined,
+          startDate: event.start_date,
+          endDate: event.end_date || undefined,
+          allDay: event.all_day,
+          location: event.location || undefined,
+          priority: event.priority,
+          createdBy: event.created_by,
+          createdAt: event.created_at,
+          updatedAt: event.updated_at
+        })));
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Calculate total expenses
+  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+  
+  // Filter pending expenses
+  const pendingExpenses = expenses.filter(exp => exp.status === 'pending');
+  
+  // Filter upcoming events
+  const upcomingEvents = events
     .filter(event => {
-      const eventDate = parseISO(event.startDate);
+      const eventDate = new Date(event.startDate);
       return eventDate >= new Date();
     })
     .sort((a, b) => {
-      return parseISO(a.startDate).getTime() - parseISO(b.startDate).getTime();
+      return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
     })
     .slice(0, 3);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="h-32 flex items-center justify-center">
+          <div className="animate-spin h-6 w-6 border-4 border-famacle-blue border-t-transparent rounded-full"></div>
+        </Card>
+        <Card className="h-32 flex items-center justify-center">
+          <div className="animate-spin h-6 w-6 border-4 border-famacle-blue border-t-transparent rounded-full"></div>
+        </Card>
+        <Card className="h-32 flex items-center justify-center">
+          <div className="animate-spin h-6 w-6 border-4 border-famacle-blue border-t-transparent rounded-full"></div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -46,8 +141,7 @@ const ExpenseTotalCard = ({ total }: ExpenseTotalCardProps) => (
     </CardContent>
     <div className="absolute top-0 right-0 p-3">
       <Avatar className="h-10 w-10 border-2 border-white">
-        <AvatarImage src={mockParents[0].avatar} />
-        <AvatarFallback>AJ</AvatarFallback>
+        <AvatarFallback>$</AvatarFallback>
       </Avatar>
     </div>
   </Card>
@@ -95,7 +189,7 @@ const UpcomingEventsCard = ({ upcomingEvents }: UpcomingEventsCardProps) => (
       <div className="text-3xl font-bold text-famacle-slate">{upcomingEvents.length}</div>
       <p className="text-gray-500 text-sm">
         Next: {upcomingEvents.length > 0 
-          ? format(parseISO(upcomingEvents[0].startDate), 'MMM d')
+          ? format(new Date(upcomingEvents[0].startDate), 'MMM d')
           : 'No upcoming events'}
       </p>
     </CardContent>

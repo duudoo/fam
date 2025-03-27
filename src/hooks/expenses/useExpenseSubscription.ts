@@ -2,13 +2,14 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { RealtimeChannel } from "@supabase/supabase-js";
 
 export const useExpenseSubscription = (userId: string | undefined) => {
   const queryClient = useQueryClient();
 
   // Function to setup subscription
   const subscribeToExpenses = () => {
-    if (!userId) return () => {};
+    if (!userId) return null;
 
     console.log("Setting up expense subscription for user", userId);
 
@@ -50,17 +51,18 @@ export const useExpenseSubscription = (userId: string | undefined) => {
         }
       });
 
-    // Return cleanup function
-    return () => {
-      console.log("Cleaning up expense subscription");
-      supabase.removeChannel(channel);
-    };
+    return channel;
   };
 
   // Setup subscription on component mount
   useEffect(() => {
-    const cleanup = subscribeToExpenses();
-    return cleanup;
+    const channel = subscribeToExpenses();
+    return () => {
+      if (channel) {
+        console.log("Cleaning up expense subscription");
+        supabase.removeChannel(channel);
+      }
+    };
   }, [userId, queryClient]);
 
   return { subscribeToExpenses };
