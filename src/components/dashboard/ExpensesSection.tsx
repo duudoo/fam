@@ -1,14 +1,13 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Plus } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import ExpenseCard from '../ExpenseCard';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Expense, ExpenseStatus } from '@/utils/types';
+import ExpenseCard from '@/components/expenses/ExpenseCard';
 
 const ExpensesSection = () => {
   const [expenseTab, setExpenseTab] = useState('pending');
