@@ -12,6 +12,8 @@ export const useMessageSubscription = (
   useEffect(() => {
     if (!userId || !currentReceiverId) return;
 
+    console.log("Setting up message subscription for conversation between", userId, "and", currentReceiverId);
+
     // Create a channel for real-time message updates
     const channel = supabase
       .channel('messages-subscription')
@@ -21,10 +23,10 @@ export const useMessageSubscription = (
           event: '*',
           schema: 'public',
           table: 'messages',
-          filter: `sender_id=eq.${userId}`,
+          filter: `sender_id=eq.${userId}:receiver_id=eq.${currentReceiverId}`,
         },
-        () => {
-          // Invalidate and refetch messages when sender_id matches current user
+        (payload) => {
+          console.log("Received message update (user is sender):", payload);
           queryClient.invalidateQueries({ queryKey: ['messages', currentReceiverId] });
         }
       )
@@ -34,17 +36,25 @@ export const useMessageSubscription = (
           event: '*',
           schema: 'public',
           table: 'messages',
-          filter: `receiver_id=eq.${userId}`,
+          filter: `sender_id=eq.${currentReceiverId}:receiver_id=eq.${userId}`,
         },
-        () => {
-          // Invalidate and refetch messages when receiver_id matches current user
+        (payload) => {
+          console.log("Received message update (user is receiver):", payload);
           queryClient.invalidateQueries({ queryKey: ['messages', currentReceiverId] });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`Realtime subscription status: ${status}`);
+        if (status === 'SUBSCRIBED') {
+          console.log('Successfully subscribed to message updates');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('Failed to subscribe to message updates');
+        }
+      });
 
     // Cleanup: remove the channel when component unmounts or dependencies change
     return () => {
+      console.log("Cleaning up message subscription");
       supabase.removeChannel(channel);
     };
   }, [userId, currentReceiverId, queryClient]);
