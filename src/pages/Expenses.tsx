@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useExpenses } from "@/hooks/useExpenses";
 import Navbar from "@/components/Navbar";
-import ExpenseForm from "@/components/ExpenseForm";
+import ExpenseForm from "@/components/expenses/form/ExpenseForm";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
