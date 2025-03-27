@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import { MessageConversation } from "@/components/communication/MessageConversation";
@@ -9,12 +9,16 @@ import { Message } from "@/utils/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useMessageSubscription } from "@/hooks/useMessageSubscription";
 import { toast } from "sonner";
 
 const CommunicationsPage = () => {
   const queryClient = useQueryClient();
   const { user, loading: authLoading } = useAuth();
   const [currentReceiverId, setCurrentReceiverId] = useState<string | null>("Sarah"); // Hardcoded for demo
+  
+  // Use the new message subscription hook for real-time updates
+  useMessageSubscription(user?.id, currentReceiverId);
   
   // Fetch messages for the current conversation
   const { data: messages = [], isLoading } = useQuery({
@@ -74,43 +78,6 @@ const CommunicationsPage = () => {
       toast.error("Failed to send message. Please try again.");
     }
   });
-
-  // Subscribe to real-time updates
-  useEffect(() => {
-    if (!currentReceiverId || !user) return;
-
-    const channel = supabase
-      .channel('messages-channel')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-          filter: `sender_id=eq.${user.id}` // Listen for messages sent by this user
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['messages', currentReceiverId] });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-          filter: `receiver_id=eq.${user.id}` // Listen for messages received by this user
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['messages', currentReceiverId] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [currentReceiverId, user, queryClient]);
 
   const handleSendMessage = async (newMsg: Omit<Message, "id" | "status">) => {
     if (!currentReceiverId) {
