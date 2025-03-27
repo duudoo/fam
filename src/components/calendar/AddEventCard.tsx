@@ -21,12 +21,19 @@ import {
 import { PlusCircle } from 'lucide-react';
 import EventForm from './EventForm';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
+import useAuth from '@/hooks/useAuth';
 
 const AddEventCard = () => {
   const [open, setOpen] = useState(false);
   const { createEvent, isPending } = useCalendarEvents();
+  const { user } = useAuth();
 
   const handleCreateEvent = (formData: any) => {
+    if (!user?.id) {
+      console.error("User ID not found");
+      return;
+    }
+    
     const newEvent = {
       title: formData.title,
       description: formData.description,
@@ -51,7 +58,7 @@ const AddEventCard = () => {
       priority: formData.priority
     };
 
-    createEvent(newEvent);
+    createEvent(newEvent, user.id);
     setOpen(false);
   };
 

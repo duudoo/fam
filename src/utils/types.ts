@@ -1,3 +1,4 @@
+
 export type Parent = {
   id: string;
   name: string;
@@ -151,4 +152,14 @@ export type Conversation = {
   unreadCount: number;
   createdAt: string;
   updatedAt: string;
+};
+
+export type UserProfile = {
+  id: string;
+  email: string;
+  full_name?: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+  phone?: string;
 };
