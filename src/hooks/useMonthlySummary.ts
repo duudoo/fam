@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { ExpenseCategory } from '@/utils/types';
 
-export interface CategoryData {
+interface CategorySummary {
   name: string;
   amount: number;
   percentage: number;
@@ -10,12 +12,8 @@ export interface CategoryData {
 }
 
 export const useMonthlySummary = () => {
-  const [categories, setCategories] = useState<CategoryData[]>([
-    { name: "Education", amount: 150, percentage: 30, color: "bg-famacle-blue" },
-    { name: "Medical", amount: 250, percentage: 50, color: "bg-famacle-teal" },
-    { name: "Activities", amount: 100, percentage: 20, color: "bg-famacle-coral" }
-  ]);
-  const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState<CategorySummary[]>([]);
+  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -25,35 +23,69 @@ export const useMonthlySummary = () => {
   }, [user]);
 
   const fetchMonthlySummary = async () => {
-    // This is a placeholder for future API integration
-    // When ready to connect to real data, we'll implement the actual fetching logic here
-    setLoading(true);
+    if (!user) return;
     
     try {
-      // Placeholder for future API call to get expense categories
-      // const { data, error } = await supabase
-      //   .from('expenses')
-      //   .select('category, amount')
-      //   .gte('date', startOfMonth.toISOString())
-      //   .lte('date', endOfMonth.toISOString());
+      setLoading(true);
       
-      // For now, we'll use the mock data
-      // In the future, this would process the data to calculate percentages
+      // Get the start and end dates for the current month
+      const now = new Date();
+      const startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Fetch expenses for the current month
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .gte('date', startDate)
+        .lte('date', endDate);
+        
+      if (error) throw error;
       
-      // Keep using the mock data for now
-      // setCategories(processedData);
+      // Process the data to get totals by category
+      const categoryTotals: Record<string, number> = {};
+      let totalAmount = 0;
+      
+      if (data && data.length > 0) {
+        data.forEach(expense => {
+          const category = expense.category as ExpenseCategory;
+          const amount = parseFloat(expense.amount);
+          
+          categoryTotals[category] = (categoryTotals[category] || 0) + amount;
+          totalAmount += amount;
+        });
+        
+        // Convert to array format with percentages
+        const categoryColors: Record<string, string> = {
+          medical: 'bg-red-500',
+          education: 'bg-blue-500',
+          clothing: 'bg-purple-500',
+          activities: 'bg-green-500',
+          food: 'bg-yellow-500',
+          other: 'bg-gray-500'
+        };
+        
+        const categoriesArray: CategorySummary[] = Object.keys(categoryTotals).map(category => ({
+          name: category.charAt(0).toUpperCase() + category.slice(1),
+          amount: categoryTotals[category],
+          percentage: totalAmount > 0 ? (categoryTotals[category] / totalAmount) * 100 : 0,
+          color: categoryColors[category] || 'bg-gray-500'
+        }));
+        
+        // Sort by amount (highest first)
+        categoriesArray.sort((a, b) => b.amount - a.amount);
+        
+        setCategories(categoriesArray);
+      } else {
+        setCategories([]);
+      }
     } catch (error) {
       console.error('Error fetching monthly summary:', error);
+      setCategories([]);
     } finally {
       setLoading(false);
     }
   };
 
-  return {
-    categories,
-    loading
-  };
+  return { categories, loading };
 };

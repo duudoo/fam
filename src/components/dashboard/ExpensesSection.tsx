@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Plus } from 'lucide-react';
@@ -28,7 +29,6 @@ const ExpensesSection = () => {
             event: '*',
             schema: 'public',
             table: 'expenses',
-            filter: `paid_by=eq.${user.id}`
           },
           () => {
             fetchExpenses();

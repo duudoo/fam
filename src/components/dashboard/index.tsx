@@ -1,39 +1,46 @@
 
-import DashboardHeader from './DashboardHeader';
-import SummaryCards from './SummaryCards';
-import ExpensesSection from './ExpensesSection';
-import MonthlySummary from './MonthlySummary';
-import UpcomingEventsCard from './UpcomingEventsCard';
-import NotificationsCard from './NotificationsCard';
+import { useAuth } from "@/hooks/useAuth";
+import DashboardHeader from "./DashboardHeader";
+import SummaryCards from "./SummaryCards";
+import ExpensesSection from "./ExpensesSection";
+import UpcomingEventsCard from "./UpcomingEventsCard";
+import NotificationsCard from "./NotificationsCard";
+import MonthlySummary from "./MonthlySummary";
 
-const Dashboard = () => {
+const DashboardComponent = () => {
+  const { user } = useAuth();
+  
+  if (!user) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-gray-500">Please sign in to view your dashboard</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="animate-fade-in">
       <DashboardHeader />
       
-      {/* Summary Cards */}
-      <SummaryCards />
+      <div className="mt-6">
+        <SummaryCards />
+      </div>
       
-      {/* Main Dashboard Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          {/* Expenses Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+        <div className="lg:col-span-2">
           <ExpensesSection />
-          
-          {/* Monthly Summary */}
+        </div>
+        <div>
           <MonthlySummary />
         </div>
-        
-        <div className="space-y-6">
-          {/* Upcoming Events */}
-          <UpcomingEventsCard />
-          
-          {/* Recent Notifications */}
-          <NotificationsCard />
-        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+        <UpcomingEventsCard />
+        <NotificationsCard />
       </div>
     </div>
   );
 };
 
-export default Dashboard;
+export default DashboardComponent;

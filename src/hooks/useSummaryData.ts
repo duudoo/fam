@@ -66,7 +66,7 @@ export const useSummaryData = () => {
           location: event.location || undefined,
           priority: event.priority,
           createdBy: event.created_by,
-          reminders: [], // Add empty reminders array to comply with Event type
+          reminders: [], // Initialize with empty reminders array
           createdAt: event.created_at,
           updatedAt: event.updated_at
         })));
