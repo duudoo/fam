@@ -18,7 +18,6 @@ const ExpenseCard = ({ expense, showActions = true }: ExpenseCardProps) => {
   if (isEditing) {
     return (
       <ExpenseForm 
-        expense={expense} 
         onExpenseAdded={() => setIsEditing(false)} 
         onCancel={() => setIsEditing(false)}
       />
