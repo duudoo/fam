@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useExpenses } from "@/hooks/useExpenses";
+import { useExpenses } from "@/hooks/expenses";
 import Navbar from "@/components/Navbar";
 import ExpenseForm from "@/components/expenses/form/ExpenseForm";
 import { Button } from "@/components/ui/button";
