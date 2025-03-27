@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import ChildrenTab from "@/components/user/ChildrenTab";
 import CoParentsTab from "@/components/user/CoParentsTab";
 import { Child, CoParentInvite, Parent } from "@/utils/types";
+import { useAuth } from "@/hooks/useAuth";
 import type { Database } from "@/integrations/supabase/database.types";
 
 type Tables = Database['public']['Tables'];
@@ -14,51 +15,34 @@ type ChildRow = Tables['children']['Row'];
 type CoParentInviteRow = Tables['co_parent_invites']['Row'];
 
 const UserManagementPage = () => {
+  const { user, profile, loading: authLoading } = useAuth();
   const [children, setChildren] = useState<Child[]>([]);
   const [invites, setInvites] = useState<CoParentInvite[]>([]);
   const [currentUser, setCurrentUser] = useState<Parent | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchUserData();
-    fetchChildren();
-    fetchInvites();
-  }, []);
-
-  const fetchUserData = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("Please sign in to access this page");
-        return;
-      }
-
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select()
-        .eq('id', user.id)
-        .single();
-
-      if (error) throw error;
-
-      if (profile) {
-        setCurrentUser({
-          id: profile.id,
-          name: profile.name,
-          email: profile.email,
-          phone: profile.phone || undefined,
-          avatar: profile.avatar_url,
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching user:', error);
-      toast.error("Failed to load user profile");
+    // Convert profile data to Parent type when profile changes
+    if (profile) {
+      setCurrentUser({
+        id: profile.id,
+        name: profile.full_name || profile.first_name || '',
+        email: profile.email,
+        phone: profile.phone || undefined,
+        avatar: profile.avatar_url,
+      });
     }
-  };
+  }, [profile]);
+
+  useEffect(() => {
+    if (user) {
+      fetchChildren();
+      fetchInvites();
+    }
+  }, [user]);
 
   const fetchChildren = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
@@ -93,7 +77,6 @@ const UserManagementPage = () => {
 
   const fetchInvites = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
@@ -119,7 +102,15 @@ const UserManagementPage = () => {
     }
   };
 
-  if (!currentUser) {
+  if (authLoading) {
+    return (
+      <div className="container mx-auto py-6 text-center">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!user || !currentUser) {
     return (
       <div className="container mx-auto py-6 text-center">
         Please sign in to access this page
