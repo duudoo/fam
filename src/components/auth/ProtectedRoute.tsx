@@ -2,6 +2,7 @@
 import { ReactNode, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -10,6 +11,15 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
   const location = useLocation();
+
+  // Check authentication status on initial load and display a message
+  useEffect(() => {
+    if (!loading && !user) {
+      toast.error("Please sign in to access this page", {
+        id: "auth-required",
+      });
+    }
+  }, [loading, user]);
 
   // If still loading auth state, show a loading indicator
   if (loading) {
