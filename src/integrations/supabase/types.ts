@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      children: {
+        Row: {
+          created_at: string | null
+          date_of_birth: string | null
+          id: string
+          initials: string
+          name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date_of_birth?: string | null
+          id?: string
+          initials: string
+          name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date_of_birth?: string | null
+          id?: string
+          initials?: string
+          name?: string | null
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string
@@ -179,6 +203,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      parent_children: {
+        Row: {
+          child_id: string
+          created_at: string
+          is_primary: boolean
+          parent_id: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          is_primary?: boolean
+          parent_id: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          is_primary?: boolean
+          parent_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_children_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

@@ -14,7 +14,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { ExpenseCategory, SplitMethod } from '@/utils/types';
+import { ExpenseCategory, SplitMethod, Expense } from '@/utils/types';
 import { format } from 'date-fns';
 
 // Import the form sections
@@ -25,13 +25,15 @@ import FormActions from './FormActions';
 
 // Define props interface
 interface ExpenseFormProps {
+  expense?: Expense;
   onExpenseAdded?: () => void;
   onCancel?: () => void;
 }
 
-const ExpenseForm = ({ onExpenseAdded, onCancel }: ExpenseFormProps) => {
+const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEditing = !!expense;
   
   const categories: ExpenseCategory[] = [
     'medical',
@@ -50,7 +52,14 @@ const ExpenseForm = ({ onExpenseAdded, onCancel }: ExpenseFormProps) => {
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: expense ? {
+      description: expense.description,
+      amount: expense.amount.toString(),
+      date: new Date(expense.date),
+      category: expense.category,
+      splitMethod: expense.splitMethod,
+      notes: expense.notes || "",
+    } : {
       description: "",
       amount: "",
       date: new Date(),
@@ -69,31 +78,53 @@ const ExpenseForm = ({ onExpenseAdded, onCancel }: ExpenseFormProps) => {
     setIsSubmitting(true);
     
     try {
-      const { data, error } = await supabase
-        .from('expenses')
-        .insert({
-          description: values.description,
-          amount: parseFloat(values.amount),
-          date: format(values.date, 'yyyy-MM-dd'),
-          category: values.category,
-          paid_by: user.id,
-          split_method: values.splitMethod,
-          notes: values.notes || null,
-          status: 'pending'
-        })
-        .select();
+      if (isEditing && expense) {
+        // Update existing expense
+        const { data, error } = await supabase
+          .from('expenses')
+          .update({
+            description: values.description,
+            amount: parseFloat(values.amount),
+            date: format(values.date, 'yyyy-MM-dd'),
+            category: values.category,
+            split_method: values.splitMethod,
+            notes: values.notes || null
+          })
+          .eq('id', expense.id)
+          .select();
 
-      if (error) throw error;
+        if (error) throw error;
+        
+        toast.success("Expense updated successfully");
+      } else {
+        // Add new expense
+        const { data, error } = await supabase
+          .from('expenses')
+          .insert({
+            description: values.description,
+            amount: parseFloat(values.amount),
+            date: format(values.date, 'yyyy-MM-dd'),
+            category: values.category,
+            paid_by: user.id,
+            split_method: values.splitMethod,
+            notes: values.notes || null,
+            status: 'pending'
+          })
+          .select();
+
+        if (error) throw error;
+        
+        toast.success("Expense added successfully");
+      }
       
-      toast.success("Expense added successfully");
       form.reset();
       
       if (onExpenseAdded) {
         onExpenseAdded();
       }
     } catch (error) {
-      console.error("Error adding expense:", error);
-      toast.error("Failed to add expense");
+      console.error(isEditing ? "Error updating expense:" : "Error adding expense:", error);
+      toast.error(isEditing ? "Failed to update expense" : "Failed to add expense");
     } finally {
       setIsSubmitting(false);
     }
@@ -102,7 +133,9 @@ const ExpenseForm = ({ onExpenseAdded, onCancel }: ExpenseFormProps) => {
   return (
     <Card className="w-full max-w-lg mx-auto animate-fade-in">
       <CardHeader>
-        <CardTitle className="text-2xl font-semibold">Add New Expense</CardTitle>
+        <CardTitle className="text-2xl font-semibold">
+          {isEditing ? "Edit Expense" : "Add New Expense"}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -117,7 +150,11 @@ const ExpenseForm = ({ onExpenseAdded, onCancel }: ExpenseFormProps) => {
             
             <NotesSection form={form} />
             
-            <FormActions onCancel={onCancel} isSubmitting={isSubmitting} />
+            <FormActions 
+              onCancel={onCancel} 
+              isSubmitting={isSubmitting} 
+              isEditing={isEditing}
+            />
           </form>
         </Form>
       </CardContent>
