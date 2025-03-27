@@ -1,4 +1,3 @@
-
 import { DollarSign, FileText, Calendar, CreditCard, Bell } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -70,6 +69,7 @@ const SummaryCards = () => {
           location: event.location || undefined,
           priority: event.priority,
           createdBy: event.created_by,
+          reminders: [], // Add empty reminders array to comply with Event type
           createdAt: event.created_at,
           updatedAt: event.updated_at
         })));
