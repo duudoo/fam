@@ -2,13 +2,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Expense } from "@/utils/types";
+import { Expense, ExpenseStatus } from "@/utils/types";
 
-export const useExpenseMutations = (userId?: string) => {
+export const useExpenseMutations = (userId: string | undefined) => {
   const queryClient = useQueryClient();
 
-  // Create expense mutation
-  const createExpenseMutation = useMutation({
+  // Create a new expense
+  const createExpense = useMutation({
     mutationFn: async (newExpense: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => {
       if (!userId) throw new Error("User not authenticated");
 
@@ -19,91 +19,98 @@ export const useExpenseMutations = (userId?: string) => {
           amount: newExpense.amount,
           date: newExpense.date,
           category: newExpense.category,
-          paid_by: userId, // Always use the current user's ID
+          paid_by: userId,
           receipt_url: newExpense.receiptUrl,
-          status: newExpense.status || 'pending',
+          status: newExpense.status,
           split_method: newExpense.splitMethod,
           notes: newExpense.notes
         })
-        .select('*')
+        .select()
         .single();
 
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['expenses', userId] });
-      toast.success("Expense added successfully");
+      toast.success("Expense created successfully");
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
     },
     onError: (error) => {
-      console.error('Error creating expense:', error);
-      toast.error("Failed to add expense");
+      console.error("Error creating expense:", error);
+      toast.error("Failed to create expense");
     }
   });
 
-  // Update expense mutation
-  const updateExpenseMutation = useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<Expense> & { id: string }) => {
+  // Update an existing expense
+  const updateExpense = useMutation({
+    mutationFn: async ({ 
+      id, 
+      updates 
+    }: { 
+      id: string, 
+      updates: Partial<Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>> 
+    }) => {
       if (!userId) throw new Error("User not authenticated");
+
+      // Transform from our app's model to the database model
+      const dbUpdates: Record<string, any> = {};
+      
+      if (updates.description !== undefined) dbUpdates.description = updates.description;
+      if (updates.amount !== undefined) dbUpdates.amount = updates.amount;
+      if (updates.date !== undefined) dbUpdates.date = updates.date;
+      if (updates.category !== undefined) dbUpdates.category = updates.category;
+      if (updates.receiptUrl !== undefined) dbUpdates.receipt_url = updates.receiptUrl;
+      if (updates.status !== undefined) dbUpdates.status = updates.status;
+      if (updates.splitMethod !== undefined) dbUpdates.split_method = updates.splitMethod;
+      if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
 
       const { data, error } = await supabase
         .from('expenses')
-        .update({
-          description: updates.description,
-          amount: updates.amount,
-          date: updates.date,
-          category: updates.category,
-          receipt_url: updates.receiptUrl,
-          status: updates.status,
-          split_method: updates.splitMethod,
-          notes: updates.notes
-        })
+        .update(dbUpdates)
         .eq('id', id)
-        .eq('paid_by', userId) // Ensure the user can only update their own expenses
-        .select('*')
+        .select()
         .single();
 
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['expenses', userId] });
       toast.success("Expense updated successfully");
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
     },
     onError: (error) => {
-      console.error('Error updating expense:', error);
+      console.error("Error updating expense:", error);
       toast.error("Failed to update expense");
     }
   });
 
-  // Delete expense mutation
-  const deleteExpenseMutation = useMutation({
+  // Delete an expense
+  const deleteExpense = useMutation({
     mutationFn: async (id: string) => {
       if (!userId) throw new Error("User not authenticated");
 
       const { error } = await supabase
         .from('expenses')
         .delete()
-        .eq('id', id)
-        .eq('paid_by', userId); // Ensure the user can only delete their own expenses
+        .eq('id', id);
 
       if (error) throw error;
       return id;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['expenses', userId] });
+    onSuccess: (id) => {
       toast.success("Expense deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
     },
     onError: (error) => {
-      console.error('Error deleting expense:', error);
+      console.error("Error deleting expense:", error);
       toast.error("Failed to delete expense");
     }
   });
 
   return {
-    createExpense: createExpenseMutation.mutate,
-    updateExpense: updateExpenseMutation.mutate,
-    deleteExpense: deleteExpenseMutation.mutate,
-    isPending: createExpenseMutation.isPending || updateExpenseMutation.isPending || deleteExpenseMutation.isPending
+    createExpense,
+    updateExpense,
+    deleteExpense,
+    isPending: createExpense.isPending || updateExpense.isPending || deleteExpense.isPending
   };
 };

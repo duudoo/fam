@@ -1,15 +1,22 @@
 
 import { motion } from "framer-motion";
-import { Card } from "@/components/ui/card";
 import { Check, DollarSign } from "lucide-react";
 
 const DemoExpenses = () => {
+  // Local demo data
   const features = [
     "Track shared childcare expenses in one place",
     "Upload receipts directly from your phone",
     "Split costs automatically based on your agreement",
     "Get monthly summaries of expenses by category",
     "Export reports for legal or tax purposes"
+  ];
+
+  // Local mock expenses
+  const demoExpenses = [
+    { name: "School Supplies", amount: 67.89, date: "Aug 15", paid: "You" },
+    { name: "Doctor Visit", amount: 120.00, date: "Aug 10", paid: "Sarah" },
+    { name: "Soccer Registration", amount: 95.00, date: "Aug 5", paid: "You" }
   ];
 
   return (
@@ -44,12 +51,7 @@ const DemoExpenses = () => {
             Recent Expenses
           </h3>
           
-          {/* Mock expenses */}
-          {[
-            { name: "School Supplies", amount: 67.89, date: "Aug 15", paid: "You" },
-            { name: "Doctor Visit", amount: 120.00, date: "Aug 10", paid: "Sarah" },
-            { name: "Soccer Registration", amount: 95.00, date: "Aug 5", paid: "You" }
-          ].map((expense, index) => (
+          {demoExpenses.map((expense, index) => (
             <motion.div 
               key={index}
               className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0"

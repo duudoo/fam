@@ -1,9 +1,9 @@
 
 import { motion } from "framer-motion";
-import { Card } from "@/components/ui/card";
 import { Calendar, Check } from "lucide-react";
 
 const DemoCalendar = () => {
+  // Local demo data
   const features = [
     "Visualize custody schedules with color-coded calendar",
     "Manage child pickups and drop-offs seamlessly",

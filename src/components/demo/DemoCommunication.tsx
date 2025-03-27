@@ -1,9 +1,9 @@
 
 import { motion } from "framer-motion";
-import { Card } from "@/components/ui/card";
 import { Check, MessageCircle } from "lucide-react";
 
 const DemoCommunication = () => {
+  // Local demo data
   const features = [
     "Keep all co-parenting conversations in one secure place",
     "Share photos and updates about your children",
@@ -12,7 +12,7 @@ const DemoCommunication = () => {
     "Maintain a civil tone with our communication tools"
   ];
 
-  // Sample messages
+  // Local mock messages
   const messages = [
     { sender: "You", text: "Emma has soccer practice this Saturday at 10am. Can you take her?", time: "2:45 PM" },
     { sender: "Sarah", text: "Yes, I can take her. Will pick her up at 9:30am.", time: "3:12 PM" },
