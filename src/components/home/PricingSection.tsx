@@ -70,7 +70,7 @@ const PricingSection = () => {
                 asChild
                 className="w-full bg-famacle-blue hover:bg-famacle-blue/90"
               >
-                <Link to="/landing?tab=signup">
+                <Link to="/signup">
                   Start Free Trial
                 </Link>
               </Button>
