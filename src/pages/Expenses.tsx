@@ -1,5 +1,7 @@
 
 import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useExpenses } from "@/hooks/useExpenses";
 import Navbar from "@/components/Navbar";
 import ExpenseCard from "@/components/ExpenseCard";
 import ExpenseForm from "@/components/ExpenseForm";
@@ -25,45 +27,49 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { mockExpenses } from "@/utils/mockData";
-import { Expense, ExpenseCategory } from "@/utils/types";
-import { DollarSign, Filter, Plus, Search, SlidersHorizontal } from "lucide-react";
+import { ExpenseCategory } from "@/utils/types";
+import { DollarSign, Filter, Plus, Search } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const ExpensesPage = () => {
+  const { user, loading: authLoading } = useAuth();
   const [showForm, setShowForm] = useState(false);
-  const [expenses, setExpenses] = useState<Expense[]>(mockExpenses);
-  const [filter, setFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
-
+  
+  const {
+    expenses,
+    isLoading,
+    filter,
+    setFilter,
+    categoryFilter,
+    setCategoryFilter,
+    searchQuery,
+    setSearchQuery,
+    subscribeToExpenses
+  } = useExpenses();
+  
+  // Set up real-time subscription
   useEffect(() => {
-    // Set page title
-    document.title = "Expenses | Famacle";
+    const channel = subscribeToExpenses();
     
-    // Filter expenses based on status, category, and search query
-    let filteredExpenses = [...mockExpenses];
-    
-    // Filter by status
-    if (filter !== "all") {
-      filteredExpenses = filteredExpenses.filter(expense => expense.status === filter);
-    }
-    
-    // Filter by category
-    if (categoryFilter !== "all") {
-      filteredExpenses = filteredExpenses.filter(expense => expense.category === categoryFilter);
-    }
-    
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filteredExpenses = filteredExpenses.filter(expense => 
-        expense.description.toLowerCase().includes(query) ||
-        expense.notes?.toLowerCase().includes(query)
-      );
-    }
-    
-    setExpenses(filteredExpenses);
-  }, [filter, categoryFilter, searchQuery]);
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [user]);
+
+  // Calculate totals
+  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+  const pendingExpenses = expenses.filter(exp => exp.status === 'pending');
+  
+  // Get current month expenses
+  const currentMonthExpenses = expenses.filter(exp => {
+    const expMonth = new Date(exp.date).getMonth();
+    const expYear = new Date(exp.date).getFullYear();
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    return expMonth === currentMonth && expYear === currentYear;
+  });
 
   // Expense categories
   const categories: ExpenseCategory[] = [
@@ -74,6 +80,33 @@ const ExpensesPage = () => {
     "food",
     "other",
   ];
+
+  if (authLoading || isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <main className="container mx-auto px-4 pt-24 pb-12 max-w-6xl">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin h-8 w-8 border-4 border-famacle-blue border-t-transparent rounded-full"></div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <main className="container mx-auto px-4 pt-24 pb-12 max-w-6xl">
+          <div className="flex flex-col items-center justify-center h-64">
+            <h2 className="text-xl font-semibold text-famacle-slate mb-2">Please Sign In</h2>
+            <p className="text-gray-500">You need to be signed in to view and manage expenses.</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -98,7 +131,10 @@ const ExpensesPage = () => {
           
           {showForm && (
             <div className="mb-8">
-              <ExpenseForm />
+              <ExpenseForm 
+                onExpenseAdded={() => setShowForm(false)} 
+                onCancel={() => setShowForm(false)}
+              />
             </div>
           )}
 
@@ -114,15 +150,14 @@ const ExpensesPage = () => {
                 <div className="p-4 bg-famacle-blue-light/30 rounded-lg">
                   <p className="text-sm text-gray-600 mb-1">Total Expenses</p>
                   <p className="text-2xl font-bold text-famacle-slate">
-                    ${mockExpenses.reduce((sum, exp) => sum + exp.amount, 0).toFixed(2)}
+                    ${totalExpenses.toFixed(2)}
                   </p>
                 </div>
                 
                 <div className="p-4 bg-famacle-teal-light/30 rounded-lg">
                   <p className="text-sm text-gray-600 mb-1">Pending Approval</p>
                   <p className="text-2xl font-bold text-famacle-slate">
-                    ${mockExpenses
-                      .filter(exp => exp.status === 'pending')
+                    ${pendingExpenses
                       .reduce((sum, exp) => sum + exp.amount, 0).toFixed(2)}
                   </p>
                 </div>
@@ -130,14 +165,7 @@ const ExpensesPage = () => {
                 <div className="p-4 bg-famacle-coral-light/30 rounded-lg">
                   <p className="text-sm text-gray-600 mb-1">This Month</p>
                   <p className="text-2xl font-bold text-famacle-slate">
-                    ${mockExpenses
-                      .filter(exp => {
-                        const expMonth = new Date(exp.date).getMonth();
-                        const expYear = new Date(exp.date).getFullYear();
-                        const currentMonth = new Date().getMonth();
-                        const currentYear = new Date().getFullYear();
-                        return expMonth === currentMonth && expYear === currentYear;
-                      })
+                    ${currentMonthExpenses
                       .reduce((sum, exp) => sum + exp.amount, 0).toFixed(2)}
                   </p>
                 </div>
@@ -146,7 +174,7 @@ const ExpensesPage = () => {
           </Card>
           
           <div className="mb-6">
-            <Tabs defaultValue="all" onValueChange={setFilter}>
+            <Tabs defaultValue="all" onValueChange={value => setFilter(value as any)}>
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                 <TabsList className="w-full md:w-auto">
                   <TabsTrigger value="all">All</TabsTrigger>
@@ -167,7 +195,7 @@ const ExpensesPage = () => {
                     />
                   </div>
                   
-                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <Select value={categoryFilter as string} onValueChange={value => setCategoryFilter(value as any)}>
                     <SelectTrigger className="w-[180px]">
                       <div className="flex items-center">
                         <Filter className="w-4 h-4 mr-2" />
@@ -195,6 +223,14 @@ const ExpensesPage = () => {
                   ) : (
                     <div className="col-span-3 text-center py-16">
                       <p className="text-gray-500">No matching expenses found.</p>
+                      <Button 
+                        variant="outline" 
+                        className="mt-4"
+                        onClick={() => setShowForm(true)}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Your First Expense
+                      </Button>
                     </div>
                   )}
                 </div>

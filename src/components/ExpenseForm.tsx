@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { 
   Card, 
   CardContent, 
@@ -30,11 +30,17 @@ import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Upload } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { mockParents } from '@/utils/mockData';
 import { ExpenseCategory, SplitMethod } from '@/utils/types';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useAuth } from '@/hooks/useAuth';
+
+// Define props interface
+interface ExpenseFormProps {
+  onExpenseAdded?: () => void;
+  onCancel?: () => void;
+}
 
 const formSchema = z.object({
   description: z.string().min(2, {
@@ -47,13 +53,12 @@ const formSchema = z.object({
     required_error: "Please select a date",
   }),
   category: z.string(),
-  paidBy: z.string(),
   splitMethod: z.string(),
   notes: z.string().optional(),
 });
 
-const ExpenseForm = () => {
-  const [date, setDate] = useState<Date | undefined>(new Date());
+const ExpenseForm = ({ onExpenseAdded, onCancel }: ExpenseFormProps) => {
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const categories: ExpenseCategory[] = [
@@ -78,25 +83,48 @@ const ExpenseForm = () => {
       amount: "",
       date: new Date(),
       category: "education",
-      paidBy: mockParents[0].id,
       splitMethod: "50/50",
       notes: "",
     },
   });
   
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!user) {
+      toast.error("You must be signed in to add an expense");
+      return;
+    }
+
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      console.log(values);
-      toast({
-        title: "Expense added",
-        description: "Your expense has been added successfully.",
-      });
+    try {
+      const { data, error } = await supabase
+        .from('expenses')
+        .insert({
+          description: values.description,
+          amount: parseFloat(values.amount),
+          date: format(values.date, 'yyyy-MM-dd'),
+          category: values.category,
+          paid_by: user.id,
+          split_method: values.splitMethod,
+          notes: values.notes || null,
+          status: 'pending'
+        })
+        .select();
+
+      if (error) throw error;
+      
+      toast.success("Expense added successfully");
       form.reset();
+      
+      if (onExpenseAdded) {
+        onExpenseAdded();
+      }
+    } catch (error) {
+      console.error("Error adding expense:", error);
+      toast.error("Failed to add expense");
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
   
   return (
@@ -206,20 +234,20 @@ const ExpenseForm = () => {
               
               <FormField
                 control={form.control}
-                name="paidBy"
+                name="splitMethod"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Paid By</FormLabel>
+                    <FormLabel>Split Method</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select parent" />
+                          <SelectValue placeholder="Select split method" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {mockParents.map((parent) => (
-                          <SelectItem key={parent.id} value={parent.id}>
-                            {parent.name}
+                        {splitMethods.map((method) => (
+                          <SelectItem key={method} value={method}>
+                            {method}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -229,31 +257,6 @@ const ExpenseForm = () => {
                 )}
               />
             </div>
-            
-            <FormField
-              control={form.control}
-              name="splitMethod"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Split Method</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select split method" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {splitMethods.map((method) => (
-                        <SelectItem key={method} value={method}>
-                          {method}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             
             <div className="border border-dashed border-gray-300 rounded-lg p-4 text-center">
               <div className="flex flex-col items-center justify-center gap-2">
@@ -285,9 +288,16 @@ const ExpenseForm = () => {
               )}
             />
             
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? "Adding..." : "Add Expense"}
-            </Button>
+            <div className="flex gap-3 justify-end">
+              {onCancel && (
+                <Button type="button" variant="outline" onClick={onCancel}>
+                  Cancel
+                </Button>
+              )}
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Adding..." : "Add Expense"}
+              </Button>
+            </div>
           </form>
         </Form>
       </CardContent>

@@ -1,15 +1,83 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Plus } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { mockExpenses } from '@/utils/mockData';
 import ExpenseCard from '../ExpenseCard';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { Expense, ExpenseStatus } from '@/utils/types';
 
 const ExpensesSection = () => {
   const [expenseTab, setExpenseTab] = useState('pending');
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  
+  useEffect(() => {
+    if (user) {
+      fetchExpenses();
+      
+      // Set up real-time subscription
+      const channel = supabase
+        .channel('dashboard-expenses-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'expenses',
+            filter: `paid_by=eq.${user.id}`
+          },
+          () => {
+            fetchExpenses();
+          }
+        )
+        .subscribe();
+        
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [user]);
+  
+  const fetchExpenses = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(6);
+        
+      if (error) throw error;
+      
+      if (data) {
+        setExpenses(data.map(expense => ({
+          id: expense.id,
+          description: expense.description,
+          amount: parseFloat(expense.amount),
+          date: expense.date,
+          category: expense.category,
+          paidBy: expense.paid_by,
+          receiptUrl: expense.receipt_url || undefined,
+          status: expense.status as ExpenseStatus,
+          splitMethod: expense.split_method,
+          notes: expense.notes || undefined,
+          createdAt: expense.created_at,
+          updatedAt: expense.updated_at
+        })));
+      }
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   return (
     <Card>
@@ -31,29 +99,58 @@ const ExpensesSection = () => {
             <TabsTrigger value="approved">Approved</TabsTrigger>
             <TabsTrigger value="recent">Recent</TabsTrigger>
           </TabsList>
-          <TabsContent value="pending" className="space-y-4">
-            {mockExpenses.filter(e => e.status === 'pending').map(expense => (
-              <ExpenseCard key={expense.id} expense={expense} />
-            ))}
-          </TabsContent>
-          <TabsContent value="approved" className="space-y-4">
-            {mockExpenses.filter(e => e.status === 'approved').map(expense => (
-              <ExpenseCard key={expense.id} expense={expense} />
-            ))}
-          </TabsContent>
-          <TabsContent value="recent" className="space-y-4">
-            {mockExpenses
-              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-              .slice(0, 3)
-              .map(expense => (
-                <ExpenseCard key={expense.id} expense={expense} />
-              ))}
-          </TabsContent>
+          
+          {loading ? (
+            <div className="h-64 flex items-center justify-center">
+              <div className="animate-spin h-6 w-6 border-4 border-famacle-blue border-t-transparent rounded-full"></div>
+            </div>
+          ) : (
+            <>
+              <TabsContent value="pending" className="space-y-4">
+                {expenses.filter(e => e.status === 'pending').length > 0 ? (
+                  expenses.filter(e => e.status === 'pending').map(expense => (
+                    <ExpenseCard key={expense.id} expense={expense} />
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No pending expenses found
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="approved" className="space-y-4">
+                {expenses.filter(e => e.status === 'approved').length > 0 ? (
+                  expenses.filter(e => e.status === 'approved').map(expense => (
+                    <ExpenseCard key={expense.id} expense={expense} />
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No approved expenses found
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="recent" className="space-y-4">
+                {expenses.length > 0 ? (
+                  expenses
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    .slice(0, 3)
+                    .map(expense => (
+                      <ExpenseCard key={expense.id} expense={expense} />
+                    ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No recent expenses found
+                  </div>
+                )}
+              </TabsContent>
+            </>
+          )}
         </Tabs>
       </CardContent>
       <CardFooter className="border-t pt-4">
         <Button asChild variant="outline" className="w-full">
-          <Link to="/expenses/new">
+          <Link to="/expenses">
             <Plus className="w-4 h-4 mr-2" />
             New Expense
           </Link>
