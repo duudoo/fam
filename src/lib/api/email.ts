@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface EmailPayload {
@@ -23,13 +22,18 @@ export const emailAPI = {
 
       if (error) {
         console.error("Error invoking edge function:", error);
-        throw error;
+        return { error };
+      }
+
+      if (data?.error) {
+        console.error("Failed to send email:", data.error);
+        return { error: data.error };
       }
 
       return data;
     } catch (error) {
       console.error("Failed to send email:", error);
-      throw error;
+      return { error };
     }
   },
 
@@ -89,12 +93,19 @@ export const emailAPI = {
       </div>
     `;
 
-    return emailAPI.sendEmail({
-      to,
-      subject: "Welcome to Famacle!",
-      html,
-      text: `Hello ${name}, Thank you for joining Famacle! We're excited to help you manage your family's finances and schedules.`,
-    });
+    try {
+      const result = await emailAPI.sendEmail({
+        to,
+        subject: "Welcome to Famacle!",
+        html,
+        text: `Hello ${name}, Thank you for joining Famacle! We're excited to help you manage your family's finances and schedules.`,
+      });
+      return result;
+    } catch (error) {
+      console.error("Failed to send welcome email:", error);
+      // Don't fail the signup if the welcome email fails
+      return { error };
+    }
   },
 
   /**

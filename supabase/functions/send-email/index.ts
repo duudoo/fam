@@ -31,10 +31,11 @@ const handler = async (req: Request): Promise<Response> => {
     
     // Check if this is a test email - for test emails, use Resend's onboarding address
     // For production emails, attempt to use the verified domain
-    const fromAddress = payload.isTest
+    let fromAddress = payload.isTest
       ? "Famacle <onboarding@resend.dev>"
       : (payload.from || "Famacle <noreply@famacle.app>");
     
+    // Log request details for debugging
     console.log(`[EMAIL REQUEST] Sending email to: ${typeof payload.to === 'string' ? payload.to : payload.to.join(', ')}`);
     console.log(`[EMAIL REQUEST] Subject: ${payload.subject}`);
     console.log(`[EMAIL REQUEST] Is test: ${payload.isTest ? 'yes' : 'no'}`);
@@ -46,7 +47,8 @@ const handler = async (req: Request): Promise<Response> => {
       emailSubject = `[TEST] ${emailSubject}`;
     }
     
-    const emailResponse = await resend.emails.send({
+    // First try to send with the configured from address
+    let emailResponse = await resend.emails.send({
       from: fromAddress,
       to: payload.to,
       subject: emailSubject,
@@ -54,6 +56,24 @@ const handler = async (req: Request): Promise<Response> => {
       text: payload.text,
       reply_to: payload.replyTo,
     });
+
+    // If we get a domain verification error and this is not a test email,
+    // fall back to the onboarding address
+    if (emailResponse.error && 
+        emailResponse.error.message?.includes("domain is not verified") && 
+        !payload.isTest) {
+      console.log("[EMAIL FALLBACK] Domain not verified, falling back to onboarding@resend.dev");
+      fromAddress = "Famacle <onboarding@resend.dev>";
+      
+      emailResponse = await resend.emails.send({
+        from: fromAddress,
+        to: payload.to,
+        subject: `[IMPORTANT] ${emailSubject}`,
+        html: payload.html,
+        text: payload.text,
+        reply_to: payload.replyTo,
+      });
+    }
 
     if (emailResponse.error) {
       console.error("[EMAIL ERROR] Resend API returned an error:", emailResponse.error);

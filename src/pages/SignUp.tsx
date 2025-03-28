@@ -51,8 +51,12 @@ const SignUpPage = () => {
 
       // Send welcome email
       try {
-        await emailAPI.sendWelcomeEmail(email, name || firstName);
-        console.log("Welcome email sent successfully");
+        const emailResult = await emailAPI.sendWelcomeEmail(email, name || firstName);
+        if (emailResult?.error) {
+          console.warn("Welcome email failed but continuing signup:", emailResult.error);
+        } else {
+          console.log("Welcome email sent successfully");
+        }
       } catch (emailError) {
         console.error("Failed to send welcome email:", emailError);
         // Don't fail the signup if the welcome email fails
