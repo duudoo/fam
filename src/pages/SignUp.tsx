@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import SignUpForm from "@/components/auth/SignUpForm";
 import { supabase } from "@/integrations/supabase/client";
+import { emailAPI } from "@/lib/api/email";
 
 const SignUpPage = () => {
   const navigate = useNavigate();
@@ -47,6 +48,15 @@ const SignUpPage = () => {
       if (error) throw error;
       
       console.log("Signup response:", data);
+
+      // Send welcome email
+      try {
+        await emailAPI.sendWelcomeEmail(email, name || firstName);
+        console.log("Welcome email sent successfully");
+      } catch (emailError) {
+        console.error("Failed to send welcome email:", emailError);
+        // Don't fail the signup if the welcome email fails
+      }
 
       // Check if confirmation was sent
       if (data.user && !data.user.confirmed_at) {

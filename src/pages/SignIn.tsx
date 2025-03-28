@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import SignInForm from "@/components/auth/SignInForm";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import { supabase } from "@/integrations/supabase/client";
+import { emailAPI } from "@/lib/api/email";
 
 const SignInPage = () => {
   const navigate = useNavigate();
@@ -31,11 +32,21 @@ const SignInPage = () => {
         navigate("/dashboard");
       } else if (mode === "forgot-password") {
         // Send password reset email
+        const resetLink = `${window.location.origin}/reset-password`;
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`,
+          redirectTo: resetLink,
         });
 
         if (error) throw error;
+
+        // Send a custom password reset email
+        try {
+          await emailAPI.sendPasswordResetEmail(email, resetLink);
+          console.log("Password reset email sent successfully");
+        } catch (emailError) {
+          console.error("Failed to send custom password reset email:", emailError);
+          // Don't fail the reset process if the custom email fails
+        }
 
         toast.success("Password reset link sent to your email!");
         setMode("signin");
