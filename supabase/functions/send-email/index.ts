@@ -29,8 +29,8 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const payload: EmailPayload = await req.json();
     
-    // Using verified domain now that famacle.app is verified with Resend
-    const fromAddress = payload.from || "Famacle <noreply@famacle.app>";
+    // Using verified domain with Resend
+    const fromAddress = payload.from || "Famacle <hello@famacle.com>";
     
     console.log(`[EMAIL REQUEST] Sending email to: ${typeof payload.to === 'string' ? payload.to : payload.to.join(', ')}`);
     console.log(`[EMAIL REQUEST] Subject: ${payload.subject}`);

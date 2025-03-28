@@ -5,11 +5,14 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { emailAPI } from "@/lib/api/email";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 const EmailTestPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   const handleTestEmail = async () => {
     if (!email.trim()) {
@@ -18,12 +21,17 @@ const EmailTestPage = () => {
     }
 
     setIsSending(true);
+    setLastError(null);
+    
     try {
-      await emailAPI.sendTestEmail(email);
-      toast.success(`Test email sent to ${email}. Please check your inbox.`);
+      const response = await emailAPI.sendTestEmail(email);
+      toast.success(`Test email sent to ${email}. Please check your inbox or spam folder.`);
+      console.log("Email response:", response);
     } catch (error: any) {
       console.error("Failed to send test email:", error);
-      toast.error(error.message || "Failed to send test email");
+      const errorMessage = error.message || "Failed to send test email";
+      setLastError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSending(false);
     }
@@ -49,6 +57,25 @@ const EmailTestPage = () => {
                 Send a test email to verify your email configuration
               </p>
             </div>
+            
+            <Alert className="mb-4 bg-blue-50 border-blue-200">
+              <InfoIcon className="h-4 w-4 text-blue-600" />
+              <AlertTitle className="text-blue-600">Testing Instructions</AlertTitle>
+              <AlertDescription className="text-blue-700">
+                For testing purposes, you may need to use <strong>hello@famacle.com</strong> as the recipient email 
+                until the domain is fully verified with Resend. Check the Edge Function logs for detailed information.
+              </AlertDescription>
+            </Alert>
+            
+            {lastError && (
+              <Alert className="mb-4 bg-red-50 border-red-200">
+                <InfoIcon className="h-4 w-4 text-red-600" />
+                <AlertTitle className="text-red-600">Error Details</AlertTitle>
+                <AlertDescription className="text-red-700">
+                  {lastError}
+                </AlertDescription>
+              </Alert>
+            )}
             
             <div className="space-y-4">
               <div>
