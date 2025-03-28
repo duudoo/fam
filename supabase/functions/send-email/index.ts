@@ -33,7 +33,7 @@ const handler = async (req: Request): Promise<Response> => {
     // For production emails, attempt to use the verified domain
     let fromAddress = payload.isTest
       ? "Famacle <onboarding@resend.dev>"
-      : (payload.from || "Famacle <noreply@famacle.app>");
+      : (payload.from || "Famacle <hello@famacle.com>");
     
     // Log request details for debugging
     console.log(`[EMAIL REQUEST] Sending email to: ${typeof payload.to === 'string' ? payload.to : payload.to.join(', ')}`);

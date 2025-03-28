@@ -73,7 +73,7 @@ const EmailTestPage = () => {
               <AlertTitle className="text-blue-600">Email Configuration Info</AlertTitle>
               <AlertDescription className="text-blue-700">
                 Test emails will be sent from <strong>onboarding@resend.dev</strong> (Resend testing address).
-                Production emails will use <strong>noreply@famacle.app</strong> once your domain is verified.
+                Production emails will use <strong>hello@famacle.com</strong> once your domain is verified.
                 <p className="mt-2">
                   <a 
                     href="https://resend.com/domains" 
