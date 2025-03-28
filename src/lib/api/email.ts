@@ -46,6 +46,8 @@ export const emailAPI = {
           <p>Hello,</p>
           <p>This is a test email from Famacle to verify that the email service is working correctly.</p>
           <p>If you're receiving this email, it means your email configuration is working properly!</p>
+          <p>Note: We're currently using Resend's testing domain (onboarding@resend.dev). To use your own domain, 
+          you'll need to verify it on <a href="https://resend.com/domains">Resend's domain verification page</a>.</p>
           <p>Time sent: ${new Date().toLocaleString()}</p>
           <p style="margin-top: 30px;">Best regards,<br>The Famacle Team</p>
         </div>

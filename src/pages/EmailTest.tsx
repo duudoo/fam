@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { emailAPI } from "@/lib/api/email";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 const EmailTestPage = () => {
   const navigate = useNavigate();
@@ -49,6 +51,22 @@ const EmailTestPage = () => {
                 Send a test email to verify your email configuration
               </p>
             </div>
+            
+            <Alert className="mb-4 bg-blue-50 border-blue-200">
+              <InfoIcon className="h-4 w-4 text-blue-600" />
+              <AlertTitle className="text-blue-600">Domain Verification Required</AlertTitle>
+              <AlertDescription className="text-blue-700">
+                Currently using Resend's test domain (onboarding@resend.dev). To use famacle.app as the sender domain, 
+                <a 
+                  href="https://resend.com/domains" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-800 underline ml-1"
+                >
+                  verify your domain with Resend
+                </a>.
+              </AlertDescription>
+            </Alert>
             
             <div className="space-y-4">
               <div>
