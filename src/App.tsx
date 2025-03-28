@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -17,79 +16,79 @@ import Demo from "./pages/Demo";
 import Communications from "./pages/Communications";
 import UserManagement from "./pages/UserManagement";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import EmailTest from "./pages/EmailTest";
 
-// Create a QueryClient
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <Toaster />
-    <Sonner />
-    <BrowserRouter>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<Index />} />
-        <Route path="/landing" element={<Landing />} />
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/demo" element={<Demo />} />
-        
-        {/* Protected routes */}
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/expenses" 
-          element={
-            <ProtectedRoute>
-              <Expenses />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/calendar" 
-          element={
-            <ProtectedRoute>
-              <Calendar />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/communications" 
-          element={
-            <ProtectedRoute>
-              <Communications />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/notifications" 
-          element={
-            <ProtectedRoute>
-              <Notifications />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/user-management" 
-          element={
-            <ProtectedRoute>
-              <UserManagement />
-            </ProtectedRoute>
-          } 
-        />
-        
-        {/* Catch all route */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <div className="App">
+      <QueryClientProvider client={queryClient}>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/landing" element={<Landing />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/demo" element={<Demo />} />
+            <Route path="/email-test" element={<EmailTest />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/expenses" 
+              element={
+                <ProtectedRoute>
+                  <Expenses />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/calendar" 
+              element={
+                <ProtectedRoute>
+                  <Calendar />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/communications" 
+              element={
+                <ProtectedRoute>
+                  <Communications />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/notifications" 
+              element={
+                <ProtectedRoute>
+                  <Notifications />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/user-management" 
+              element={
+                <ProtectedRoute>
+                  <UserManagement />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </div>
+  );
+}
 
 export default App;

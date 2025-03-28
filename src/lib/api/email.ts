@@ -8,6 +8,7 @@ export interface EmailPayload {
   from?: string;
   text?: string;
   replyTo?: string;
+  isTest?: boolean;
 }
 
 export const emailAPI = {
@@ -30,6 +31,34 @@ export const emailAPI = {
       console.error("Failed to send email:", error);
       throw error;
     }
+  },
+
+  /**
+   * Send a test email to verify email configuration
+   */
+  sendTestEmail: async (to: string) => {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background-color: #4F46E5; color: white; padding: 20px; text-align: center;">
+          <h1>Famacle Email Test</h1>
+        </div>
+        <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none;">
+          <p>Hello,</p>
+          <p>This is a test email from Famacle to verify that the email service is working correctly.</p>
+          <p>If you're receiving this email, it means your email configuration is working properly!</p>
+          <p>Time sent: ${new Date().toLocaleString()}</p>
+          <p style="margin-top: 30px;">Best regards,<br>The Famacle Team</p>
+        </div>
+      </div>
+    `;
+
+    return emailAPI.sendEmail({
+      to,
+      subject: "Famacle Email Configuration Test",
+      html,
+      text: "This is a test email from Famacle to verify that the email service is working correctly.",
+      isTest: true,
+    });
   },
 
   /**

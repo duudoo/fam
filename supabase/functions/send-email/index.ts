@@ -17,6 +17,7 @@ export interface EmailPayload {
   from?: string;
   text?: string;
   replyTo?: string;
+  isTest?: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -31,19 +32,26 @@ const handler = async (req: Request): Promise<Response> => {
     // Default from address if not provided
     const fromAddress = payload.from || "Famacle <noreply@famacle.app>";
     
-    console.log(`Sending email to: ${typeof payload.to === 'string' ? payload.to : payload.to.join(', ')}`);
-    console.log(`Subject: ${payload.subject}`);
+    console.log(`[EMAIL REQUEST] Sending email to: ${typeof payload.to === 'string' ? payload.to : payload.to.join(', ')}`);
+    console.log(`[EMAIL REQUEST] Subject: ${payload.subject}`);
+    console.log(`[EMAIL REQUEST] Is test: ${payload.isTest ? 'yes' : 'no'}`);
+    
+    // If this is a test email and we're not in production, add a prefix to the subject
+    let emailSubject = payload.subject;
+    if (payload.isTest) {
+      emailSubject = `[TEST] ${emailSubject}`;
+    }
     
     const emailResponse = await resend.emails.send({
       from: fromAddress,
       to: payload.to,
-      subject: payload.subject,
+      subject: emailSubject,
       html: payload.html,
       text: payload.text,
       reply_to: payload.replyTo,
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    console.log("[EMAIL SUCCESS] Email sent successfully:", emailResponse);
 
     return new Response(JSON.stringify(emailResponse), {
       status: 200,
@@ -53,7 +61,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
   } catch (error: any) {
-    console.error("Error in send-email function:", error);
+    console.error("[EMAIL ERROR] Error in send-email function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
