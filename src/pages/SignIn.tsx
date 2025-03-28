@@ -26,6 +26,14 @@ const SignInPage = () => {
           password,
         });
 
+        // Handle email not confirmed error specifically
+        if (error?.message?.includes("Email not confirmed") || error?.code === 'email_not_confirmed') {
+          toast.error("Your email has not been confirmed. Please check your inbox or verify your email now.");
+          // Redirect to verify email page with the email pre-filled
+          navigate("/verify-email", { state: { email } });
+          return;
+        }
+
         if (error) throw error;
 
         toast.success("Signed in successfully!");
@@ -67,6 +75,31 @@ const SignInPage = () => {
     setMode("signin");
   };
 
+  const handleResendVerification = async () => {
+    if (!email) {
+      toast.error("Please enter your email address first");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Verification email resent. Please check your inbox.");
+      navigate("/verify-email", { state: { email } });
+    } catch (error: any) {
+      console.error("Failed to resend verification email:", error);
+      toast.error(error.message || "Failed to resend verification email. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-famacle-blue-light/30 px-4 py-12">
       <div className="w-full max-w-md">
@@ -106,6 +139,7 @@ const SignInPage = () => {
                   isSubmitting={isSubmitting}
                   handleSubmit={handleSubmit}
                   onForgotPassword={handleForgotPassword}
+                  onResendVerification={handleResendVerification}
                 />
                 
                 <div className="mt-6 text-center">

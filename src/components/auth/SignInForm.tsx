@@ -13,6 +13,7 @@ interface SignInFormProps {
   isSubmitting: boolean;
   handleSubmit: (e: React.FormEvent) => void;
   onForgotPassword: () => void;
+  onResendVerification?: () => void;
 }
 
 const SignInForm = ({
@@ -23,6 +24,7 @@ const SignInForm = ({
   isSubmitting,
   handleSubmit,
   onForgotPassword,
+  onResendVerification,
 }: SignInFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   
@@ -92,6 +94,19 @@ const SignInForm = ({
         >
           {isSubmitting ? "Signing In..." : "Sign In"}
         </Button>
+        
+        {onResendVerification && (
+          <p className="text-sm text-center text-gray-500 mt-2">
+            Haven't received verification email?{" "}
+            <button
+              type="button"
+              className="text-famacle-blue hover:underline"
+              onClick={onResendVerification}
+            >
+              Resend Verification
+            </button>
+          </p>
+        )}
       </div>
     </form>
   );
