@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { emailAPI } from "@/lib/api/email";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoIcon } from "lucide-react";
+import { InfoIcon, AlertTriangleIcon } from "lucide-react";
 
 const EmailTestPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [lastResponse, setLastResponse] = useState<any>(null);
 
   const handleTestEmail = async () => {
     if (!email.trim()) {
@@ -22,10 +23,19 @@ const EmailTestPage = () => {
 
     setIsSending(true);
     setLastError(null);
+    setLastResponse(null);
     
     try {
       const response = await emailAPI.sendTestEmail(email);
-      toast.success(`Test email sent to ${email}. Please check your inbox or spam folder.`);
+      setLastResponse(response);
+      
+      if (response.error) {
+        setLastError(response.error.message || "Error sending email");
+        toast.error("Failed to send email. See details below.");
+      } else {
+        toast.success(`Test email sent to ${email}. Please check your inbox or spam folder.`);
+      }
+      
       console.log("Email response:", response);
     } catch (error: any) {
       console.error("Failed to send test email:", error);
@@ -60,19 +70,29 @@ const EmailTestPage = () => {
             
             <Alert className="mb-4 bg-blue-50 border-blue-200">
               <InfoIcon className="h-4 w-4 text-blue-600" />
-              <AlertTitle className="text-blue-600">Testing Instructions</AlertTitle>
+              <AlertTitle className="text-blue-600">Testing Information</AlertTitle>
               <AlertDescription className="text-blue-700">
-                For testing purposes, you may need to use <strong>hello@famacle.com</strong> as the recipient email 
-                until the domain is fully verified with Resend. Check the Edge Function logs for detailed information.
+                We're using Resend's testing address (<strong>onboarding@resend.dev</strong>) to guarantee delivery. 
+                This is the recommended way to test email functionality before fully configuring your domain.
               </AlertDescription>
             </Alert>
             
             {lastError && (
               <Alert className="mb-4 bg-red-50 border-red-200">
-                <InfoIcon className="h-4 w-4 text-red-600" />
+                <AlertTriangleIcon className="h-4 w-4 text-red-600" />
                 <AlertTitle className="text-red-600">Error Details</AlertTitle>
                 <AlertDescription className="text-red-700">
                   {lastError}
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {lastResponse && !lastError && (
+              <Alert className="mb-4 bg-green-50 border-green-200">
+                <InfoIcon className="h-4 w-4 text-green-600" />
+                <AlertTitle className="text-green-600">Email Sent</AlertTitle>
+                <AlertDescription className="text-green-700">
+                  Email was successfully queued for delivery. ID: {lastResponse.id || "N/A"}
                 </AlertDescription>
               </Alert>
             )}

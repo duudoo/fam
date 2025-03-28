@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface EmailPayload {
@@ -21,7 +22,7 @@ export const emailAPI = {
       });
 
       if (error) {
-        console.error("Error sending email:", error);
+        console.error("Error invoking edge function:", error);
         throw error;
       }
 

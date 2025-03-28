@@ -29,12 +29,13 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const payload: EmailPayload = await req.json();
     
-    // Using verified domain with Resend
-    const fromAddress = payload.from || "Famacle <hello@famacle.com>";
+    // Use Resend's onboarding address for testing purposes - this is guaranteed to work
+    const fromAddress = payload.from || "Famacle <onboarding@resend.dev>";
     
     console.log(`[EMAIL REQUEST] Sending email to: ${typeof payload.to === 'string' ? payload.to : payload.to.join(', ')}`);
     console.log(`[EMAIL REQUEST] Subject: ${payload.subject}`);
     console.log(`[EMAIL REQUEST] Is test: ${payload.isTest ? 'yes' : 'no'}`);
+    console.log(`[EMAIL REQUEST] From address: ${fromAddress}`);
     
     // If this is a test email and we're not in production, add a prefix to the subject
     let emailSubject = payload.subject;
@@ -50,6 +51,17 @@ const handler = async (req: Request): Promise<Response> => {
       text: payload.text,
       reply_to: payload.replyTo,
     });
+
+    if (emailResponse.error) {
+      console.error("[EMAIL ERROR] Resend API returned an error:", emailResponse.error);
+      return new Response(
+        JSON.stringify({ error: emailResponse.error }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
 
     console.log("[EMAIL SUCCESS] Email sent successfully:", emailResponse);
 
