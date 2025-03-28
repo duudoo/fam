@@ -29,8 +29,11 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const payload: EmailPayload = await req.json();
     
-    // Use the verified domain email as default, or fall back to Resend's onboarding address for testing
-    const fromAddress = payload.from || "Famacle <noreply@famacle.app>";
+    // Check if this is a test email - for test emails, use Resend's onboarding address
+    // For production emails, attempt to use the verified domain
+    const fromAddress = payload.isTest
+      ? "Famacle <onboarding@resend.dev>"
+      : (payload.from || "Famacle <noreply@famacle.app>");
     
     console.log(`[EMAIL REQUEST] Sending email to: ${typeof payload.to === 'string' ? payload.to : payload.to.join(', ')}`);
     console.log(`[EMAIL REQUEST] Subject: ${payload.subject}`);

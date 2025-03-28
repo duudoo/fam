@@ -72,8 +72,18 @@ const EmailTestPage = () => {
               <InfoIcon className="h-4 w-4 text-blue-600" />
               <AlertTitle className="text-blue-600">Email Configuration Info</AlertTitle>
               <AlertDescription className="text-blue-700">
-                Emails will be sent from <strong>noreply@famacle.app</strong> using your verified domain.
-                Provide a valid email address to test the email delivery.
+                Test emails will be sent from <strong>onboarding@resend.dev</strong> (Resend testing address).
+                Production emails will use <strong>noreply@famacle.app</strong> once your domain is verified.
+                <p className="mt-2">
+                  <a 
+                    href="https://resend.com/domains" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    Verify your domain on Resend
+                  </a>
+                </p>
               </AlertDescription>
             </Alert>
             
@@ -92,7 +102,8 @@ const EmailTestPage = () => {
                 <InfoIcon className="h-4 w-4 text-green-600" />
                 <AlertTitle className="text-green-600">Email Sent</AlertTitle>
                 <AlertDescription className="text-green-700">
-                  Email was successfully queued for delivery. ID: {lastResponse.id || "N/A"}
+                  Test email was successfully queued for delivery. ID: {lastResponse.id || "N/A"}
+                  <p className="mt-2">From: onboarding@resend.dev (Resend testing address)</p>
                 </AlertDescription>
               </Alert>
             )}
