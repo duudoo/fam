@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -49,7 +48,7 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
       try {
         await emailAPI.sendCoParentInviteEmail(
           email, 
-          currentUser.fullName || 'A co-parent', 
+          currentUser.name || 'A co-parent', 
           message, 
           inviteLink
         );
