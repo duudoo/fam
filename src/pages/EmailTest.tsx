@@ -70,10 +70,10 @@ const EmailTestPage = () => {
             
             <Alert className="mb-4 bg-blue-50 border-blue-200">
               <InfoIcon className="h-4 w-4 text-blue-600" />
-              <AlertTitle className="text-blue-600">Testing Information</AlertTitle>
+              <AlertTitle className="text-blue-600">Email Configuration Info</AlertTitle>
               <AlertDescription className="text-blue-700">
-                We're using Resend's testing address (<strong>onboarding@resend.dev</strong>) to guarantee delivery. 
-                This is the recommended way to test email functionality before fully configuring your domain.
+                Emails will be sent from <strong>noreply@famacle.app</strong> using your verified domain.
+                Provide a valid email address to test the email delivery.
               </AlertDescription>
             </Alert>
             
