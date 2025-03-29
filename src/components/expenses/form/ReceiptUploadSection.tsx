@@ -1,9 +1,10 @@
 
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, FileImage } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ReceiptUploadSectionProps {
   onFileUpload: (url: string) => void;
@@ -15,9 +16,14 @@ const ReceiptUploadSection = ({ onFileUpload, existingReceiptUrl }: ReceiptUploa
   const [previewUrl, setPreviewUrl] = useState<string | null>(existingReceiptUrl || null);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
 
   const handleFileUpload = async (file: File) => {
     if (!file) return;
+    if (!user) {
+      toast.error('You must be signed in to upload receipts');
+      return;
+    }
 
     // Check file type
     const fileType = file.type;
@@ -36,12 +42,17 @@ const ReceiptUploadSection = ({ onFileUpload, existingReceiptUrl }: ReceiptUploa
       setIsUploading(true);
       
       // Generate a unique file name
-      const fileName = `${Date.now()}-${file.name}`;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const filePath = `receipts/${fileName}`;
       
-      // Create storage bucket if it doesn't exist (this will be handled by RLS)
+      // Upload to Supabase storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('receipts')
-        .upload(`receipts/${fileName}`, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
         throw uploadError;
@@ -50,7 +61,7 @@ const ReceiptUploadSection = ({ onFileUpload, existingReceiptUrl }: ReceiptUploa
       // Get the public URL
       const { data: publicUrlData } = supabase.storage
         .from('receipts')
-        .getPublicUrl(`receipts/${fileName}`);
+        .getPublicUrl(filePath);
 
       if (publicUrlData && publicUrlData.publicUrl) {
         // Update preview
@@ -145,11 +156,12 @@ const ReceiptUploadSection = ({ onFileUpload, existingReceiptUrl }: ReceiptUploa
           <p className="text-xs text-gray-500 mt-1">Receipt uploaded</p>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center gap-2">
-          <Upload className="w-6 h-6 text-gray-400" />
-          <p className="text-sm text-gray-500">
-            Drag & drop receipt here or click to browse
+        <div className="flex flex-col items-center justify-center gap-2 p-6">
+          <FileImage className="w-12 h-12 text-gray-400 mb-2" />
+          <p className="text-sm text-gray-500 mb-2">
+            Drag & drop receipt image here or click to browse
           </p>
+          <p className="text-xs text-gray-400 mb-4">Accepted formats: JPG, PNG, GIF (Max 5MB)</p>
           <Button 
             type="button" 
             variant="outline" 
