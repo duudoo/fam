@@ -18,6 +18,8 @@ import UserManagementPage from './pages/UserManagement';
 import Settings from './pages/Settings';
 import VerifyEmailPage from './pages/VerifyEmail';
 import Demo from './pages/Demo';
+import ExpenseSuccess from './pages/ExpenseSuccess';
+import ExpenseError from './pages/ExpenseError';
 
 const App = () => {
   const { user, loading } = useAuth();
@@ -105,6 +107,10 @@ const App = () => {
             <Settings />
           </ProtectedRoute>
         } />
+        
+        {/* Public routes for expense approval flow */}
+        <Route path="/expense-success" element={<ExpenseSuccess />} />
+        <Route path="/expense-error" element={<ExpenseError />} />
       </Routes>
     </div>
   );

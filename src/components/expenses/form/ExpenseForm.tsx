@@ -16,6 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useExpenseMutations } from '@/hooks/expenses';
 import { ExpenseCategory, SplitMethod, Expense } from '@/utils/types';
 import { format } from 'date-fns';
+import { supabase } from "@/integrations/supabase/client";
 
 // Import the form sections
 import ExpenseDetailsSection, { formSchema, FormValues } from './ExpenseDetailsSection';
@@ -79,6 +80,106 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
   const handleReceiptUpload = (url: string) => {
     setReceiptUrl(url);
   };
+
+  // Function to send email notification for expense approval
+  const sendExpenseNotification = async (expenseData: any, approvalToken: string) => {
+    try {
+      // Get co-parent email
+      const { data: parentChildren, error: pcError } = await supabase
+        .from('parent_children')
+        .select(`
+          child_id,
+          parent_id
+        `)
+        .in('child_id', expenseData.childIds || []);
+      
+      if (pcError) throw pcError;
+      
+      // Find co-parent IDs (parents who share a child with the current user)
+      const childParents = parentChildren.reduce((acc, pc) => {
+        if (!acc[pc.child_id]) acc[pc.child_id] = [];
+        if (pc.parent_id !== user?.id) acc[pc.child_id].push(pc.parent_id);
+        return acc;
+      }, {} as Record<string, string[]>);
+      
+      // Get unique co-parent IDs
+      const coParentIds = Array.from(
+        new Set(
+          Object.values(childParents).flat()
+        )
+      );
+      
+      if (coParentIds.length === 0) {
+        console.log("No co-parents found to notify");
+        return;
+      }
+      
+      // Get co-parent emails
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, email, full_name')
+        .in('id', coParentIds);
+      
+      if (profilesError) throw profilesError;
+      
+      // Get current user profile for sender name
+      const { data: currentProfile, error: currentProfileError } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user?.id)
+        .single();
+      
+      if (currentProfileError) throw currentProfileError;
+      
+      const formattedDate = format(new Date(expenseData.date), 'MMM d, yyyy');
+      const frontendUrl = window.location.origin;
+      
+      // Send email notification to each co-parent
+      const notificationPromises = profiles.map(async (profile) => {
+        // Create a record of the notification
+        const { data: notification, error: notifError } = await supabase
+          .from('expense_notifications')
+          .insert({
+            expense_id: expenseData.id,
+            sent_to: profile.email,
+            token: approvalToken,
+            notification_type: 'expense_approval'
+          })
+          .select()
+          .single();
+        
+        if (notifError) throw notifError;
+        
+        const approveUrl = `${frontendUrl}/api/expense-action?token=${approvalToken}&action=approve`;
+        const disputeUrl = `${frontendUrl}/api/expense-action?token=${approvalToken}&action=dispute`;
+        
+        // Call the edge function to send the email
+        await supabase.functions.invoke('send-expense-notification', {
+          body: {
+            expenseId: expenseData.id,
+            recipientEmail: profile.email,
+            expenseAmount: parseFloat(expenseData.amount),
+            expenseDescription: expenseData.description,
+            category: expenseData.category,
+            date: formattedDate,
+            payerName: currentProfile.full_name || "A co-parent",
+            receiptUrl,
+            approvalToken,
+            approveUrl,
+            disputeUrl
+          }
+        });
+        
+        console.log(`Notification sent to ${profile.email}`);
+      });
+      
+      await Promise.all(notificationPromises);
+      toast.success("Expense notifications sent to co-parents");
+    } catch (error) {
+      console.error("Failed to send expense notification:", error);
+      toast.error("Failed to send notifications. Co-parents will still see the expense in the app.");
+    }
+  };
   
   const onSubmit = async (values: FormValues) => {
     if (!user) {
@@ -91,7 +192,7 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
     try {
       if (isEditing && expense) {
         // Update existing expense using the mutation
-        await updateExpense.mutateAsync({
+        const updatedExpense = await updateExpense.mutateAsync({
           id: expense.id,
           updates: {
             description: values.description,
@@ -106,7 +207,7 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
         });
       } else {
         // Add new expense using the mutation
-        await createExpense.mutateAsync({
+        const newExpense = await createExpense.mutateAsync({
           description: values.description,
           amount: parseFloat(values.amount),
           date: format(values.date, 'yyyy-MM-dd'),
@@ -115,9 +216,30 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
           splitMethod: values.splitMethod as SplitMethod,
           notes: values.notes || undefined,
           receiptUrl: receiptUrl || undefined,
-          paidBy: user.id, // Add the paidBy property with the current user's ID
+          paidBy: user.id,
           childIds: values.childIds
         });
+        
+        // Get the approval token from the newly created expense
+        if (newExpense) {
+          const { data: expenseData, error: expenseError } = await supabase
+            .from('expenses')
+            .select('id, approval_token')
+            .eq('id', newExpense.id)
+            .single();
+            
+          if (!expenseError && expenseData) {
+            // Send email notification for approval
+            await sendExpenseNotification({
+              id: newExpense.id,
+              description: values.description,
+              amount: values.amount,
+              date: format(values.date, 'yyyy-MM-dd'),
+              category: values.category,
+              childIds: values.childIds
+            }, expenseData.approval_token);
+          }
+        }
       }
       
       form.reset();
