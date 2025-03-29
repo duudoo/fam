@@ -4,9 +4,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import CategoryProgressBar from './cards/CategoryProgressBar';
 import { useMonthlySummary } from '@/hooks/useMonthlySummary';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 const MonthlySummary = () => {
   const { categories, loading } = useMonthlySummary();
+  const { currency } = useCurrency();
 
   return (
     <Card>
@@ -28,6 +30,7 @@ const MonthlySummary = () => {
                 amount={category.amount}
                 percentage={category.percentage}
                 color={category.color}
+                currency={currency}
               />
             ))}
           </div>
