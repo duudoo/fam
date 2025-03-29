@@ -1,5 +1,5 @@
 
-import { FileText, CreditCard } from 'lucide-react';
+import { FileText, BanknoteIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Expense } from '@/utils/types';
 import { formatCurrency } from '@/utils/expenseUtils';
@@ -59,7 +59,7 @@ const PendingExpensesCard = ({ pendingExpenses }: PendingExpensesCardProps) => {
         )}
       </CardContent>
       <div className="absolute top-0 right-0 p-3">
-        <CreditCard className="w-6 h-6 text-famacle-teal" />
+        <BanknoteIcon className="w-6 h-6 text-famacle-teal" />
       </div>
     </Card>
   );
