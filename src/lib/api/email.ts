@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface EmailPayload {
@@ -63,6 +64,42 @@ export const emailAPI = {
       text: "This is a test email from Famacle to verify that the email service is working correctly.",
       isTest: true,
     });
+  },
+
+  /**
+   * Send a verification email with a code
+   */
+  sendVerificationEmail: async (to: string, name: string, verificationCode: string) => {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background-color: #4F46E5; color: white; padding: 20px; text-align: center;">
+          <h1>Verify Your Email</h1>
+        </div>
+        <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none;">
+          <p>Hello ${name},</p>
+          <p>Thank you for signing up for Famacle! Please use the verification code below to confirm your email address:</p>
+          <div style="margin: 30px 0; text-align: center;">
+            <div style="font-size: 32px; letter-spacing: 5px; font-weight: bold; background-color: #f4f4f4; padding: 10px; border-radius: 5px; display: inline-block;">${verificationCode}</div>
+          </div>
+          <p>If you didn't sign up for Famacle, you can safely ignore this email.</p>
+          <p style="margin-top: 30px;">Best regards,<br>The Famacle Team</p>
+        </div>
+      </div>
+    `;
+
+    try {
+      const result = await emailAPI.sendEmail({
+        to,
+        subject: "Verify Your Famacle Account",
+        html,
+        text: `Hello ${name}, Thank you for signing up for Famacle! Please use this verification code to confirm your email: ${verificationCode}`,
+      });
+      return result;
+    } catch (error) {
+      console.error("Failed to send verification email:", error);
+      // Don't fail the signup if the verification email fails
+      return { error };
+    }
   },
 
   /**

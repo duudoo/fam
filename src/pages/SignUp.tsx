@@ -31,6 +31,9 @@ const SignUpPage = () => {
 
       console.log("Attempting to sign up user:", email);
       
+      // Generate a 6-digit verification code
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      
       // Sign up with Supabase - explicitly requesting a signup OTP email
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -39,7 +42,8 @@ const SignUpPage = () => {
           data: {
             first_name: firstName,
             last_name: lastName,
-            full_name: name
+            full_name: name,
+            verification_code: verificationCode
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`
         }
@@ -49,29 +53,22 @@ const SignUpPage = () => {
       
       console.log("Signup response:", data);
 
-      // Send welcome email
+      // Send custom verification email with the code
       try {
-        const emailResult = await emailAPI.sendWelcomeEmail(email, name || firstName);
+        const emailResult = await emailAPI.sendVerificationEmail(email, name || firstName, verificationCode);
         if (emailResult?.error) {
-          console.warn("Welcome email failed but continuing signup:", emailResult.error);
+          console.warn("Verification email failed but continuing signup:", emailResult.error);
         } else {
-          console.log("Welcome email sent successfully");
+          console.log("Verification email sent successfully");
         }
       } catch (emailError) {
-        console.error("Failed to send welcome email:", emailError);
-        // Don't fail the signup if the welcome email fails
+        console.error("Failed to send verification email:", emailError);
+        // Don't fail the signup if the verification email fails
       }
 
-      // Check if confirmation was sent
-      if (data.user && !data.user.confirmed_at) {
-        console.log("Email verification required, redirecting to verify page");
-        toast.success("Verification code sent to your email. Please check your inbox.");
-        navigate("/verify-email", { state: { email } });
-      } else {
-        console.log("User already confirmed or auto-confirmed, redirecting to dashboard");
-        toast.success("Account created successfully!");
-        navigate("/dashboard");
-      }
+      // Redirect to verify email page with the email pre-filled
+      toast.success("Verification code sent to your email. Please check your inbox.");
+      navigate("/verify-email", { state: { email } });
     } catch (error: any) {
       console.error("Signup error:", error);
       toast.error(error.message || "Failed to create account. Please try again.");

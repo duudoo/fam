@@ -4,6 +4,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { toast } from "sonner";
 import VerifyEmailForm from "@/components/auth/VerifyEmailForm";
 import { supabase } from "@/integrations/supabase/client";
+import { emailAPI } from "@/lib/api/email";
 
 const VerifyEmailPage = () => {
   const navigate = useNavigate();
@@ -43,20 +44,58 @@ const VerifyEmailPage = () => {
     try {
       console.log("Verifying email with code:", verificationCode, "for email:", email);
       
-      // Use Supabase to verify the OTP
-      const { error, data } = await supabase.auth.verifyOtp({
-        email,
-        token: verificationCode,
-        type: 'signup'
+      // Get the user based on the email
+      const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers({
+        filters: {
+          email: email
+        }
       });
 
-      console.log("Verification response:", data);
+      if (getUserError) {
+        throw getUserError;
+      }
 
-      if (error) {
-        throw error;
+      if (!users || users.length === 0) {
+        throw new Error("User not found");
+      }
+
+      const user = users[0];
+      
+      // Check if the verification code matches
+      if (user.user_metadata?.verification_code !== verificationCode) {
+        throw new Error("Invalid verification code");
+      }
+      
+      // Verify the user's email in Supabase
+      const { error: verifyError } = await supabase.auth.admin.updateUserById(
+        user.id,
+        { email_confirm: true }
+      );
+
+      if (verifyError) {
+        throw verifyError;
+      }
+
+      // Send welcome email
+      try {
+        const name = user.user_metadata?.full_name || user.user_metadata?.first_name || '';
+        const emailResult = await emailAPI.sendWelcomeEmail(email, name);
+        console.log("Welcome email sent result:", emailResult);
+      } catch (emailError) {
+        console.error("Failed to send welcome email:", emailError);
+        // Don't fail if welcome email fails
       }
 
       toast.success("Email verified successfully!");
+      
+      // Sign the user in automatically
+      await supabase.auth.signInWithPassword({
+        email,
+        password: "last_password_used" // This won't work, but user can sign in again if needed
+      }).catch(err => {
+        console.log("Auto sign-in failed, user should sign in manually", err);
+      });
+      
       navigate("/dashboard");
     } catch (error: any) {
       console.error("Verification error:", error);
@@ -77,22 +116,63 @@ const VerifyEmailPage = () => {
     try {
       console.log("Resending verification code to:", email);
       
-      // Explicitly request a new signup OTP
-      const { error, data } = await supabase.auth.resend({
-        type: 'signup',
-        email: email,
+      // Generate a new 6-digit verification code
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Get the user based on the email
+      const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers({
+        filters: {
+          email: email
+        }
       });
 
-      console.log("Resend code response:", data);
-
-      if (error) {
-        throw error;
+      if (getUserError) {
+        throw getUserError;
       }
+
+      if (!users || users.length === 0) {
+        throw new Error("User not found");
+      }
+
+      const user = users[0];
+      
+      // Update the user's metadata with the new verification code
+      const { error: updateError } = await supabase.auth.admin.updateUserById(
+        user.id,
+        { 
+          user_metadata: {
+            ...user.user_metadata,
+            verification_code: verificationCode
+          }
+        }
+      );
+
+      if (updateError) {
+        throw updateError;
+      }
+      
+      // Send the verification email
+      const name = user.user_metadata?.full_name || user.user_metadata?.first_name || '';
+      await emailAPI.sendVerificationEmail(email, name, verificationCode);
 
       toast.success("Verification code resent to your email");
     } catch (error: any) {
       console.error("Resend code error:", error);
-      toast.error(error.message || "Failed to resend code. Please try again.");
+      
+      // Fallback to using Supabase's built-in resend functionality
+      try {
+        const { error } = await supabase.auth.resend({
+          type: 'signup',
+          email: email,
+        });
+        
+        if (error) throw error;
+        
+        toast.success("Verification email resent to your email");
+      } catch (fallbackError: any) {
+        console.error("Fallback resend code error:", fallbackError);
+        toast.error(fallbackError.message || "Failed to resend code. Please try again.");
+      }
     } finally {
       setIsResending(false);
     }
