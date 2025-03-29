@@ -43,10 +43,12 @@ export const useEmailVerification = ({ email, password }: UseEmailVerificationPr
       });
       
       if (error) {
+        console.error("Edge function error:", error);
         throw new Error(error.message || "Failed to verify email");
       }
       
       if (!data.success) {
+        console.error("Verification failed:", data.message);
         throw new Error(data.message || "Invalid verification code");
       }
       
@@ -103,10 +105,12 @@ export const useEmailVerification = ({ email, password }: UseEmailVerificationPr
       });
       
       if (error) {
+        console.error("Edge function error:", error);
         throw new Error(error.message || "Failed to resend verification code");
       }
       
       if (!data.success) {
+        console.error("Resend failed:", data.message);
         throw new Error(data.message || "Failed to resend verification code");
       }
 

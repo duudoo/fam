@@ -41,11 +41,15 @@ serve(async (req) => {
       }
     );
 
+    console.log(`Looking up user with email: ${email}`);
+
     // Get the user with the provided email
     const { data: { users }, error: getUserError } = await supabaseAdmin.auth.admin.listUsers({
       page: 1,
       perPage: 1,
-      email: email
+      filters: {
+        email: email
+      }
     });
 
     if (getUserError) {
@@ -54,6 +58,7 @@ serve(async (req) => {
     }
 
     if (!users || users.length === 0) {
+      console.error("User not found with email:", email);
       return new Response(
         JSON.stringify({ success: false, message: "User not found" }),
         { 
@@ -64,9 +69,27 @@ serve(async (req) => {
     }
 
     const user = users[0];
+    console.log(`Found user: ${user.id}, checking verification code...`);
+    console.log(`User metadata:`, user.user_metadata);
     
     // Check if the verification code matches
-    if (user.user_metadata?.verification_code !== code) {
+    const userVerificationCode = user.user_metadata?.verification_code;
+    
+    if (!userVerificationCode) {
+      console.error("No verification code found in user metadata");
+      return new Response(
+        JSON.stringify({ success: false, message: "No verification code found for this user" }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+
+    console.log(`Expected code: ${userVerificationCode}, received code: ${code}`);
+    
+    if (userVerificationCode !== code) {
+      console.error("Invalid verification code");
       return new Response(
         JSON.stringify({ success: false, message: "Invalid verification code" }),
         { 
@@ -86,6 +109,8 @@ serve(async (req) => {
       console.error("Error verifying email:", verifyError);
       throw new Error("Failed to verify email");
     }
+
+    console.log("Email verified successfully for user:", user.id);
 
     return new Response(
       JSON.stringify({
