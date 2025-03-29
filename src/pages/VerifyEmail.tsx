@@ -44,38 +44,25 @@ const VerifyEmailPage = () => {
     try {
       console.log("Verifying email with code:", verificationCode, "for email:", email);
       
-      // Get the user based on the email
-      const { data, error: getUserError } = await supabase.auth.admin.listUsers();
-
-      if (getUserError) {
-        throw getUserError;
-      }
-
-      // Find the user with matching email
-      const user = data.users.find(u => u.email === email);
+      // Verify the code directly with Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke('verify-email-code', {
+        body: {
+          email,
+          code: verificationCode
+        }
+      });
       
-      if (!user) {
-        throw new Error("User not found");
+      if (error) {
+        throw new Error(error.message || "Failed to verify email");
       }
       
-      // Check if the verification code matches
-      if (user.user_metadata?.verification_code !== verificationCode) {
-        throw new Error("Invalid verification code");
+      if (!data.success) {
+        throw new Error(data.message || "Invalid verification code");
       }
       
-      // Verify the user's email in Supabase
-      const { error: verifyError } = await supabase.auth.admin.updateUserById(
-        user.id,
-        { email_confirm: true }
-      );
-
-      if (verifyError) {
-        throw verifyError;
-      }
-
       // Send welcome email
       try {
-        const name = user.user_metadata?.full_name || user.user_metadata?.first_name || '';
+        const name = data.userName || '';
         const emailResult = await emailAPI.sendWelcomeEmail(email, name);
         console.log("Welcome email sent result:", emailResult);
       } catch (emailError) {
@@ -85,15 +72,18 @@ const VerifyEmailPage = () => {
 
       toast.success("Email verified successfully!");
       
-      // Sign the user in automatically
-      await supabase.auth.signInWithPassword({
+      // Sign the user in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
-        password: "last_password_used" // This won't work, but user can sign in again if needed
-      }).catch(err => {
-        console.log("Auto sign-in failed, user should sign in manually", err);
+        password: location.state?.password || ""
       });
-      
-      navigate("/dashboard");
+
+      if (signInError) {
+        console.log("Auto sign-in failed, user should sign in manually", signInError);
+        navigate("/signin", { state: { email, verified: true } });
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       console.error("Verification error:", error);
       toast.error(error.message || "Failed to verify email. Please try again.");
@@ -113,41 +103,18 @@ const VerifyEmailPage = () => {
     try {
       console.log("Resending verification code to:", email);
       
-      // Generate a new 6-digit verification code
-      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      // Use our edge function to generate and send a new code
+      const { data, error } = await supabase.functions.invoke('resend-verification-code', {
+        body: { email }
+      });
       
-      // Get the user based on the email
-      const { data, error: getUserError } = await supabase.auth.admin.listUsers();
-
-      if (getUserError) {
-        throw getUserError;
+      if (error) {
+        throw new Error(error.message || "Failed to resend verification code");
       }
       
-      // Find the user with matching email
-      const user = data.users.find(u => u.email === email);
-      
-      if (!user) {
-        throw new Error("User not found");
+      if (!data.success) {
+        throw new Error(data.message || "Failed to resend verification code");
       }
-      
-      // Update the user's metadata with the new verification code
-      const { error: updateError } = await supabase.auth.admin.updateUserById(
-        user.id,
-        { 
-          user_metadata: {
-            ...user.user_metadata,
-            verification_code: verificationCode
-          }
-        }
-      );
-
-      if (updateError) {
-        throw updateError;
-      }
-      
-      // Send the verification email
-      const name = user.user_metadata?.full_name || user.user_metadata?.first_name || '';
-      await emailAPI.sendVerificationEmail(email, name, verificationCode);
 
       toast.success("Verification code resent to your email");
     } catch (error: any) {
