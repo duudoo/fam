@@ -33,6 +33,7 @@ interface ExpenseFormProps {
 const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [receiptUrl, setReceiptUrl] = useState<string>(expense?.receiptUrl || '');
   const isEditing = !!expense;
   
   const { createExpense, updateExpense } = useExpenseMutations(user?.id);
@@ -72,6 +73,10 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
     },
   });
   
+  const handleReceiptUpload = (url: string) => {
+    setReceiptUrl(url);
+  };
+  
   const onSubmit = async (values: FormValues) => {
     if (!user) {
       toast.error("You must be signed in to add an expense");
@@ -91,7 +96,8 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
             date: format(values.date, 'yyyy-MM-dd'),
             category: values.category as ExpenseCategory,
             splitMethod: values.splitMethod as SplitMethod,
-            notes: values.notes || undefined
+            notes: values.notes || undefined,
+            receiptUrl: receiptUrl || undefined
           }
         });
       } else {
@@ -104,11 +110,13 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
           status: 'pending',
           splitMethod: values.splitMethod as SplitMethod,
           notes: values.notes || undefined,
+          receiptUrl: receiptUrl || undefined,
           paidBy: user.id // Add the paidBy property with the current user's ID
         });
       }
       
       form.reset();
+      setReceiptUrl('');
       
       if (onExpenseAdded) {
         onExpenseAdded();
@@ -137,7 +145,10 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
               splitMethods={splitMethods} 
             />
             
-            <ReceiptUploadSection />
+            <ReceiptUploadSection 
+              onFileUpload={handleReceiptUpload}
+              existingReceiptUrl={expense?.receiptUrl}
+            />
             
             <NotesSection form={form} />
             
