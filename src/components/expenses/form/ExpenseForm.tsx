@@ -65,8 +65,8 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
       description: "",
       amount: "",
       date: new Date(),
-      category: "education",
-      splitMethod: "50/50",
+      category: "education" as ExpenseCategory,
+      splitMethod: "50/50" as SplitMethod,
       notes: "",
     },
   });
@@ -88,8 +88,8 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
             description: values.description,
             amount: parseFloat(values.amount),
             date: format(values.date, 'yyyy-MM-dd'),
-            category: values.category,
-            splitMethod: values.splitMethod,
+            category: values.category as ExpenseCategory,
+            splitMethod: values.splitMethod as SplitMethod,
             notes: values.notes || undefined
           }
         });
@@ -99,9 +99,9 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
           description: values.description,
           amount: parseFloat(values.amount),
           date: format(values.date, 'yyyy-MM-dd'),
-          category: values.category,
+          category: values.category as ExpenseCategory,
           status: 'pending',
-          splitMethod: values.splitMethod,
+          splitMethod: values.splitMethod as SplitMethod,
           notes: values.notes || undefined
         });
       }
