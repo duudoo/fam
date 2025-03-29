@@ -33,6 +33,36 @@ export type Database = {
         }
         Relationships: []
       }
+      co_parent_invites: {
+        Row: {
+          email: string
+          id: string
+          invited_at: string
+          invited_by: string
+          message: string | null
+          responded_at: string | null
+          status: string
+        }
+        Insert: {
+          email: string
+          id?: string
+          invited_at?: string
+          invited_by: string
+          message?: string | null
+          responded_at?: string | null
+          status?: string
+        }
+        Update: {
+          email?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string
+          message?: string | null
+          responded_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string

@@ -81,18 +81,19 @@ const UserManagementPage = () => {
 
       const { data, error } = await supabase
         .from('co_parent_invites')
-        .select()
+        .select('*')
         .eq('invited_by', user.id);
 
       if (error) throw error;
 
       if (data) {
-        setInvites(data.map((invite) => ({
+        setInvites(data.map((invite: CoParentInviteRow) => ({
           id: invite.id,
           email: invite.email,
           status: invite.status as any,
           invitedBy: invite.invited_by,
           invitedAt: invite.invited_at,
+          message: invite.message || undefined,
           respondedAt: invite.responded_at || undefined
         })));
       }
