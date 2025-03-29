@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -31,13 +32,31 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
         return;
       }
 
-      const { error } = await supabase
+      // Check if invitation already exists
+      const { data: existingInvites, error: checkError } = await supabase
+        .from('co_parent_invites')
+        .select('*')
+        .eq('email', email)
+        .eq('invited_by', user.id);
+      
+      if (checkError) throw checkError;
+      
+      if (existingInvites && existingInvites.length > 0) {
+        toast.error("This email has already been invited");
+        return;
+      }
+
+      // Create the invitation
+      const { data: invite, error } = await supabase
         .from('co_parent_invites')
         .insert({
           email,
           invited_by: user.id,
-          status: 'pending'
-        });
+          status: 'pending',
+          message: message
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -56,6 +75,21 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
       } catch (emailError) {
         console.error("Failed to send co-parent invitation email:", emailError);
         // Don't fail the invitation process if the email fails
+      }
+
+      if (invite) {
+        // Add new invite to state
+        const newInvite: CoParentInviteType = {
+          id: invite.id,
+          email: invite.email,
+          status: invite.status as any,
+          invitedBy: invite.invited_by,
+          invitedAt: invite.invited_at,
+          message: invite.message || undefined,
+          respondedAt: invite.responded_at || undefined
+        };
+        
+        setInvites(prev => [...prev, newInvite]);
       }
 
       setAddingCoParent(false);

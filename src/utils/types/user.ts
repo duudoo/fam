@@ -59,6 +59,8 @@ export type CoParentInvite = {
   invitedAt: string;
   /** ISO timestamp when the invitation was responded to (if applicable) */
   respondedAt?: string;
+  /** Optional personal message included with the invitation */
+  message?: string;
 };
 
 /**
