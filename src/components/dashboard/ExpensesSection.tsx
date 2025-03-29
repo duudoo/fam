@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Plus } from 'lucide-react';
@@ -8,13 +7,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Expense, ExpenseStatus } from '@/utils/types';
-import ExpenseCard from '@/components/expenses/ExpenseCard';
+import ExpenseCard from '@/components/ExpenseCard';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 const ExpensesSection = () => {
   const [expenseTab, setExpenseTab] = useState('pending');
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { currency } = useCurrency();
   
   useEffect(() => {
     if (user) {
@@ -108,7 +109,11 @@ const ExpensesSection = () => {
               <TabsContent value="pending" className="space-y-4">
                 {expenses.filter(e => e.status === 'pending').length > 0 ? (
                   expenses.filter(e => e.status === 'pending').map(expense => (
-                    <ExpenseCard key={expense.id} expense={expense} />
+                    <ExpenseCard 
+                      key={expense.id} 
+                      expense={expense} 
+                      currency={currency}
+                    />
                   ))
                 ) : (
                   <div className="text-center py-8 text-gray-500">
@@ -120,7 +125,11 @@ const ExpensesSection = () => {
               <TabsContent value="approved" className="space-y-4">
                 {expenses.filter(e => e.status === 'approved').length > 0 ? (
                   expenses.filter(e => e.status === 'approved').map(expense => (
-                    <ExpenseCard key={expense.id} expense={expense} />
+                    <ExpenseCard 
+                      key={expense.id} 
+                      expense={expense} 
+                      currency={currency}
+                    />
                   ))
                 ) : (
                   <div className="text-center py-8 text-gray-500">
@@ -135,7 +144,11 @@ const ExpensesSection = () => {
                     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                     .slice(0, 3)
                     .map(expense => (
-                      <ExpenseCard key={expense.id} expense={expense} />
+                      <ExpenseCard 
+                        key={expense.id} 
+                        expense={expense} 
+                        currency={currency}
+                      />
                     ))
                 ) : (
                   <div className="text-center py-8 text-gray-500">
