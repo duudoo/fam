@@ -1,4 +1,3 @@
-
 import { FileText, CreditCard } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Expense } from '@/utils/types';
@@ -20,16 +19,20 @@ const PendingExpensesCard = ({ pendingExpenses }: PendingExpensesCardProps) => {
       // If the current user paid for the expense
       if (expense.paidBy === user.id) {
         // Calculate based on split amounts if available
-        if (expense.splitPercentage) {
-          // Get the percentage the current user is responsible for
-          const userPercentage = expense.splitPercentage[user.id] || 0;
-          // Calculate what others owe (total minus user's share)
-          return total + (expense.amount * (1 - userPercentage / 100));
+        if (expense.splitAmounts) {
+          // Find the total that others owe based on the split amounts
+          const userShare = expense.splitAmounts[user.id] || 0;
+          // Others owe the difference between total and user's share
+          return total + (expense.amount - userShare);
         } 
         // Or use split method
         else if (expense.splitMethod === '50/50') {
           // For 50/50 split, they are owed half the amount
           return total + (expense.amount / 2);
+        }
+        // For other split methods, assume they paid the full amount temporarily
+        else {
+          return total + expense.amount;
         }
       }
       return total;

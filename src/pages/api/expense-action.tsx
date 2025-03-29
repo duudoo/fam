@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 
 const ExpenseAction = () => {
   const [searchParams] = useSearchParams();
@@ -15,8 +15,9 @@ const ExpenseAction = () => {
 
   useEffect(() => {
     const handleExpenseAction = async () => {
-      if (!token || !action) {
-        navigate('/expense-error?reason=invalid-parameters');
+      if (!token || !action || (action !== "approve" && action !== "clarify")) {
+        setError("Invalid parameters provided. Please check your email link.");
+        setLoading(false);
         return;
       }
 
@@ -29,7 +30,8 @@ const ExpenseAction = () => {
 
         if (error) {
           console.error('Error handling expense action:', error);
-          navigate('/expense-error?reason=server-error');
+          setError(error.message || "An error occurred processing your request");
+          setLoading(false);
           return;
         }
 
@@ -43,8 +45,7 @@ const ExpenseAction = () => {
         navigate(`/expense-success?action=${action}&id=${data.expenseId}`);
       } catch (error) {
         console.error('Error handling expense action:', error);
-        navigate('/expense-error?reason=server-error');
-      } finally {
+        setError("An unexpected error occurred. Please try again later.");
         setLoading(false);
       }
     };
@@ -66,11 +67,13 @@ const ExpenseAction = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <p className="text-red-500">{error}</p>
+        <div className="text-center max-w-md mx-auto">
+          <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Action Failed</h2>
+          <p className="text-red-500 mb-4">{error}</p>
           <button 
             onClick={() => navigate('/')}
-            className="mt-4 px-4 py-2 bg-famacle-blue text-white rounded hover:bg-famacle-blue-dark"
+            className="px-4 py-2 bg-famacle-blue text-white rounded hover:bg-famacle-blue-dark transition-colors"
           >
             Go to Homepage
           </button>

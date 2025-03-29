@@ -20,7 +20,21 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   // Get request data
-  const { token, action } = await req.json();
+  let body;
+  try {
+    body = await req.json();
+  } catch (error) {
+    console.error("Error parsing JSON:", error);
+    return new Response(JSON.stringify({ 
+      error: "invalid-request",
+      message: "Invalid request format" 
+    }), { 
+      status: 400,
+      headers: { "Content-Type": "application/json", ...corsHeaders }
+    });
+  }
+  
+  const { token, action } = body;
   
   // Validate input
   if (!token || !action || (action !== "approve" && action !== "clarify")) {
@@ -34,6 +48,8 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log(`Processing expense action: ${action} with token: ${token}`);
+    
     // Find the expense notification with this token
     const { data: notification, error: notifError } = await supabase
       .from("expense_notifications")
@@ -66,6 +82,18 @@ const handler = async (req: Request): Promise<Response> => {
         message: "Expense not found" 
       }), { 
         status: 404,
+        headers: { "Content-Type": "application/json", ...corsHeaders }
+      });
+    }
+
+    // Check if expense is already processed
+    if (expense.status !== "pending") {
+      console.log(`Expense already processed. Current status: ${expense.status}`);
+      return new Response(JSON.stringify({ 
+        error: "already-processed",
+        message: `This expense has already been ${expense.status}` 
+      }), { 
+        status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders }
       });
     }
@@ -124,24 +152,65 @@ const handler = async (req: Request): Promise<Response> => {
       } else {
         // Create a payment record for the co-parent
         const splitAmounts = expense.split_amounts || {};
-        const amountToPay = splitAmounts[coParent.id] || (expense.split_method === "50/50" ? expense.amount / 2 : 0);
+        let amountToPay = 0;
         
-        const { error: paymentError } = await supabase
-          .from("expense_payments")
+        if (Object.keys(splitAmounts).length > 0) {
+          amountToPay = splitAmounts[coParent.id] || 0;
+        } else if (expense.split_method === "50/50") {
+          amountToPay = expense.amount / 2;
+        }
+        
+        if (amountToPay > 0) {
+          const { error: paymentError } = await supabase
+            .from("expense_payments")
+            .insert({
+              expense_id: expense.id,
+              payer_id: coParent.id,
+              amount: amountToPay,
+              status: "pending",
+              due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // Due in 7 days
+            });
+            
+          if (paymentError) {
+            console.error("Error creating payment record:", paymentError);
+            // Continue despite error, this shouldn't block the overall approval
+          } else {
+            console.log(`Created payment record for co-parent ${coParent.id}, amount: ${amountToPay}`);
+          }
+        }
+        
+        // Create a notification for the expense creator
+        const { error: notificationError } = await supabase
+          .from("notifications")
           .insert({
-            expense_id: expense.id,
-            payer_id: coParent.id,
-            amount: amountToPay,
-            status: "pending",
-            due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // Due in 7 days
+            user_id: expense.paid_by,
+            type: "expense_approved", 
+            message: `Your expense "${expense.description}" was approved`,
+            related_id: expense.id
           });
           
-        if (paymentError) {
-          console.error("Error creating payment record:", paymentError);
+        if (notificationError) {
+          console.error("Error creating notification:", notificationError);
         }
+      }
+    } else if (action === "clarify") {
+      // Create a notification for the expense creator
+      const { error: notificationError } = await supabase
+        .from("notifications")
+        .insert({
+          user_id: expense.paid_by,
+          type: "expense_clarification", 
+          message: `Clarification requested for "${expense.description}"`,
+          related_id: expense.id
+        });
+        
+      if (notificationError) {
+        console.error("Error creating notification:", notificationError);
       }
     }
 
+    console.log(`Successfully processed expense action: ${action} for expense ${expense.id}`);
+    
     return new Response(JSON.stringify({ 
       expenseId: expense.id,
       action: action,
