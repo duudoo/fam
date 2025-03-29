@@ -45,21 +45,18 @@ const VerifyEmailPage = () => {
       console.log("Verifying email with code:", verificationCode, "for email:", email);
       
       // Get the user based on the email
-      const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers({
-        filters: {
-          email: email
-        }
-      });
+      const { data, error: getUserError } = await supabase.auth.admin.listUsers();
 
       if (getUserError) {
         throw getUserError;
       }
 
-      if (!users || users.length === 0) {
+      // Find the user with matching email
+      const user = data.users.find(u => u.email === email);
+      
+      if (!user) {
         throw new Error("User not found");
       }
-
-      const user = users[0];
       
       // Check if the verification code matches
       if (user.user_metadata?.verification_code !== verificationCode) {
@@ -120,21 +117,18 @@ const VerifyEmailPage = () => {
       const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
       
       // Get the user based on the email
-      const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers({
-        filters: {
-          email: email
-        }
-      });
+      const { data, error: getUserError } = await supabase.auth.admin.listUsers();
 
       if (getUserError) {
         throw getUserError;
       }
-
-      if (!users || users.length === 0) {
+      
+      // Find the user with matching email
+      const user = data.users.find(u => u.email === email);
+      
+      if (!user) {
         throw new Error("User not found");
       }
-
-      const user = users[0];
       
       // Update the user's metadata with the new verification code
       const { error: updateError } = await supabase.auth.admin.updateUserById(
