@@ -5,16 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
 interface ExpenseListProps {
-  expenses: Expense[];
+  expenses: Expense[] | undefined;
   filteredStatus?: string;
   onAddNewClick: () => void;
 }
 
-const ExpenseList = ({ expenses, filteredStatus, onAddNewClick }: ExpenseListProps) => {
+const ExpenseList = ({ expenses = [], filteredStatus, onAddNewClick }: ExpenseListProps) => {
+  // Safely handle undefined expenses by providing a default empty array
   // Filter expenses by status if provided
-  const filteredExpenses = filteredStatus && filteredStatus !== 'all'
+  const filteredExpenses = expenses && filteredStatus && filteredStatus !== 'all'
     ? expenses.filter(expense => expense.status === filteredStatus)
-    : expenses;
+    : expenses || [];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

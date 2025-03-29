@@ -51,7 +51,7 @@ export const useExpenseMutations = (userId: string | undefined) => {
       if (!userId) throw new Error("User not authenticated");
       return await expensesAPI.deleteExpense(id);
     },
-    onSuccess: (id) => {
+    onSuccess: () => {
       toast.success("Expense deleted successfully");
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
     },

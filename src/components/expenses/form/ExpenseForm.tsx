@@ -13,7 +13,7 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { useExpenseMutations } from '@/hooks/expenses';
 import { ExpenseCategory, SplitMethod, Expense } from '@/utils/types';
 import { format } from 'date-fns';
 
@@ -34,6 +34,8 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = !!expense;
+  
+  const { createExpense, updateExpense } = useExpenseMutations(user?.id);
   
   const categories: ExpenseCategory[] = [
     'medical',
@@ -79,42 +81,29 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
     
     try {
       if (isEditing && expense) {
-        // Update existing expense
-        const { data, error } = await supabase
-          .from('expenses')
-          .update({
+        // Update existing expense using the mutation
+        await updateExpense.mutateAsync({
+          id: expense.id,
+          updates: {
             description: values.description,
             amount: parseFloat(values.amount),
             date: format(values.date, 'yyyy-MM-dd'),
             category: values.category,
-            split_method: values.splitMethod,
-            notes: values.notes || null
-          })
-          .eq('id', expense.id)
-          .select();
-
-        if (error) throw error;
-        
-        toast.success("Expense updated successfully");
+            splitMethod: values.splitMethod,
+            notes: values.notes || undefined
+          }
+        });
       } else {
-        // Add new expense
-        const { data, error } = await supabase
-          .from('expenses')
-          .insert({
-            description: values.description,
-            amount: parseFloat(values.amount),
-            date: format(values.date, 'yyyy-MM-dd'),
-            category: values.category,
-            paid_by: user.id,
-            split_method: values.splitMethod,
-            notes: values.notes || null,
-            status: 'pending'
-          })
-          .select();
-
-        if (error) throw error;
-        
-        toast.success("Expense added successfully");
+        // Add new expense using the mutation
+        await createExpense.mutateAsync({
+          description: values.description,
+          amount: parseFloat(values.amount),
+          date: format(values.date, 'yyyy-MM-dd'),
+          category: values.category,
+          status: 'pending',
+          splitMethod: values.splitMethod,
+          notes: values.notes || undefined
+        });
       }
       
       form.reset();
