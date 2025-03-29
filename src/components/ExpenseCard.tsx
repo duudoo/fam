@@ -3,7 +3,6 @@ import { FC, useState } from 'react';
 import { format } from 'date-fns';
 import { 
   Calendar, 
-  DollarSign, 
   FileText, 
   User
 } from 'lucide-react';
@@ -76,7 +75,6 @@ const ExpenseCard: FC<ExpenseCardProps> = ({ expense, className }) => {
       
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2 text-gray-600">
-          <DollarSign className="w-4 h-4" />
           <span className="font-medium text-famacle-slate">{formatCurrency(expense.amount, currency.symbol)}</span>
         </div>
         

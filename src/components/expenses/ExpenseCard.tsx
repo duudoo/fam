@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Expense } from "@/utils/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
-import { Calendar, DollarSign, FileText, Users } from "lucide-react";
+import { Calendar, FileText, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import StatusBadge from "@/components/expenses/StatusBadge";
 import CategoryBadge from "@/components/expenses/CategoryBadge";
@@ -71,7 +71,6 @@ const ExpenseCard = ({ expense, showActions = true, className }: ExpenseCardProp
         
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2 text-gray-600">
-            <DollarSign className="w-4 h-4" />
             <span className="font-medium text-famacle-slate">${expense.amount.toFixed(2)}</span>
           </div>
           
