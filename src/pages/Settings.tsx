@@ -8,6 +8,7 @@ import CurrencySettings from '@/components/settings/CurrencySettings';
 import ExpenseSettings from '@/components/settings/ExpenseSettings';
 import NotificationSettings from '@/components/settings/NotificationSettings';
 import { Spinner } from '@/components/ui/spinner';
+import { CurrencyProvider } from '@/contexts/CurrencyContext';
 
 const SettingsPage = () => {
   const { user, loading } = useAuth();
@@ -39,77 +40,79 @@ const SettingsPage = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 pt-24">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-famacle-slate">Settings</h1>
-        <p className="text-muted-foreground">Manage your account settings and preferences</p>
+    <CurrencyProvider>
+      <div className="container mx-auto py-6 pt-24">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-famacle-slate">Settings</h1>
+          <p className="text-muted-foreground">Manage your account settings and preferences</p>
+        </div>
+
+        <Tabs defaultValue={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
+          <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <TabsTrigger value="user">User Settings</TabsTrigger>
+            <TabsTrigger value="currency">Currency</TabsTrigger>
+            <TabsTrigger value="expenses">Expenses</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="user" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>User Settings</CardTitle>
+                <CardDescription>
+                  Manage your profile and invite co-parents
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <UserSettings />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="currency" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Currency Settings</CardTitle>
+                <CardDescription>
+                  Customize the currency used throughout the application
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CurrencySettings />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="expenses" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Expense Settings</CardTitle>
+                <CardDescription>
+                  Configure your default expense split methods and categories
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ExpenseSettings />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="notifications" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Notification Settings</CardTitle>
+                <CardDescription>
+                  Customize how and when you receive notifications
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <NotificationSettings />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
-
-      <Tabs defaultValue={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          <TabsTrigger value="user">User Settings</TabsTrigger>
-          <TabsTrigger value="currency">Currency</TabsTrigger>
-          <TabsTrigger value="expenses">Expenses</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="user" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>User Settings</CardTitle>
-              <CardDescription>
-                Manage your profile and invite co-parents
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <UserSettings />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="currency" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Currency Settings</CardTitle>
-              <CardDescription>
-                Customize the currency used throughout the application
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <CurrencySettings />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="expenses" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Expense Settings</CardTitle>
-              <CardDescription>
-                Configure your default expense split methods and categories
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ExpenseSettings />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="notifications" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification Settings</CardTitle>
-              <CardDescription>
-                Customize how and when you receive notifications
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <NotificationSettings />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+    </CurrencyProvider>
   );
 };
 

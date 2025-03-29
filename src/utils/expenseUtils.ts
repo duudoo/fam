@@ -51,13 +51,15 @@ export const getStatusText = (status: ExpenseStatus): string => {
   return statusText[status] || "Unknown";
 };
 
-// Format currency
-export const formatCurrency = (amount: number): string => {
+// Format currency with a given symbol or default to $
+export const formatCurrency = (amount: number, currencySymbol = '$'): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'USD', // This isn't as important as the symbol we display
     minimumFractionDigits: 2,
-  }).format(amount);
+    // Use the provided symbol instead of the one from the locale
+    currencyDisplay: 'symbol',
+  }).format(amount).replace('$', currencySymbol);
 };
 
 // Format date

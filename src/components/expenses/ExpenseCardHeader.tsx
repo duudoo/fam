@@ -3,12 +3,14 @@ import { formatCurrency, getCategoryColor, getCategoryIcon } from "@/utils/expen
 import { Expense } from "@/utils/types";
 import { LucideIcon } from "lucide-react";
 import * as Icons from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface ExpenseCardHeaderProps {
   expense: Expense;
 }
 
 const ExpenseCardHeader = ({ expense }: ExpenseCardHeaderProps) => {
+  const { currency } = useCurrency();
   const iconName = getCategoryIcon(expense.category);
   // @ts-ignore - Dynamic icon import
   const Icon: LucideIcon = Icons[iconName.charAt(0).toUpperCase() + iconName.slice(1)] || Icons.Circle;
@@ -25,7 +27,7 @@ const ExpenseCardHeader = ({ expense }: ExpenseCardHeaderProps) => {
         </div>
       </div>
       <div className="text-right">
-        <p className="font-bold text-famacle-slate">{formatCurrency(expense.amount)}</p>
+        <p className="font-bold text-famacle-slate">{formatCurrency(expense.amount, currency.symbol)}</p>
         <p className="text-sm text-gray-500">{expense.splitMethod}</p>
       </div>
     </div>

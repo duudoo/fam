@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { CurrencyProvider } from "@/contexts/CurrencyContext";
 
 // Import refactored components
 import ExpenseOverview from "@/components/expenses/ExpenseOverview";
@@ -69,69 +70,71 @@ const ExpensesPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <main className="container mx-auto px-4 pt-24 pb-12 max-w-6xl">
-        <div className="mb-8 animate-fade-in">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-famacle-slate">Expenses</h1>
-              <p className="text-gray-500 mt-1">Track and manage child-related expenses</p>
+    <CurrencyProvider>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <main className="container mx-auto px-4 pt-24 pb-12 max-w-6xl">
+          <div className="mb-8 animate-fade-in">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-famacle-slate">Expenses</h1>
+                <p className="text-gray-500 mt-1">Track and manage child-related expenses</p>
+              </div>
+              
+              <Button onClick={() => setShowForm(!showForm)}>
+                {showForm ? "Cancel" : (
+                  <>
+                    <Plus className="w-4 h-4 mr-2" />
+                    New Expense
+                  </>
+                )}
+              </Button>
             </div>
             
-            <Button onClick={() => setShowForm(!showForm)}>
-              {showForm ? "Cancel" : (
-                <>
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Expense
-                </>
-              )}
-            </Button>
-          </div>
-          
-          {showForm && (
-            <div className="mb-8">
-              <ExpenseForm 
-                onExpenseAdded={() => setShowForm(false)} 
-                onCancel={() => setShowForm(false)}
-              />
-            </div>
-          )}
-
-          <ExpenseOverview expenses={expenses} />
-          
-          <div className="mb-6">
-            <Tabs defaultValue="all" onValueChange={value => setFilter(value as any)}>
-              <ExpenseFilters 
-                filter={filter}
-                setFilter={setFilter}
-                categoryFilter={categoryFilter}
-                setCategoryFilter={setCategoryFilter}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-              />
-              
-              <TabsContent value="all" className="mt-0">
-                <ExpenseList 
-                  expenses={expenses} 
-                  onAddNewClick={() => setShowForm(true)} 
+            {showForm && (
+              <div className="mb-8">
+                <ExpenseForm 
+                  onExpenseAdded={() => setShowForm(false)} 
+                  onCancel={() => setShowForm(false)}
                 />
-              </TabsContent>
-              
-              {["pending", "approved", "paid", "disputed"].map((status) => (
-                <TabsContent key={status} value={status} className="mt-0">
+              </div>
+            )}
+
+            <ExpenseOverview expenses={expenses} />
+            
+            <div className="mb-6">
+              <Tabs defaultValue="all" onValueChange={value => setFilter(value as any)}>
+                <ExpenseFilters 
+                  filter={filter}
+                  setFilter={setFilter}
+                  categoryFilter={categoryFilter}
+                  setCategoryFilter={setCategoryFilter}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                />
+                
+                <TabsContent value="all" className="mt-0">
                   <ExpenseList 
                     expenses={expenses} 
-                    filteredStatus={status} 
                     onAddNewClick={() => setShowForm(true)} 
                   />
                 </TabsContent>
-              ))}
-            </Tabs>
+                
+                {["pending", "approved", "paid", "disputed"].map((status) => (
+                  <TabsContent key={status} value={status} className="mt-0">
+                    <ExpenseList 
+                      expenses={expenses} 
+                      filteredStatus={status} 
+                      onAddNewClick={() => setShowForm(true)} 
+                    />
+                  </TabsContent>
+                ))}
+              </Tabs>
+            </div>
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </CurrencyProvider>
   );
 };
 

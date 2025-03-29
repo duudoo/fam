@@ -15,6 +15,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import StatusBadge from '@/components/expenses/StatusBadge';
 import CategoryBadge from '@/components/expenses/CategoryBadge';
 import ExpenseStatusMenu from '@/components/expenses/ExpenseStatusMenu';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { formatCurrency } from '@/utils/expenseUtils';
 
 interface ExpenseCardProps {
   expense: Expense;
@@ -25,6 +27,7 @@ const ExpenseCard: FC<ExpenseCardProps> = ({ expense, className }) => {
   const queryClient = useQueryClient();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const { currency } = useCurrency();
   
   const deleteExpense = async () => {
     if (!confirm('Are you sure you want to delete this expense?')) return;
@@ -74,7 +77,7 @@ const ExpenseCard: FC<ExpenseCardProps> = ({ expense, className }) => {
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2 text-gray-600">
           <DollarSign className="w-4 h-4" />
-          <span className="font-medium text-famacle-slate">${expense.amount.toFixed(2)}</span>
+          <span className="font-medium text-famacle-slate">{formatCurrency(expense.amount, currency.symbol)}</span>
         </div>
         
         <CategoryBadge category={expense.category} />

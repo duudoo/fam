@@ -22,20 +22,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
 import { Spinner } from '@/components/ui/spinner';
-
-// Mock currencies for now, would be stored in user settings
-const currencies = [
-  { code: 'USD', symbol: '$', name: 'US Dollar' },
-  { code: 'EUR', symbol: '€', name: 'Euro' },
-  { code: 'GBP', symbol: '£', name: 'British Pound' },
-  { code: 'CAD', symbol: '$', name: 'Canadian Dollar' },
-  { code: 'AUD', symbol: '$', name: 'Australian Dollar' },
-  { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
-  { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
-  { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
-  { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
-  { code: 'MXN', symbol: '$', name: 'Mexican Peso' },
-];
+import { useCurrency, currencies } from '@/contexts/CurrencyContext';
 
 const currencyFormSchema = z.object({
   currency: z.string({
@@ -46,24 +33,24 @@ const currencyFormSchema = z.object({
 type CurrencyFormValues = z.infer<typeof currencyFormSchema>;
 
 const CurrencySettings = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const { currency, saveCurrencyPreference, isLoading } = useCurrency();
   
-  // For now, default to USD. In a real app, this would be loaded from user preferences
+  // Use current currency as default
   const form = useForm<CurrencyFormValues>({
     resolver: zodResolver(currencyFormSchema),
     defaultValues: {
-      currency: 'USD',
+      currency: currency.code,
     },
   });
 
   const onSubmit = async (data: CurrencyFormValues) => {
-    setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await saveCurrencyPreference(data.currency);
       toast.success("Currency settings updated");
-      setIsLoading(false);
-    }, 1000);
+    } catch (error) {
+      console.error("Error saving currency:", error);
+      toast.error("Failed to update currency settings");
+    }
   };
 
   return (
