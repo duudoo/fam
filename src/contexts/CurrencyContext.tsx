@@ -63,7 +63,10 @@ export function CurrencyProvider({ children }: CurrencyProviderProps) {
             .eq('id', user.id)
             .single();
             
-          if (error) throw error;
+          if (error) {
+            console.error('Error loading currency preference:', error);
+            return;
+          }
           
           if (data?.currency_preference) {
             const userCurrency = currencies.find(c => c.code === data.currency_preference);
