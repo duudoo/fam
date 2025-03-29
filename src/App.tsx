@@ -15,9 +15,9 @@ import Communications from './pages/Communications';
 import Notifications from './pages/Notifications';
 import Navbar from '@/components/Navbar';
 import UserManagementPage from './pages/UserManagement';
-
-// Add a new route for the Settings page
 import Settings from './pages/Settings';
+import VerifyEmailPage from './pages/VerifyEmail';
+import Demo from './pages/Demo';
 
 const App = () => {
   const { user, loading } = useAuth();
@@ -57,6 +57,12 @@ const App = () => {
             <SignUp />
           </PublicOnlyRoute>
         } />
+        <Route path="/verify-email" element={
+          <PublicOnlyRoute>
+            <VerifyEmailPage />
+          </PublicOnlyRoute>
+        } />
+        <Route path="/demo" element={<Demo />} />
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Navbar />
