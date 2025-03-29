@@ -1,8 +1,10 @@
+
 import { FileText, CreditCard } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Expense } from '@/utils/types';
 import { formatCurrency } from '@/utils/expenseUtils';
 import { useAuth } from '@/hooks/useAuth';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface PendingExpensesCardProps {
   pendingExpenses: Expense[];
@@ -10,6 +12,7 @@ interface PendingExpensesCardProps {
 
 const PendingExpensesCard = ({ pendingExpenses }: PendingExpensesCardProps) => {
   const { user } = useAuth();
+  const { currency } = useCurrency();
 
   const calculateUserOwedAmount = () => {
     if (!user) return 0;
@@ -45,13 +48,13 @@ const PendingExpensesCard = ({ pendingExpenses }: PendingExpensesCardProps) => {
         <div className="text-3xl font-bold text-famacle-slate">{pendingExpenses.length}</div>
         <p className="text-gray-500 text-sm">
           {pendingExpenses.length > 0 
-            ? `${formatCurrency(pendingExpenses.reduce((sum, exp) => sum + exp.amount, 0))} total pending`
+            ? `${formatCurrency(pendingExpenses.reduce((sum, exp) => sum + exp.amount, 0), currency.symbol)} total pending`
             : 'No pending expenses'}
         </p>
         
         {owedAmount > 0 && (
           <p className="text-green-600 text-sm mt-1">
-            {formatCurrency(owedAmount)} owed to you
+            {formatCurrency(owedAmount, currency.symbol)} owed to you
           </p>
         )}
       </CardContent>

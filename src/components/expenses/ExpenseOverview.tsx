@@ -3,12 +3,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Expense, ExpenseCategory } from '@/utils/types';
 import { formatCurrency } from '@/utils/expenseUtils';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface ExpenseOverviewProps {
   expenses: Expense[] | undefined;
 }
 
 const ExpenseOverview = ({ expenses = [] }: ExpenseOverviewProps) => {
+  const { currency } = useCurrency();
+  
   // Safely handle undefined expenses by providing a default empty array
   const totalExpenses = expenses ? expenses.reduce((sum, expense) => sum + expense.amount, 0) : 0;
   
@@ -34,7 +37,7 @@ const ExpenseOverview = ({ expenses = [] }: ExpenseOverviewProps) => {
           <div className="lg:col-span-1">
             <h3 className="text-lg font-medium mb-3">Expense Summary</h3>
             <p className="text-3xl font-bold mb-1">
-              {formatCurrency(totalExpenses)}
+              {formatCurrency(totalExpenses, currency.symbol)}
             </p>
             <p className="text-sm text-gray-500">
               {expenses?.length || 0} total expenses
@@ -45,7 +48,7 @@ const ExpenseOverview = ({ expenses = [] }: ExpenseOverviewProps) => {
                 <div key={category}>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="capitalize">{category}</span>
-                    <span className="font-medium">{formatCurrency(amount)}</span>
+                    <span className="font-medium">{formatCurrency(amount, currency.symbol)}</span>
                   </div>
                   <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
@@ -65,7 +68,7 @@ const ExpenseOverview = ({ expenses = [] }: ExpenseOverviewProps) => {
                   <XAxis dataKey="category" />
                   <YAxis />
                   <Tooltip
-                    formatter={(value) => formatCurrency(value as number)}
+                    formatter={(value) => formatCurrency(value as number, currency.symbol)}
                     labelFormatter={(label) => label.charAt(0).toUpperCase() + label.slice(1)}
                   />
                   <Bar
