@@ -6,7 +6,7 @@ import ReceiptUploadSection from './ReceiptUploadSection';
 import NotesSection from './NotesSection';
 import FormActions from './FormActions';
 import { UseFormReturn } from 'react-hook-form';
-import { FormValues } from './ExpenseDetailsSection';
+import { FormValues } from './schema';
 
 interface ExpenseFormContentProps {
   form: UseFormReturn<FormValues, any, undefined>;

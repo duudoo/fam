@@ -1,7 +1,7 @@
 
 import { UseFormReturn } from 'react-hook-form';
 import { ExpenseCategory, SplitMethod } from '@/utils/types';
-import { FormValues, expenseFormSchema } from './schema';
+import { FormValues } from './schema';
 import { DescriptionField } from './fields/DescriptionField';
 import { AmountField } from './fields/AmountField';
 import { DateField } from './fields/DateField';
@@ -32,6 +32,4 @@ const ExpenseDetailsSection = ({ form, categories, splitMethods }: ExpenseDetail
   );
 };
 
-export { expenseFormSchema };
-export type { FormValues };
 export default ExpenseDetailsSection;

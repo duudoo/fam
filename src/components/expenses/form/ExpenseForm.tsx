@@ -8,7 +8,7 @@ import { useExpenseMutations } from '@/hooks/expenses';
 import { Expense } from '@/utils/types';
 import { ExpenseFormProvider } from './ExpenseFormContext';
 import { processFormSubmission } from './expenseFormUtils';
-import { formSchema, FormValues } from './ExpenseDetailsSection';
+import { expenseFormSchema, FormValues } from './schema';
 import ExpenseFormContent from './ExpenseFormContent';
 
 interface ExpenseFormProps {
@@ -23,7 +23,7 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
   const isEditing = !!expense;
   
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(expenseFormSchema),
     defaultValues: expense ? {
       description: expense.description,
       amount: expense.amount.toString(),
