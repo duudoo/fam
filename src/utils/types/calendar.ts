@@ -1,0 +1,58 @@
+
+/**
+ * Calendar-related types for the Famacle application
+ */
+
+import { ReminderType } from './notification';
+
+/**
+ * Priority levels for calendar events
+ */
+export type EventPriority = 
+  | 'high'
+  | 'medium'
+  | 'low';
+
+/**
+ * Calendar event
+ */
+export type Event = {
+  /** Unique identifier */
+  id: string;
+  /** Title of the event */
+  title: string;
+  /** Optional detailed description */
+  description?: string;
+  /** Start date/time in ISO format */
+  startDate: string;
+  /** Optional end date/time in ISO format */
+  endDate?: string; 
+  /** Whether this is an all-day event */
+  allDay: boolean;
+  /** Optional physical location of the event */
+  location?: string;
+  /** Priority level of the event */
+  priority: EventPriority;
+  /** ID of the parent who created the event */
+  createdBy: string;
+  /** Reminders associated with this event */
+  reminders: Reminder[];
+  /** ISO timestamp when the event was created */
+  createdAt?: string;
+  /** ISO timestamp when the event was last updated */
+  updatedAt?: string;
+};
+
+/**
+ * Reminder for an event
+ */
+export type Reminder = {
+  /** Unique identifier */
+  id: string;
+  /** ISO timestamp when the reminder should trigger */
+  time: string;
+  /** Type of notification to send */
+  type: ReminderType;
+  /** Whether the reminder has been sent */
+  sent: boolean;
+};

@@ -11,26 +11,18 @@ interface PendingExpensesCardProps {
 const PendingExpensesCard = ({ pendingExpenses }: PendingExpensesCardProps) => {
   const { user } = useAuth();
 
-  // Calculate the amount owed to the current user
   const calculateUserOwedAmount = () => {
     if (!user) return 0;
     
     return pendingExpenses.reduce((total, expense) => {
-      // If the current user paid for the expense
       if (expense.paidBy === user.id) {
-        // Calculate based on split amounts if available
         if (expense.splitAmounts) {
-          // Find the total that others owe based on the split amounts
           const userShare = expense.splitAmounts[user.id] || 0;
-          // Others owe the difference between total and user's share
           return total + (expense.amount - userShare);
         } 
-        // Or use split method
         else if (expense.splitMethod === '50/50') {
-          // For 50/50 split, they are owed half the amount
           return total + (expense.amount / 2);
         }
-        // For other split methods, assume they paid the full amount temporarily
         else {
           return total + expense.amount;
         }
