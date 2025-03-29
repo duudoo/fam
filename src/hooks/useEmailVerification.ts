@@ -114,6 +114,9 @@ export const useEmailVerification = ({ email, password }: UseEmailVerificationPr
         throw new Error(data.message || "Failed to resend verification code");
       }
 
+      // Clear the verification code input field
+      setVerificationCode("");
+      
       toast.success("Verification code resent to your email");
     } catch (error: any) {
       console.error("Resend code error:", error);
@@ -126,6 +129,9 @@ export const useEmailVerification = ({ email, password }: UseEmailVerificationPr
         });
         
         if (error) throw error;
+        
+        // Clear the verification code input field
+        setVerificationCode("");
         
         toast.success("Verification email resent to your email");
       } catch (fallbackError: any) {
