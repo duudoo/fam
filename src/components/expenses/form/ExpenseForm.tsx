@@ -16,7 +16,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useExpenseMutations } from '@/hooks/expenses';
 import { ExpenseCategory, SplitMethod, Expense } from '@/utils/types';
 import { format } from 'date-fns';
-import * as z from 'zod';
 
 // Import the form sections
 import ExpenseDetailsSection, { formSchema, FormValues } from './ExpenseDetailsSection';
@@ -56,13 +55,8 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
     'custom'
   ];
   
-  // Update the form schema to include childIds
-  const formWithChildrenSchema = formSchema.extend({
-    childIds: z.array(z.string()).optional()
-  });
-  
-  const form = useForm<FormValues & { childIds: string[] }>({
-    resolver: zodResolver(formWithChildrenSchema),
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: expense ? {
       description: expense.description,
       amount: expense.amount.toString(),
@@ -86,7 +80,7 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
     setReceiptUrl(url);
   };
   
-  const onSubmit = async (values: FormValues & { childIds: string[] }) => {
+  const onSubmit = async (values: FormValues) => {
     if (!user) {
       toast.error("You must be signed in to add an expense");
       return;

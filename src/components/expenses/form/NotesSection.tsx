@@ -15,12 +15,12 @@ const NotesSection = ({ form }: NotesSectionProps) => {
       name="notes"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Notes (optional)</FormLabel>
+          <FormLabel>Notes (Optional)</FormLabel>
           <FormControl>
-            <Textarea 
-              placeholder="Add any additional details about this expense" 
-              className="resize-none" 
-              {...field} 
+            <Textarea
+              placeholder="Additional notes about this expense..."
+              className="resize-none min-h-[100px]"
+              {...field}
             />
           </FormControl>
           <FormMessage />

@@ -18,6 +18,7 @@ import { ExpenseCategory, SplitMethod } from '@/utils/types';
 import { UseFormReturn } from 'react-hook-form';
 import { z } from 'zod';
 
+// Update the form schema to include childIds
 const formSchema = z.object({
   description: z.string().min(2, {
     message: "Description must be at least 2 characters.",
@@ -31,6 +32,7 @@ const formSchema = z.object({
   category: z.string(),
   splitMethod: z.string(),
   notes: z.string().optional(),
+  childIds: z.array(z.string()).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
