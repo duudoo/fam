@@ -1,4 +1,3 @@
-
 export type Parent = {
   id: string;
   name: string;
@@ -61,6 +60,7 @@ export type Expense = {
   splitMethod: SplitMethod;
   splitPercentage?: { [parentId: string]: number }; // for custom splits
   notes?: string;
+  childIds?: string[]; // Associated children IDs
   createdAt: string;
   updatedAt: string;
 };

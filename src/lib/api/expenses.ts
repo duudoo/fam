@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Expense, ExpenseCategory, ExpenseStatus } from "@/utils/types";
 
@@ -14,7 +13,12 @@ export const expensesAPI = {
   ) => {
     let query = supabase
       .from('expenses')
-      .select('*');
+      .select(`
+        *,
+        expense_children (
+          child_id
+        )
+      `);
     
     // Add status filter if not "all"
     if (statusFilter !== "all") {
@@ -49,6 +53,7 @@ export const expensesAPI = {
       status: exp.status as ExpenseStatus,
       splitMethod: exp.split_method,
       notes: exp.notes || undefined,
+      childIds: exp.expense_children ? exp.expense_children.map((ec: any) => ec.child_id) : undefined,
       createdAt: exp.created_at,
       updatedAt: exp.updated_at
     }));
@@ -60,6 +65,7 @@ export const expensesAPI = {
    * Create a new expense
    */
   createExpense: async (userId: string, newExpense: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => {
+    // Start a transaction
     const { data, error } = await supabase
       .from('expenses')
       .insert({
@@ -78,6 +84,22 @@ export const expensesAPI = {
 
     if (error) {
       throw error;
+    }
+
+    // If there are child IDs, create expense-child relationships
+    if (newExpense.childIds && newExpense.childIds.length > 0) {
+      const childRelations = newExpense.childIds.map(childId => ({
+        expense_id: data.id,
+        child_id: childId
+      }));
+
+      const { error: relError } = await supabase
+        .from('expense_children')
+        .insert(childRelations);
+
+      if (relError) {
+        throw relError;
+      }
     }
     
     return data;
@@ -111,6 +133,31 @@ export const expensesAPI = {
 
     if (error) {
       throw error;
+    }
+    
+    // If childIds is included in the updates, update the child relationships
+    if (updates.childIds !== undefined) {
+      // First, remove all existing relationships
+      const { error: deleteError } = await supabase
+        .from('expense_children')
+        .delete()
+        .eq('expense_id', expenseId);
+      
+      if (deleteError) throw deleteError;
+      
+      // Then add the new relationships if there are any
+      if (updates.childIds.length > 0) {
+        const childRelations = updates.childIds.map(childId => ({
+          expense_id: expenseId,
+          child_id: childId
+        }));
+        
+        const { error: insertError } = await supabase
+          .from('expense_children')
+          .insert(childRelations);
+        
+        if (insertError) throw insertError;
+      }
     }
     
     return data;

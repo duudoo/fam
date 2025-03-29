@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Expense } from "@/utils/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
-import { Calendar, DollarSign, FileText } from "lucide-react";
+import { Calendar, DollarSign, FileText, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import StatusBadge from "@/components/expenses/StatusBadge";
 import CategoryBadge from "@/components/expenses/CategoryBadge";
@@ -12,6 +12,7 @@ import ExpenseCardHeader from "./ExpenseCardHeader";
 import ExpenseCardDetails from "./ExpenseCardDetails";
 import ExpenseCardActions from "./ExpenseCardActions";
 import ExpenseForm from "./form/ExpenseForm";
+import { useChildren } from "@/hooks/children";
 
 interface ExpenseCardProps {
   expense: Expense;
@@ -23,6 +24,7 @@ const ExpenseCard = ({ expense, showActions = true, className }: ExpenseCardProp
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const { children } = useChildren();
 
   if (isEditing) {
     return (
@@ -37,6 +39,11 @@ const ExpenseCard = ({ expense, showActions = true, className }: ExpenseCardProp
   const handleDelete = async () => {
     setIsDeleting(true);
   };
+  
+  // Filter children that are related to this expense
+  const relatedChildren = children.filter(child => 
+    expense.childIds?.includes(child.id)
+  );
 
   return (
     <Card 
@@ -81,6 +88,15 @@ const ExpenseCard = ({ expense, showActions = true, className }: ExpenseCardProp
             <FileText className="w-4 h-4 text-gray-400" />
             <span>Split: {expense.splitMethod}</span>
           </div>
+          
+          {relatedChildren.length > 0 && (
+            <div className="flex items-center gap-1 col-span-2 mt-1">
+              <Users className="w-4 h-4 text-gray-400" />
+              <span>
+                For: {relatedChildren.map(c => c.name || c.initials).join(', ')}
+              </span>
+            </div>
+          )}
         </div>
         
         {expense.notes && (

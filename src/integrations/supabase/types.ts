@@ -96,6 +96,42 @@ export type Database = {
         }
         Relationships: []
       }
+      expense_children: {
+        Row: {
+          child_id: string
+          created_at: string
+          expense_id: string
+          id: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          expense_id: string
+          id?: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          expense_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_children_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_children_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expenses: {
         Row: {
           amount: number

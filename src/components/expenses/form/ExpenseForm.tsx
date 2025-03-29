@@ -16,12 +16,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { useExpenseMutations } from '@/hooks/expenses';
 import { ExpenseCategory, SplitMethod, Expense } from '@/utils/types';
 import { format } from 'date-fns';
+import * as z from 'zod';
 
 // Import the form sections
 import ExpenseDetailsSection, { formSchema, FormValues } from './ExpenseDetailsSection';
 import ReceiptUploadSection from './ReceiptUploadSection';
 import NotesSection from './NotesSection';
 import FormActions from './FormActions';
+import ChildrenSelectionSection from './ChildrenSelectionSection';
 
 // Define props interface
 interface ExpenseFormProps {
@@ -54,8 +56,13 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
     'custom'
   ];
   
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  // Update the form schema to include childIds
+  const formWithChildrenSchema = formSchema.extend({
+    childIds: z.array(z.string()).optional()
+  });
+  
+  const form = useForm<FormValues & { childIds: string[] }>({
+    resolver: zodResolver(formWithChildrenSchema),
     defaultValues: expense ? {
       description: expense.description,
       amount: expense.amount.toString(),
@@ -63,6 +70,7 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
       category: expense.category,
       splitMethod: expense.splitMethod,
       notes: expense.notes || "",
+      childIds: expense.childIds || []
     } : {
       description: "",
       amount: "",
@@ -70,6 +78,7 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
       category: "education" as ExpenseCategory,
       splitMethod: "none" as SplitMethod,
       notes: "",
+      childIds: []
     },
   });
   
@@ -77,7 +86,7 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
     setReceiptUrl(url);
   };
   
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: FormValues & { childIds: string[] }) => {
     if (!user) {
       toast.error("You must be signed in to add an expense");
       return;
@@ -97,7 +106,8 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
             category: values.category as ExpenseCategory,
             splitMethod: values.splitMethod as SplitMethod,
             notes: values.notes || undefined,
-            receiptUrl: receiptUrl || undefined
+            receiptUrl: receiptUrl || undefined,
+            childIds: values.childIds
           }
         });
       } else {
@@ -111,7 +121,8 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
           splitMethod: values.splitMethod as SplitMethod,
           notes: values.notes || undefined,
           receiptUrl: receiptUrl || undefined,
-          paidBy: user.id // Add the paidBy property with the current user's ID
+          paidBy: user.id, // Add the paidBy property with the current user's ID
+          childIds: values.childIds
         });
       }
       
@@ -143,6 +154,10 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
               form={form} 
               categories={categories} 
               splitMethods={splitMethods} 
+            />
+            
+            <ChildrenSelectionSection 
+              defaultSelectedIds={expense?.childIds}
             />
             
             <ReceiptUploadSection 
