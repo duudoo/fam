@@ -23,8 +23,12 @@ interface CoParentsTabProps {
 
 const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoParentsTabProps) => {
   const [addingCoParent, setAddingCoParent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInviteCoParent = async (email: string, message?: string) => {
+    if (isSubmitting) return; // Prevent multiple submissions
+    
+    setIsSubmitting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -81,7 +85,6 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
       } catch (emailError) {
         console.error("Failed to send co-parent invitation email:", emailError);
         toast.warning("Invitation created but email delivery failed. The user can still sign up using the invitation link.");
-        // Don't fail the invitation process if the email fails
       }
 
       if (invite) {
@@ -105,6 +108,9 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
     } catch (error) {
       console.error('Error sending invite:', error);
       toast.error("Failed to send invitation");
+      // Don't close the form on error
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

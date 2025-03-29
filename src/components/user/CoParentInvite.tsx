@@ -37,8 +37,15 @@ const CoParentInvite = ({ onSubmit, onCancel }: CoParentInviteProps) => {
     },
   });
 
-  const handleSubmit = (data: FormData) => {
-    onSubmit(data.email, data.message);
+  const handleSubmit = async (data: FormData) => {
+    try {
+      await onSubmit(data.email, data.message);
+      // Only reset the form if submission is successful
+      // The parent component will close the form on successful submission
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      // Form will retain values if submission fails
+    }
   };
 
   return (
