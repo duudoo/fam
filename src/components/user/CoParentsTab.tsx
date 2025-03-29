@@ -65,15 +65,22 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
       
       // Send invitation email
       try {
-        await emailAPI.sendCoParentInviteEmail(
+        const emailResult = await emailAPI.sendCoParentInviteEmail(
           email, 
           currentUser.name || 'A co-parent', 
           message, 
           inviteLink
         );
-        console.log("Co-parent invitation email sent successfully");
+        
+        if (emailResult?.error) {
+          console.error("Failed to send co-parent invitation email:", emailResult.error);
+          toast.warning("Invitation created but email delivery failed. The user can still sign up using the invitation link.");
+        } else {
+          console.log("Co-parent invitation email sent successfully");
+        }
       } catch (emailError) {
         console.error("Failed to send co-parent invitation email:", emailError);
+        toast.warning("Invitation created but email delivery failed. The user can still sign up using the invitation link.");
         // Don't fail the invitation process if the email fails
       }
 
