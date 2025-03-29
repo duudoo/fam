@@ -44,6 +44,7 @@ export type ExpenseStatus =
   | 'paid';
 
 export type SplitMethod = 
+  | 'none'
   | '50/50'
   | 'income-based'
   | 'custom';

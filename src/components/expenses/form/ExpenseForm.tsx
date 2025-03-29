@@ -47,6 +47,7 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
   ];
   
   const splitMethods: SplitMethod[] = [
+    'none',
     '50/50',
     'income-based',
     'custom'
@@ -66,7 +67,7 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
       amount: "",
       date: new Date(),
       category: "education" as ExpenseCategory,
-      splitMethod: "50/50" as SplitMethod,
+      splitMethod: "none" as SplitMethod,
       notes: "",
     },
   });
@@ -102,7 +103,8 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
           category: values.category as ExpenseCategory,
           status: 'pending',
           splitMethod: values.splitMethod as SplitMethod,
-          notes: values.notes || undefined
+          notes: values.notes || undefined,
+          paidBy: user.id // Add the paidBy property with the current user's ID
         });
       }
       
