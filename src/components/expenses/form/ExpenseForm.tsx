@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { 
@@ -18,14 +17,12 @@ import { ExpenseCategory, SplitMethod, Expense } from '@/utils/types';
 import { format } from 'date-fns';
 import { supabase } from "@/integrations/supabase/client";
 
-// Import the form sections
 import ExpenseDetailsSection, { formSchema, FormValues } from './ExpenseDetailsSection';
 import ReceiptUploadSection from './ReceiptUploadSection';
 import NotesSection from './NotesSection';
 import FormActions from './FormActions';
 import ChildrenSelectionSection from './ChildrenSelectionSection';
 
-// Define props interface
 interface ExpenseFormProps {
   expense?: Expense;
   onExpenseAdded?: () => void;
@@ -71,7 +68,7 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
       amount: "",
       date: new Date(),
       category: "education" as ExpenseCategory,
-      splitMethod: "none" as SplitMethod,
+      splitMethod: "50/50" as SplitMethod,
       notes: "",
       childIds: []
     },
@@ -81,10 +78,8 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
     setReceiptUrl(url);
   };
 
-  // Function to send email notification for expense approval
   const sendExpenseNotification = async (expenseData: any, approvalToken: string) => {
     try {
-      // Get co-parent email
       const { data: parentChildren, error: pcError } = await supabase
         .from('parent_children')
         .select(`
@@ -95,14 +90,12 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
       
       if (pcError) throw pcError;
       
-      // Find co-parent IDs (parents who share a child with the current user)
       const childParents = parentChildren.reduce((acc, pc) => {
         if (!acc[pc.child_id]) acc[pc.child_id] = [];
         if (pc.parent_id !== user?.id) acc[pc.child_id].push(pc.parent_id);
         return acc;
       }, {} as Record<string, string[]>);
       
-      // Get unique co-parent IDs
       const coParentIds = Array.from(
         new Set(
           Object.values(childParents).flat()
@@ -114,7 +107,6 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
         return;
       }
       
-      // Get co-parent emails
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, email, full_name')
@@ -122,7 +114,6 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
       
       if (profilesError) throw profilesError;
       
-      // Get current user profile for sender name
       const { data: currentProfile, error: currentProfileError } = await supabase
         .from('profiles')
         .select('full_name')
@@ -134,16 +125,42 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
       const formattedDate = format(new Date(expenseData.date), 'MMM d, yyyy');
       const frontendUrl = window.location.origin;
       
-      // Send email notification to each co-parent
+      const totalAmount = parseFloat(expenseData.amount);
+      const splitMethod = expenseData.splitMethod;
+      
+      let splitAmounts: Record<string, number> = {};
+      
+      splitAmounts[user?.id || ''] = totalAmount;
+      
+      if (splitMethod === '50/50' && coParentIds.length > 0) {
+        const amountPerParent = totalAmount / 2;
+        splitAmounts[user?.id || ''] = amountPerParent;
+        
+        coParentIds.forEach(coParentId => {
+          splitAmounts[coParentId] = amountPerParent;
+        });
+      }
+      
+      const { error: splitError } = await supabase
+        .from('expenses')
+        .update({ split_amounts: splitAmounts })
+        .eq('id', expenseData.id);
+        
+      if (splitError) {
+        console.error("Error updating split amounts:", splitError);
+      }
+      
       const notificationPromises = profiles.map(async (profile) => {
-        // Create a record of the notification
+        const coParentAmount = splitAmounts[profile.id] || 0;
+        
         const { data: notification, error: notifError } = await supabase
           .from('expense_notifications')
           .insert({
             expense_id: expenseData.id,
             sent_to: profile.email,
             token: approvalToken,
-            notification_type: 'expense_approval'
+            notification_type: 'expense_approval',
+            amount: coParentAmount
           })
           .select()
           .single();
@@ -151,26 +168,26 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
         if (notifError) throw notifError;
         
         const approveUrl = `${frontendUrl}/api/expense-action?token=${approvalToken}&action=approve`;
-        const disputeUrl = `${frontendUrl}/api/expense-action?token=${approvalToken}&action=dispute`;
+        const clarifyUrl = `${frontendUrl}/api/expense-action?token=${approvalToken}&action=clarify`;
         
-        // Call the edge function to send the email
         await supabase.functions.invoke('send-expense-notification', {
           body: {
             expenseId: expenseData.id,
             recipientEmail: profile.email,
             expenseAmount: parseFloat(expenseData.amount),
             expenseDescription: expenseData.description,
+            recipientAmount: coParentAmount,
             category: expenseData.category,
             date: formattedDate,
             payerName: currentProfile.full_name || "A co-parent",
             receiptUrl,
             approvalToken,
             approveUrl,
-            disputeUrl
+            clarifyUrl
           }
         });
         
-        console.log(`Notification sent to ${profile.email}`);
+        console.log(`Notification sent to ${profile.email} with amount ${coParentAmount}`);
       });
       
       await Promise.all(notificationPromises);
@@ -191,7 +208,6 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
     
     try {
       if (isEditing && expense) {
-        // Update existing expense using the mutation
         const updatedExpense = await updateExpense.mutateAsync({
           id: expense.id,
           updates: {
@@ -206,7 +222,6 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
           }
         });
       } else {
-        // Add new expense using the mutation
         const newExpense = await createExpense.mutateAsync({
           description: values.description,
           amount: parseFloat(values.amount),
@@ -220,7 +235,6 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
           childIds: values.childIds
         });
         
-        // Get the approval token from the newly created expense
         if (newExpense) {
           const { data: expenseData, error: expenseError } = await supabase
             .from('expenses')
@@ -229,13 +243,13 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
             .single();
             
           if (!expenseError && expenseData) {
-            // Send email notification for approval
             await sendExpenseNotification({
               id: newExpense.id,
               description: values.description,
               amount: values.amount,
               date: format(values.date, 'yyyy-MM-dd'),
               category: values.category,
+              splitMethod: values.splitMethod,
               childIds: values.childIds
             }, expenseData.approval_token);
           }

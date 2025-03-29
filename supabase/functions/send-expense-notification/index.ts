@@ -1,8 +1,15 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.3";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const resendApiKey = Deno.env.get("RESEND_API_KEY") || "";
+const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const frontendUrl = Deno.env.get("FRONTEND_URL") || "http://localhost:3000";
+
+const resend = new Resend(resendApiKey);
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,10 +17,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-export interface ExpenseNotificationPayload {
+interface EmailRequestBody {
   expenseId: string;
   recipientEmail: string;
   expenseAmount: number;
+  recipientAmount: number;
   expenseDescription: string;
   category: string;
   date: string;
@@ -21,7 +29,7 @@ export interface ExpenseNotificationPayload {
   receiptUrl?: string;
   approvalToken: string;
   approveUrl: string;
-  disputeUrl: string;
+  clarifyUrl: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -31,73 +39,99 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const payload: ExpenseNotificationPayload = await req.json();
+    const payload: EmailRequestBody = await req.json();
     
-    // Create HTML for the email
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background-color: #4F46E5; color: white; padding: 20px; text-align: center;">
-          <h1>Expense Approval Request</h1>
-        </div>
-        <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none;">
-          <p>Hello,</p>
-          <p>${payload.payerName} has added a new expense that requires your review.</p>
-          
-          <div style="background-color: #f9fafb; border-radius: 8px; padding: 16px; margin: 16px 0;">
-            <h2 style="margin-top: 0; color: #374151;">${payload.expenseDescription}</h2>
-            <p style="margin: 8px 0;"><strong>Amount:</strong> $${payload.expenseAmount.toFixed(2)}</p>
-            <p style="margin: 8px 0;"><strong>Category:</strong> ${payload.category}</p>
-            <p style="margin: 8px 0;"><strong>Date:</strong> ${payload.date}</p>
-            ${payload.receiptUrl ? `<p style="margin: 8px 0;"><a href="${payload.receiptUrl}" target="_blank" style="color: #4F46E5;">View Receipt</a></p>` : ''}
-          </div>
-          
-          <div style="margin: 30px 0; text-align: center;">
-            <a href="${payload.approveUrl}" style="background-color: #10B981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin-right: 10px; display: inline-block;">Approve Expense</a>
-            <a href="${payload.disputeUrl}" style="background-color: #EF4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Dispute Expense</a>
-          </div>
-          
-          <p style="margin-top: 30px;">You don't need to sign in to approve or dispute this expense. Simply click on the appropriate button above.</p>
-          <p style="margin-top: 30px;">Best regards,<br>The Famacle Team</p>
-        </div>
-      </div>
-    `;
+    const {
+      expenseId,
+      recipientEmail,
+      expenseAmount,
+      recipientAmount,
+      expenseDescription,
+      category,
+      date,
+      payerName,
+      receiptUrl,
+      approvalToken,
+      approveUrl,
+      clarifyUrl
+    } = payload;
 
-    console.log(`[EMAIL REQUEST] Sending expense notification to: ${payload.recipientEmail}`);
-    
-    const emailResponse = await resend.emails.send({
-      from: "Famacle <onboarding@resend.dev>",
-      to: payload.recipientEmail,
-      subject: `Expense Approval Request: $${payload.expenseAmount.toFixed(2)} for ${payload.expenseDescription}`,
-      html: html,
-    });
-
-    if (emailResponse.error) {
-      console.error("[EMAIL ERROR] Failed to send expense notification:", emailResponse.error);
+    if (!recipientEmail || !expenseDescription || !expenseAmount) {
       return new Response(
-        JSON.stringify({ error: emailResponse.error }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        JSON.stringify({ error: "Missing required fields" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    console.log("[EMAIL SUCCESS] Expense notification sent successfully:", emailResponse);
+    const formattedCategory = category.charAt(0).toUpperCase() + category.slice(1);
+    
+    const receiptSection = receiptUrl 
+      ? `<div style="margin-bottom: 20px;">
+           <p style="margin-bottom: 10px; font-weight: bold;">Receipt:</p>
+           <img src="${receiptUrl}" alt="Receipt" style="max-width: 300px; border: 1px solid #ddd; padding: 5px;" />
+         </div>`
+      : '';
 
-    return new Response(JSON.stringify(emailResponse), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
+    const { data: emailResult, error: emailError } = await resend.emails.send({
+      from: "Famacle <no-reply@famacle.com>",
+      to: [recipientEmail],
+      subject: `Expense Approval Required: ${expenseDescription}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e4e4e4; border-radius: 5px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="color: #4a5568; margin-bottom: 5px;">Expense Approval Request</h1>
+            <p style="color: #718096; margin-top: 0;">${payerName} has added a new shared expense</p>
+          </div>
+
+          <div style="background-color: #f7fafc; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
+            <h2 style="color: #4a5568; margin-top: 0;">${expenseDescription}</h2>
+            <p style="color: #718096; margin: 5px 0;">Date: ${date}</p>
+            <p style="color: #718096; margin: 5px 0;">Category: ${formattedCategory}</p>
+            <p style="color: #718096; margin: 5px 0;">Total Amount: £${expenseAmount.toFixed(2)}</p>
+            <p style="color: #4a5568; font-weight: bold; margin: 15px 0 5px;">Your share: £${recipientAmount.toFixed(2)}</p>
+          </div>
+
+          ${receiptSection}
+
+          <div style="display: flex; gap: 10px; margin-bottom: 20px; justify-content: center;">
+            <a href="${approveUrl}" style="display: inline-block; background-color: #48bb78; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; text-align: center; min-width: 120px;">Approve</a>
+            <a href="${clarifyUrl}" style="display: inline-block; background-color: #ed8936; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; text-align: center; min-width: 120px;">Request Clarification</a>
+          </div>
+
+          <div style="font-size: 12px; color: #a0aec0; text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #e4e4e4;">
+            <p>This is an automated email from Famacle. Please do not reply to this email.</p>
+            <p>If you would like to manage your expenses directly, please <a href="${frontendUrl}/sign-up" style="color: #4299e1;">create an account</a>.</p>
+          </div>
+        </div>
+      `
     });
-  } catch (error: any) {
-    console.error("[EMAIL ERROR] Error in send-expense-notification function:", error);
+
+    if (emailError) {
+      console.error("Error sending email:", emailError);
+      return new Response(
+        JSON.stringify({ error: emailError }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+      JSON.stringify({ 
+        message: "Email sent successfully",
+        id: emailResult?.id 
+      }),
+      { 
+        status: 200, 
+        headers: { "Content-Type": "application/json", ...corsHeaders } 
+      }
+    );
+  } catch (error) {
+    console.error("Error in send-expense-notification function:", error);
+    
+    return new Response(
+      JSON.stringify({ error: error.message || "Unknown error occurred" }),
+      { 
+        status: 500, 
+        headers: { "Content-Type": "application/json", ...corsHeaders } 
       }
     );
   }

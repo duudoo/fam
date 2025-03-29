@@ -19,33 +19,59 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Get URL parameters
-  const url = new URL(req.url);
-  const token = url.searchParams.get("token");
-  const action = url.searchParams.get("action");
+  // Get request data
+  const { token, action } = await req.json();
   
-  // Redirect URL (frontend page to show after action)
-  const frontendUrl = Deno.env.get("FRONTEND_URL") || "http://localhost:3000";
-  
-  if (!token || !action || (action !== "approve" && action !== "dispute")) {
-    return Response.redirect(`${frontendUrl}/expense-error?reason=invalid-parameters`, 302);
+  // Validate input
+  if (!token || !action || (action !== "approve" && action !== "clarify")) {
+    return new Response(JSON.stringify({ 
+      error: "invalid-parameters",
+      message: "Invalid or missing parameters" 
+    }), { 
+      status: 400,
+      headers: { "Content-Type": "application/json", ...corsHeaders }
+    });
   }
 
   try {
-    // Find the expense with this token
+    // Find the expense notification with this token
+    const { data: notification, error: notifError } = await supabase
+      .from("expense_notifications")
+      .select("expense_id, sent_to")
+      .eq("token", token)
+      .single();
+
+    if (notifError || !notification) {
+      console.error("Error finding notification:", notifError);
+      return new Response(JSON.stringify({ 
+        error: "not-found",
+        message: "Notification not found or already processed" 
+      }), { 
+        status: 404,
+        headers: { "Content-Type": "application/json", ...corsHeaders }
+      });
+    }
+
+    // Find the expense
     const { data: expense, error: expenseError } = await supabase
       .from("expenses")
-      .select("id, description, amount, status")
-      .eq("approval_token", token)
+      .select("id, description, amount, status, split_method, paid_by, split_amounts")
+      .eq("id", notification.expense_id)
       .single();
 
     if (expenseError || !expense) {
       console.error("Error finding expense:", expenseError);
-      return Response.redirect(`${frontendUrl}/expense-error?reason=not-found`, 302);
+      return new Response(JSON.stringify({ 
+        error: "not-found",
+        message: "Expense not found" 
+      }), { 
+        status: 404,
+        headers: { "Content-Type": "application/json", ...corsHeaders }
+      });
     }
 
     // Record the notification action
-    const { error: notificationError } = await supabase
+    const { error: updateNotifError } = await supabase
       .from("expense_notifications")
       .update({
         actioned_at: new Date().toISOString(),
@@ -53,31 +79,86 @@ const handler = async (req: Request): Promise<Response> => {
       })
       .eq("token", token);
 
-    if (notificationError) {
-      console.error("Error updating notification:", notificationError);
-      return Response.redirect(`${frontendUrl}/expense-error?reason=notification-update-failed`, 302);
+    if (updateNotifError) {
+      console.error("Error updating notification:", updateNotifError);
+      return new Response(JSON.stringify({ 
+        error: "notification-update-failed",
+        message: "Failed to update notification" 
+      }), { 
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders }
+      });
     }
 
     // Update the expense status based on the action
-    const newStatus = action === "approve" ? "approved" : "disputed";
-    const { error: updateError } = await supabase
+    const newStatus = action === "approve" ? "approved" : "clarification";
+    const { error: updateExpenseError } = await supabase
       .from("expenses")
       .update({ status: newStatus })
       .eq("id", expense.id);
 
-    if (updateError) {
-      console.error("Error updating expense:", updateError);
-      return Response.redirect(`${frontendUrl}/expense-error?reason=update-failed`, 302);
+    if (updateExpenseError) {
+      console.error("Error updating expense:", updateExpenseError);
+      return new Response(JSON.stringify({ 
+        error: "update-failed",
+        message: "Failed to update expense status" 
+      }), { 
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders }
+      });
     }
 
-    // Redirect to success page
-    return Response.redirect(
-      `${frontendUrl}/expense-success?action=${action}&id=${expense.id}`, 
-      302
-    );
+    // If approved, we need to update the parent's dashboard to show awaiting payment
+    if (action === "approve") {
+      // Find the co-parent (recipient of the notification)
+      const coParentEmail = notification.sent_to;
+      
+      const { data: coParent, error: coParentError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", coParentEmail)
+        .single();
+        
+      if (coParentError || !coParent) {
+        console.error("Error finding co-parent:", coParentError);
+      } else {
+        // Create a payment record for the co-parent
+        const splitAmounts = expense.split_amounts || {};
+        const amountToPay = splitAmounts[coParent.id] || (expense.split_method === "50/50" ? expense.amount / 2 : 0);
+        
+        const { error: paymentError } = await supabase
+          .from("expense_payments")
+          .insert({
+            expense_id: expense.id,
+            payer_id: coParent.id,
+            amount: amountToPay,
+            status: "pending",
+            due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // Due in 7 days
+          });
+          
+        if (paymentError) {
+          console.error("Error creating payment record:", paymentError);
+        }
+      }
+    }
+
+    return new Response(JSON.stringify({ 
+      expenseId: expense.id,
+      action: action,
+      status: newStatus
+    }), { 
+      status: 200,
+      headers: { "Content-Type": "application/json", ...corsHeaders }
+    });
   } catch (error) {
     console.error("Error handling expense action:", error);
-    return Response.redirect(`${frontendUrl}/expense-error?reason=server-error`, 302);
+    return new Response(JSON.stringify({ 
+      error: "server-error",
+      message: "An unexpected error occurred" 
+    }), { 
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders }
+    });
   }
 };
 
