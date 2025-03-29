@@ -1,37 +1,48 @@
 
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import HomeHeader from '@/components/home/HomeHeader';
+import HeroSection from '@/components/home/HeroSection';
+import FeaturesSection from '@/components/home/FeaturesSection';
+import PricingSection from '@/components/home/PricingSection';
+import CTASection from '@/components/home/CTASection';
+import HomeFooter from '@/components/home/HomeFooter';
 
 const Home = () => {
-  const navigate = useNavigate();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null; // Prevent flash of unstyled content
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-famacle-blue-light/30">
-      <div className="container mx-auto px-4 py-16">
-        <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-famacle-blue sm:text-5xl md:text-6xl">
-            Welcome to Famacle
-          </h1>
-          <p className="mt-6 text-xl text-gray-600">
-            Manage your family finances with ease
-          </p>
-          <div className="mt-10 flex justify-center gap-4">
-            <Button
-              onClick={() => navigate('/signin')}
-              className="px-6 py-3"
-            >
-              Sign In
-            </Button>
-            <Button
-              onClick={() => navigate('/signup')}
-              variant="outline"
-              className="px-6 py-3"
-            >
-              Sign Up
-            </Button>
-          </div>
-        </div>
+    <div id="top" className="min-h-screen bg-gradient-to-b from-white to-famacle-blue-light/30">
+      {/* Header with Auth Links */}
+      <HomeHeader />
+
+      {/* Hero Section */}
+      <HeroSection />
+
+      {/* Abstract background shape */}
+      <div className="absolute top-0 right-0 w-1/3 h-2/3 -z-10 overflow-hidden">
+        <div className="absolute right-0 top-0 w-full h-full bg-famacle-blue-light/20 rounded-bl-[100px]"></div>
       </div>
+      
+      {/* Features Section */}
+      <FeaturesSection />
+      
+      {/* Pricing Section */}
+      <PricingSection />
+      
+      {/* CTA Section */}
+      <CTASection />
+      
+      {/* Footer */}
+      <HomeFooter />
     </div>
   );
 };
