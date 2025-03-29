@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
@@ -87,7 +86,7 @@ const UserManagementPage = () => {
       if (error) throw error;
 
       if (data) {
-        setInvites(data.map((invite: CoParentInviteRow) => ({
+        setInvites(data.map((invite) => ({
           id: invite.id,
           email: invite.email,
           status: invite.status as any,
