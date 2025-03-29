@@ -1,8 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { FormValues } from './ExpenseDetailsSection';
+import { FormValues } from './schema';
 
 export const sendExpenseNotification = async (expenseData: any, approvalToken: string, userId: string | undefined) => {
   try {
