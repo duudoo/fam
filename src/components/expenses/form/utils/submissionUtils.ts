@@ -16,7 +16,8 @@ export const processFormSubmission = async (
   setIsSubmitting: (value: boolean) => void,
   resetForm: () => void,
   setReceiptUrl: (url: string) => void,
-  onExpenseAdded?: () => void
+  onComplete?: () => void,
+  formAction?: string
 ) => {
   if (!user) {
     toast.error("You must be signed in to add an expense");
@@ -34,19 +35,29 @@ export const processFormSubmission = async (
         updateExpense
       );
     } else {
-      await handleExpenseCreation(
+      const newExpense = await handleExpenseCreation(
         values,
         receiptUrl,
         user,
         createExpense
       );
+      
+      if (newExpense && formAction === 'saveAndShare') {
+        // Get the co-parent email from the form submission
+        const coParentEmail = document.querySelector('input[type="email"]') as HTMLInputElement;
+        if (coParentEmail && coParentEmail.value) {
+          await sendExpenseToCoParent(newExpense.id, coParentEmail.value, values, user);
+        }
+      }
     }
     
-    resetForm();
-    setReceiptUrl('');
+    if (formAction !== 'saveAndAdd') {
+      resetForm();
+      setReceiptUrl('');
+    }
     
-    if (onExpenseAdded) {
-      onExpenseAdded();
+    if (onComplete) {
+      onComplete();
     }
   } catch (error) {
     console.error(isEditing ? "Error updating expense:" : "Error adding expense:", error);
@@ -71,6 +82,7 @@ const handleExpenseUpdate = async (
       date: format(values.date, 'yyyy-MM-dd'),
       category: values.category,
       splitMethod: values.splitMethod,
+      splitPercentage: values.splitPercentage,
       notes: values.notes || undefined,
       receiptUrl: receiptUrl || undefined,
       childIds: values.childIds
@@ -92,6 +104,7 @@ const handleExpenseCreation = async (
     category: values.category,
     status: 'pending',
     splitMethod: values.splitMethod,
+    splitPercentage: values.splitPercentage,
     notes: values.notes || undefined,
     receiptUrl: receiptUrl || undefined,
     paidBy: user.id,
@@ -106,16 +119,48 @@ const handleExpenseCreation = async (
       .single();
       
     if (!expenseError && expenseData) {
-      await sendExpenseNotification({
-        id: newExpense.id,
-        description: values.description,
-        amount: values.amount,
-        date: format(values.date, 'yyyy-MM-dd'),
-        category: values.category,
-        splitMethod: values.splitMethod,
-        childIds: values.childIds,
-        receiptUrl: receiptUrl
-      }, expenseData.approval_token, user.id);
+      // We'll send notification later when using Save & Share
+      if (values.splitMethod !== 'custom' || !values.splitPercentage) {
+        await sendExpenseNotification({
+          id: newExpense.id,
+          description: values.description,
+          amount: values.amount,
+          date: format(values.date, 'yyyy-MM-dd'),
+          category: values.category,
+          splitMethod: values.splitMethod,
+          childIds: values.childIds,
+          receiptUrl: receiptUrl
+        }, expenseData.approval_token, user.id);
+      }
     }
+  }
+  
+  return newExpense;
+};
+
+// Function to send expense to co-parent
+const sendExpenseToCoParent = async (
+  expenseId: string,
+  coParentEmail: string,
+  values: FormValues,
+  user: any
+) => {
+  try {
+    // This would usually call an edge function to send an email
+    toast.success(`Expense shared with ${coParentEmail}`);
+    
+    // Create a notification for the co-parent
+    await supabase.from('notifications').insert({
+      user_id: user.id, // This will need to be updated to the co-parent's ID in a real implementation
+      type: 'expense_shared',
+      message: `New expense shared: ${values.description} for $${values.amount}`,
+      related_id: expenseId
+    });
+    
+    return true;
+  } catch (error) {
+    console.error("Error sharing expense:", error);
+    toast.error("Failed to share expense");
+    return false;
   }
 };

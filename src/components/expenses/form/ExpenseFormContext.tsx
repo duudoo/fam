@@ -5,6 +5,7 @@ import { Expense, ExpenseCategory, SplitMethod } from '@/utils/types';
 interface ExpenseFormContextProps {
   isEditing: boolean;
   isSubmitting: boolean;
+  setIsSubmitting: (value: boolean) => void;
   receiptUrl: string;
   setReceiptUrl: (url: string) => void;
   categories: ExpenseCategory[];
@@ -27,13 +28,33 @@ export const useExpenseFormContext = () => {
 interface ExpenseFormProviderProps {
   children: React.ReactNode;
   expense?: Expense;
+  isSubmitting?: boolean;
+  setIsSubmitting?: (value: boolean) => void;
+  receiptUrl?: string;
+  setReceiptUrl?: (url: string) => void;
   onExpenseAdded?: () => void;
   onCancel?: () => void;
 }
 
-export const ExpenseFormProvider = ({ children, expense, onExpenseAdded, onCancel }: ExpenseFormProviderProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [receiptUrl, setReceiptUrl] = useState<string>(expense?.receiptUrl || '');
+export const ExpenseFormProvider = ({ 
+  children, 
+  expense,
+  isSubmitting: externalIsSubmitting,
+  setIsSubmitting: externalSetIsSubmitting,
+  receiptUrl: externalReceiptUrl,
+  setReceiptUrl: externalSetReceiptUrl, 
+  onExpenseAdded, 
+  onCancel 
+}: ExpenseFormProviderProps) => {
+  // Use external state if provided, otherwise create local state
+  const [localIsSubmitting, setLocalIsSubmitting] = useState(false);
+  const [localReceiptUrl, setLocalReceiptUrl] = useState<string>(expense?.receiptUrl || '');
+  
+  const isSubmitting = externalIsSubmitting !== undefined ? externalIsSubmitting : localIsSubmitting;
+  const setIsSubmitting = externalSetIsSubmitting || setLocalIsSubmitting;
+  const receiptUrl = externalReceiptUrl !== undefined ? externalReceiptUrl : localReceiptUrl;
+  const setReceiptUrl = externalSetReceiptUrl || setLocalReceiptUrl;
+  
   const isEditing = !!expense;
   
   const categories: ExpenseCategory[] = [
@@ -46,9 +67,7 @@ export const ExpenseFormProvider = ({ children, expense, onExpenseAdded, onCance
   ];
   
   const splitMethods: SplitMethod[] = [
-    'none',
     '50/50',
-    'income-based',
     'custom'
   ];
 
@@ -56,6 +75,7 @@ export const ExpenseFormProvider = ({ children, expense, onExpenseAdded, onCance
     <ExpenseFormContext.Provider value={{
       isEditing,
       isSubmitting,
+      setIsSubmitting,
       receiptUrl,
       setReceiptUrl,
       categories,

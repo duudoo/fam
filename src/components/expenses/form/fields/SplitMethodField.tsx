@@ -4,13 +4,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { UseFormReturn } from 'react-hook-form';
 import { SplitMethod } from '@/utils/types';
 import { FormValues } from '../schema';
+import { useEffect } from 'react';
 
 interface SplitMethodFieldProps {
   form: UseFormReturn<FormValues, any, undefined>;
   splitMethods: SplitMethod[];
+  onSplitMethodChange?: (method: SplitMethod) => void;
 }
 
-export const SplitMethodField = ({ form, splitMethods }: SplitMethodFieldProps) => {
+export const SplitMethodField = ({ form, splitMethods, onSplitMethodChange }: SplitMethodFieldProps) => {
+  // When split method changes, notify parent component
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'splitMethod' && onSplitMethodChange) {
+        onSplitMethodChange(value.splitMethod as SplitMethod);
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form, onSplitMethodChange]);
+
   return (
     <FormField
       control={form.control}
@@ -27,7 +40,9 @@ export const SplitMethodField = ({ form, splitMethods }: SplitMethodFieldProps) 
             <SelectContent>
               {splitMethods.map((method) => (
                 <SelectItem key={method} value={method}>
-                  {method}
+                  {method === "50/50" ? "50/50 Split" : 
+                   method === "custom" ? "Custom Split" : 
+                   method}
                 </SelectItem>
               ))}
             </SelectContent>

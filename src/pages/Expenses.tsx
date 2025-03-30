@@ -6,7 +6,7 @@ import { useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import ExpenseForm from "@/components/expenses/form/ExpenseForm";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
@@ -15,11 +15,13 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import ExpenseOverview from "@/components/expenses/ExpenseOverview";
 import ExpenseFilters from "@/components/expenses/ExpenseFilters";
 import ExpenseList from "@/components/expenses/ExpenseList";
+import ChildExpenseReport from "@/components/expenses/reports/ChildExpenseReport";
 
 const ExpensesPage = () => {
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const [showForm, setShowForm] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   
   const {
     expenses,
@@ -91,14 +93,29 @@ const ExpensesPage = () => {
                 <p className="text-gray-500 mt-1">Track and manage child-related expenses</p>
               </div>
               
-              <Button onClick={() => setShowForm(!showForm)}>
-                {showForm ? "Cancel" : (
-                  <>
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Expense
-                  </>
-                )}
-              </Button>
+              <div className="flex space-x-2">
+                <Button 
+                  variant={showReport ? "outline" : "default"}
+                  onClick={() => {
+                    setShowReport(!showReport);
+                    if (showForm) setShowForm(false);
+                  }}
+                >
+                  {showReport ? "Hide Report" : "Child Report"}
+                </Button>
+                
+                <Button onClick={() => {
+                  setShowForm(!showForm);
+                  if (showReport && showForm) setShowReport(false);
+                }}>
+                  {showForm ? "Cancel" : (
+                    <>
+                      <Plus className="w-4 h-4 mr-2" />
+                      New Expense
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
             
             {showForm && (
@@ -107,6 +124,12 @@ const ExpensesPage = () => {
                   onExpenseAdded={() => setShowForm(false)} 
                   onCancel={() => setShowForm(false)}
                 />
+              </div>
+            )}
+            
+            {showReport && (
+              <div className="mb-8">
+                <ChildExpenseReport expenses={expenses} />
               </div>
             )}
 

@@ -12,9 +12,15 @@ interface ExpenseDetailsSectionProps {
   form: UseFormReturn<FormValues, any, undefined>;
   categories: ExpenseCategory[];
   splitMethods: SplitMethod[];
+  onSplitMethodChange?: (method: SplitMethod) => void;
 }
 
-const ExpenseDetailsSection = ({ form, categories, splitMethods }: ExpenseDetailsSectionProps) => {
+const ExpenseDetailsSection = ({ 
+  form, 
+  categories, 
+  splitMethods,
+  onSplitMethodChange
+}: ExpenseDetailsSectionProps) => {
   return (
     <>
       <DescriptionField form={form} />
@@ -26,7 +32,11 @@ const ExpenseDetailsSection = ({ form, categories, splitMethods }: ExpenseDetail
       
       <div className="grid grid-cols-2 gap-4">
         <CategoryField form={form} categories={categories} />
-        <SplitMethodField form={form} splitMethods={splitMethods} />
+        <SplitMethodField 
+          form={form} 
+          splitMethods={splitMethods} 
+          onSplitMethodChange={onSplitMethodChange}
+        />
       </div>
     </>
   );

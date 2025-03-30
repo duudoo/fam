@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import { useExpenseFormContext } from './ExpenseFormContext';
 import ExpenseDetailsSection from './ExpenseDetailsSection';
 import ChildrenSelectionSection from './ChildrenSelectionSection';
@@ -7,6 +8,8 @@ import NotesSection from './NotesSection';
 import FormActions from './FormActions';
 import { UseFormReturn } from 'react-hook-form';
 import { FormValues } from './schema';
+import { SplitMethod } from '@/utils/types';
+import CustomSplitField from './fields/CustomSplitField';
 
 interface ExpenseFormContentProps {
   form: UseFormReturn<FormValues, any, undefined>;
@@ -22,6 +25,14 @@ const ExpenseFormContent = ({ form }: ExpenseFormContentProps) => {
     isSubmitting,
     isEditing
   } = useExpenseFormContext();
+  
+  const [showCustomSplit, setShowCustomSplit] = useState(
+    form.getValues().splitMethod === 'custom'
+  );
+  
+  const handleSplitMethodChange = (method: SplitMethod) => {
+    setShowCustomSplit(method === 'custom');
+  };
 
   return (
     <>
@@ -29,6 +40,12 @@ const ExpenseFormContent = ({ form }: ExpenseFormContentProps) => {
         form={form} 
         categories={categories} 
         splitMethods={splitMethods} 
+        onSplitMethodChange={handleSplitMethodChange}
+      />
+      
+      <CustomSplitField 
+        form={form} 
+        visible={showCustomSplit} 
       />
       
       <ChildrenSelectionSection 
@@ -46,6 +63,8 @@ const ExpenseFormContent = ({ form }: ExpenseFormContentProps) => {
         onCancel={onCancel} 
         isSubmitting={isSubmitting} 
         isEditing={isEditing}
+        showSaveAndShare={!isEditing}
+        showSaveAndAddAnother={!isEditing}
       />
     </>
   );

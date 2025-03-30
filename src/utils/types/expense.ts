@@ -27,9 +27,7 @@ export type ExpenseStatus =
  * Methods for splitting expenses between co-parents
  */
 export type SplitMethod = 
-  | 'none'
   | '50/50'
-  | 'income-based'
   | 'custom';
 
 /**
@@ -60,6 +58,15 @@ export type Expense = {
   splitAmounts?: Record<string, number>;
   /** Optional notes about the expense */
   notes?: string;
+  /** Additional notes for disputes */
+  disputeNotes?: string;
+  /** Audit trail of status changes */
+  statusHistory?: {
+    status: ExpenseStatus;
+    timestamp: string;
+    userId: string;
+    note?: string;
+  }[];
   /** IDs of children associated with this expense */
   childIds?: string[];
   /** ISO timestamp when the expense was created */

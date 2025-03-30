@@ -18,7 +18,9 @@ export const createExpense = async (userId: string, newExpense: Omit<Expense, 'i
       receipt_url: newExpense.receiptUrl,
       status: newExpense.status,
       split_method: newExpense.splitMethod,
-      notes: newExpense.notes
+      split_percentage: newExpense.splitPercentage,
+      notes: newExpense.notes,
+      dispute_notes: newExpense.disputeNotes
     })
     .select()
     .single();
@@ -43,6 +45,11 @@ export const createExpense = async (userId: string, newExpense: Omit<Expense, 'i
     }
   }
   
+  // If it's a disputed expense, record the dispute in the status history
+  if (newExpense.status === 'disputed' && newExpense.disputeNotes) {
+    await recordStatusChange(data.id, 'disputed', userId, newExpense.disputeNotes);
+  }
+  
   return data;
 };
 
@@ -63,7 +70,9 @@ export const updateExpense = async (
   if (updates.receiptUrl !== undefined) dbUpdates.receipt_url = updates.receiptUrl;
   if (updates.status !== undefined) dbUpdates.status = updates.status;
   if (updates.splitMethod !== undefined) dbUpdates.split_method = updates.splitMethod;
+  if (updates.splitPercentage !== undefined) dbUpdates.split_percentage = updates.splitPercentage;
   if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+  if (updates.disputeNotes !== undefined) dbUpdates.dispute_notes = updates.disputeNotes;
 
   const { data, error } = await supabase
     .from('expenses')
@@ -101,6 +110,11 @@ export const updateExpense = async (
     }
   }
   
+  // If it's a status change and has dispute notes, record it in history
+  if (updates.status === 'disputed' && updates.disputeNotes) {
+    await recordStatusChange(expenseId, 'disputed', "system", updates.disputeNotes);
+  }
+  
   return data;
 };
 
@@ -123,15 +137,57 @@ export const deleteExpense = async (expenseId: string) => {
 /**
  * Update expense status
  */
-export const updateExpenseStatus = async (expenseId: string, status: ExpenseStatus) => {
+export const updateExpenseStatus = async (
+  expenseId: string, 
+  status: ExpenseStatus, 
+  userId: string = "system",
+  note?: string
+) => {
+  // Update the expense status
   const { error } = await supabase
     .from('expenses')
-    .update({ status })
+    .update({ 
+      status,
+      ...(status === 'disputed' && note ? { dispute_notes: note } : {})
+    })
     .eq('id', expenseId);
     
   if (error) {
     throw error;
   }
   
+  // Record the status change in history
+  await recordStatusChange(expenseId, status, userId, note);
+  
   return { id: expenseId, status };
+};
+
+/**
+ * Record a status change in the expense history
+ */
+const recordStatusChange = async (
+  expenseId: string,
+  status: ExpenseStatus,
+  userId: string,
+  note?: string
+) => {
+  try {
+    // In a production app, you would have a status_history table
+    // For this implementation, we'll just log it
+    console.log(`Status history: Expense ${expenseId} changed to ${status} by ${userId}${note ? ` with note: ${note}` : ''}`);
+    
+    // Example of how to implement with a real table:
+    /*
+    await supabase.from('expense_status_history').insert({
+      expense_id: expenseId,
+      status,
+      user_id: userId,
+      note,
+      created_at: new Date().toISOString()
+    });
+    */
+  } catch (error) {
+    console.error('Error recording status change:', error);
+    // Don't throw - this shouldn't fail the main operation
+  }
 };

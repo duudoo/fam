@@ -10,6 +10,7 @@ import { ExpenseFormProvider } from './ExpenseFormContext';
 import { processFormSubmission } from './expenseFormUtils';
 import { expenseFormSchema, FormValues } from './schema';
 import ExpenseFormContent from './ExpenseFormContent';
+import { useState } from 'react';
 
 interface ExpenseFormProps {
   expense?: Expense;
@@ -21,6 +22,8 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
   const { user } = useAuth();
   const { createExpense, updateExpense } = useExpenseMutations(user?.id);
   const isEditing = !!expense;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [receiptUrl, setReceiptUrl] = useState(expense?.receiptUrl || '');
   
   const form = useForm<FormValues>({
     resolver: zodResolver(expenseFormSchema),
@@ -31,7 +34,8 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
       category: expense.category,
       splitMethod: expense.splitMethod,
       notes: expense.notes || "",
-      childIds: expense.childIds || []
+      childIds: expense.childIds || [],
+      splitPercentage: expense.splitPercentage || undefined
     } : {
       description: "",
       amount: "",
@@ -39,23 +43,44 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
       category: "education",
       splitMethod: "50/50",
       notes: "",
-      childIds: []
+      childIds: [],
+      splitPercentage: undefined
     },
   });
   
-  const handleSubmit = async (values: FormValues) => {
+  const handleSubmit = async (values: FormValues, event: any) => {
+    const formAction = event?.nativeEvent?.submitter?.value;
+    
     await processFormSubmission(
       values,
       isEditing,
       expense,
-      undefined, // receiptUrl is managed by the context now
+      receiptUrl,
       user,
       createExpense,
       updateExpense,
-      () => {}, // setIsSubmitting is managed by the context
+      setIsSubmitting,
       form.reset,
-      () => {}, // setReceiptUrl is managed by the context
-      onExpenseAdded
+      setReceiptUrl,
+      () => {
+        if (formAction === 'saveAndAdd') {
+          // Reset form but don't close it
+          form.reset({
+            description: "",
+            amount: "",
+            date: new Date(),
+            category: "education",
+            splitMethod: "50/50",
+            notes: "",
+            childIds: [],
+            splitPercentage: undefined
+          });
+        } else {
+          // Close form
+          if (onExpenseAdded) onExpenseAdded();
+        }
+      },
+      formAction
     );
   };
   
@@ -71,9 +96,17 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
           expense={expense}
           onExpenseAdded={onExpenseAdded}
           onCancel={onCancel}
+          isSubmitting={isSubmitting}
+          setIsSubmitting={setIsSubmitting}
+          receiptUrl={receiptUrl}
+          setReceiptUrl={setReceiptUrl}
         >
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <form 
+              id="expense-form"
+              onSubmit={form.handleSubmit(handleSubmit)} 
+              className="space-y-6"
+            >
               <ExpenseFormContent form={form} />
             </form>
           </Form>
