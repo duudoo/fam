@@ -35,7 +35,7 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
 
       console.log("Adding child:", child);
       
-      // First, create the child record - don't use the .single() modifier as it can cause issues
+      // First, create the child record
       const { data, error: childError } = await supabase
         .from('children')
         .insert({
@@ -47,11 +47,13 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
 
       if (childError) {
         console.error('Error creating child:', childError);
-        throw childError;
+        toast.error(`Failed to create child: ${childError.message}`);
+        return;
       }
       
       if (!data || data.length === 0) {
-        throw new Error("Failed to create child");
+        toast.error("Failed to create child record");
+        return;
       }
 
       const newChild = data[0];
@@ -68,7 +70,8 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
 
       if (relationError) {
         console.error('Error creating parent-child relation:', relationError);
-        throw relationError;
+        toast.error(`Failed to link child to parent: ${relationError.message}`);
+        return;
       }
 
       // Close the form and show success message

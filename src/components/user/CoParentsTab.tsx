@@ -38,7 +38,7 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
         return;
       }
 
-      // Check if invitation already exists - don't use .single() as it can cause errors
+      // Check if invitation already exists
       const { data: existingInvites, error: checkError } = await supabase
         .from('co_parent_invites')
         .select('*')
@@ -47,7 +47,8 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
       
       if (checkError) {
         console.error("Error checking existing invites:", checkError);
-        throw checkError;
+        toast.error(`Error checking invites: ${checkError.message}`);
+        return;
       }
       
       if (existingInvites && existingInvites.length > 0) {
@@ -55,7 +56,7 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
         return;
       }
 
-      // Create the invitation - don't use .single() for the insert
+      // Create the invitation
       const { data, error } = await supabase
         .from('co_parent_invites')
         .insert({
@@ -68,11 +69,13 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
 
       if (error) {
         console.error("Error creating invitation:", error);
-        throw error;
+        toast.error(`Failed to create invitation: ${error.message}`);
+        return;
       }
 
       if (!data || data.length === 0) {
-        throw new Error("Failed to create invitation");
+        toast.error("Failed to create invitation record");
+        return;
       }
 
       const invite = data[0];

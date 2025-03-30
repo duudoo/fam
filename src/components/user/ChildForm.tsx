@@ -64,7 +64,6 @@ const ChildForm = ({ onSubmit, onCancel, isSubmitting = false }: ChildFormProps)
       
       // Reset form on successful submission
       form.reset();
-      toast.success(`Child ${childData.name || childData.initials} added successfully`);
     } catch (error) {
       console.error('Error submitting form:', error);
       toast.error('Failed to add child. Please try again.');
