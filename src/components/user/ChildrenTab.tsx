@@ -50,7 +50,13 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
 
       if (childInsertResult.error) {
         console.error('Error creating child:', childInsertResult.error);
-        toast.error(`Failed to create child: ${childInsertResult.error.message}`);
+        
+        // Check for specific error cases
+        if (childInsertResult.error.message.includes('permission denied')) {
+          toast.error("Permission denied. Please ensure you're signed in properly.");
+        } else {
+          toast.error(`Failed to create child: ${childInsertResult.error.message}`);
+        }
         return;
       }
       
@@ -74,7 +80,13 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
 
       if (relationResult.error) {
         console.error('Error creating parent-child relation:', relationResult.error);
-        toast.error(`Failed to link child to parent: ${relationResult.error.message}`);
+        
+        // Check for specific error cases
+        if (relationResult.error.message.includes('permission denied')) {
+          toast.error("Permission denied when linking child to parent. Please ensure you're signed in properly.");
+        } else {
+          toast.error(`Failed to link child to parent: ${relationResult.error.message}`);
+        }
         
         // Try to clean up the orphaned child record
         await supabase.from('children').delete().eq('id', newChild.id);
