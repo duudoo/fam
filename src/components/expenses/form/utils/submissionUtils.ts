@@ -42,7 +42,8 @@ export const processFormSubmission = async (
         values,
         receiptUrl,
         user,
-        createExpense
+        createExpense,
+        formAction
       );
       
       if (newExpense && formAction === 'saveAndShare') {
@@ -98,7 +99,8 @@ const handleExpenseCreation = async (
   values: FormValues, 
   receiptUrl: string, 
   user: any, 
-  createExpense: any
+  createExpense: any,
+  formAction?: string
 ) => {
   const newExpense = await createExpense.mutateAsync({
     description: values.description,
