@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Plus } from 'lucide-react';
@@ -83,7 +84,7 @@ const ExpensesSection = () => {
     <Card>
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
-          <CardTitle className="text-xl font-semibold">Recent Expenses</CardTitle>
+          <CardTitle className="text-xl font-semibold">Expenses</CardTitle>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/expenses" className="flex items-center text-famacle-blue">
               View All 
@@ -162,7 +163,7 @@ const ExpensesSection = () => {
       </CardContent>
       <CardFooter className="border-t pt-4">
         <Button asChild variant="outline" className="w-full">
-          <Link to="/expenses">
+          <Link to="/expenses?newExpense=true">
             <Plus className="w-4 h-4 mr-2" />
             New Expense
           </Link>

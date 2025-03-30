@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { ExpenseCategory } from '@/utils/types';
+import { ExpenseCategory, Child } from '@/utils/types';
+import { useChildren } from '@/hooks/children';
 
 interface CategorySummary {
   name: string;
@@ -11,16 +12,29 @@ interface CategorySummary {
   color: string;
 }
 
+interface ChildCategorySummary {
+  [childId: string]: CategorySummary[];
+}
+
 export const useMonthlySummary = () => {
   const [categories, setCategories] = useState<CategorySummary[]>([]);
+  const [categoryByChild, setCategoryByChild] = useState<ChildCategorySummary>({});
+  const [children, setChildren] = useState<Child[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { data: childrenData } = useChildren();
+
+  useEffect(() => {
+    if (childrenData) {
+      setChildren(childrenData);
+    }
+  }, [childrenData]);
 
   useEffect(() => {
     if (user) {
       fetchMonthlySummary();
     }
-  }, [user]);
+  }, [user, children]);
 
   const fetchMonthlySummary = async () => {
     if (!user) return;
@@ -36,7 +50,7 @@ export const useMonthlySummary = () => {
       // Fetch expenses for the current month
       const { data, error } = await supabase
         .from('expenses')
-        .select('*')
+        .select('*, expense_children(child_id)')
         .gte('date', startDate)
         .lte('date', endDate);
         
@@ -44,15 +58,37 @@ export const useMonthlySummary = () => {
       
       // Process the data to get totals by category
       const categoryTotals: Record<string, number> = {};
+      const childCategoryTotals: Record<string, Record<string, number>> = {};
+      const childTotalAmounts: Record<string, number> = {};
       let totalAmount = 0;
       
       if (data && data.length > 0) {
         data.forEach(expense => {
           const category = expense.category as ExpenseCategory;
           const amount = parseFloat(expense.amount);
+          const childExpenses = expense.expense_children || [];
           
+          // Add to overall category totals
           categoryTotals[category] = (categoryTotals[category] || 0) + amount;
           totalAmount += amount;
+          
+          // If this expense is associated with children, distribute the amount
+          if (childExpenses.length > 0) {
+            const amountPerChild = amount / childExpenses.length;
+            
+            childExpenses.forEach((childExp: any) => {
+              const childId = childExp.child_id;
+              
+              if (!childCategoryTotals[childId]) {
+                childCategoryTotals[childId] = {};
+              }
+              
+              childCategoryTotals[childId][category] = 
+                (childCategoryTotals[childId][category] || 0) + amountPerChild;
+              
+              childTotalAmounts[childId] = (childTotalAmounts[childId] || 0) + amountPerChild;
+            });
+          }
         });
         
         // Convert to array format with percentages
@@ -65,6 +101,7 @@ export const useMonthlySummary = () => {
           other: 'bg-gray-500'
         };
         
+        // Overall categories
         const categoriesArray: CategorySummary[] = Object.keys(categoryTotals).map(category => ({
           name: category.charAt(0).toUpperCase() + category.slice(1),
           amount: categoryTotals[category],
@@ -75,17 +112,40 @@ export const useMonthlySummary = () => {
         // Sort by amount (highest first)
         categoriesArray.sort((a, b) => b.amount - a.amount);
         
+        // Categories by child
+        const childCategories: ChildCategorySummary = {};
+        
+        Object.keys(childCategoryTotals).forEach(childId => {
+          const childCategories: CategorySummary[] = Object.keys(childCategoryTotals[childId]).map(category => ({
+            name: category.charAt(0).toUpperCase() + category.slice(1),
+            amount: childCategoryTotals[childId][category],
+            percentage: childTotalAmounts[childId] > 0 
+              ? (childCategoryTotals[childId][category] / childTotalAmounts[childId]) * 100 
+              : 0,
+            color: categoryColors[category] || 'bg-gray-500'
+          }));
+          
+          childCategories.sort((a, b) => b.amount - a.amount);
+          
+          if (!childCategoryTotals[childId]) {
+            childCategoryTotals[childId] = {};
+          }
+        });
+        
         setCategories(categoriesArray);
+        setCategoryByChild(childCategories);
       } else {
         setCategories([]);
+        setCategoryByChild({});
       }
     } catch (error) {
       console.error('Error fetching monthly summary:', error);
       setCategories([]);
+      setCategoryByChild({});
     } finally {
       setLoading(false);
     }
   };
 
-  return { categories, loading };
+  return { categories, categoryByChild, children, loading };
 };

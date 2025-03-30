@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useExpenses } from "@/hooks/expenses";
+import { useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import ExpenseForm from "@/components/expenses/form/ExpenseForm";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import ExpenseFilters from "@/components/expenses/ExpenseFilters";
 import ExpenseList from "@/components/expenses/ExpenseList";
 
 const ExpensesPage = () => {
+  const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const [showForm, setShowForm] = useState(false);
   
@@ -30,6 +32,14 @@ const ExpensesPage = () => {
     setSearchQuery,
     subscribeToExpenses
   } = useExpenses();
+  
+  // Check for newExpense query parameter
+  useEffect(() => {
+    const newExpense = searchParams.get("newExpense");
+    if (newExpense === "true") {
+      setShowForm(true);
+    }
+  }, [searchParams]);
   
   // Set up real-time subscription
   useEffect(() => {

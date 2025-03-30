@@ -1,33 +1,43 @@
 
-import { Progress } from '@/components/ui/progress';
-import { formatCurrency } from '@/utils/expenseUtils';
-import { Currency } from '@/contexts/CurrencyContext';
+import { Currency } from "@/contexts/CurrencyContext";
+import { formatCurrency } from "@/utils/expenseUtils";
 
-export interface CategoryProgressBarProps {
+interface CategoryProgressBarProps {
   name: string;
   amount: number;
   percentage: number;
   color: string;
-  currency?: Currency;
+  currency: Currency;
+  compact?: boolean;
 }
 
-const CategoryProgressBar = ({ 
-  name, 
-  amount, 
-  percentage, 
+const CategoryProgressBar = ({
+  name,
+  amount,
+  percentage,
   color,
-  currency = { code: 'USD', symbol: '$', name: 'US Dollar' }
-}: CategoryProgressBarProps) => (
-  <div className="space-y-2">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center">
-        <div className={`w-3 h-3 rounded-full ${color} mr-2`}></div>
-        <span className="text-sm font-medium">{name}</span>
+  currency,
+  compact = false
+}: CategoryProgressBarProps) => {
+  return (
+    <div>
+      <div className="flex justify-between text-sm mb-1">
+        <span className="capitalize">{name}</span>
+        <span className="font-medium">{formatCurrency(amount, currency.symbol)}</span>
       </div>
-      <span className="text-sm font-medium">{formatCurrency(amount, currency.symbol)}</span>
+      <div className={`h-${compact ? '1.5' : '2'} bg-gray-200 rounded-full overflow-hidden`}>
+        <div
+          className={`h-full ${color}`}
+          style={{ width: `${Math.max(percentage, 3)}%` }}
+        />
+      </div>
+      {!compact && (
+        <div className="text-xs text-gray-500 mt-1">
+          {percentage.toFixed(1)}% of total
+        </div>
+      )}
     </div>
-    <Progress value={percentage} className="h-2 bg-gray-100" />
-  </div>
-);
+  );
+};
 
 export default CategoryProgressBar;
