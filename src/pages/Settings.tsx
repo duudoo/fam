@@ -9,6 +9,7 @@ import ExpenseSettings from '@/components/settings/ExpenseSettings';
 import NotificationSettings from '@/components/settings/NotificationSettings';
 import { Spinner } from '@/components/ui/spinner';
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
+import { Circle } from 'lucide-react';
 
 const SettingsPage = () => {
   const { user, loading } = useAuth();
@@ -18,7 +19,7 @@ const SettingsPage = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
-    if (tab && ['user', 'currency', 'expenses', 'notifications'].includes(tab)) {
+    if (tab && ['user', 'circle', 'currency', 'expenses', 'notifications'].includes(tab)) {
       setSelectedTab(tab);
     }
   }, []);
@@ -48,8 +49,9 @@ const SettingsPage = () => {
         </div>
 
         <Tabs defaultValue={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-          <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <TabsList className="grid grid-cols-2 md:grid-cols-5 gap-2">
             <TabsTrigger value="user">User Settings</TabsTrigger>
+            <TabsTrigger value="circle">Circle</TabsTrigger>
             <TabsTrigger value="currency">Currency</TabsTrigger>
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
@@ -60,11 +62,32 @@ const SettingsPage = () => {
               <CardHeader>
                 <CardTitle>User Settings</CardTitle>
                 <CardDescription>
-                  Manage your profile and invite co-parents
+                  Manage your profile and personal information
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <UserSettings />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="circle" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Circle className="h-5 w-5 text-famacle-blue" />
+                  <span>Your Circle</span>
+                </CardTitle>
+                <CardDescription>
+                  Manage your children and co-parents
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <iframe 
+                  src="/user-management" 
+                  className="w-full min-h-[70vh] border-none" 
+                  title="Circle Management"
+                />
               </CardContent>
             </Card>
           </TabsContent>
