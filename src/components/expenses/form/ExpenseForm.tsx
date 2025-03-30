@@ -48,8 +48,11 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
     },
   });
   
-  const handleSubmit = async (values: FormValues, event: any) => {
-    const formAction = event?.nativeEvent?.submitter?.value;
+  const handleSubmit = async (values: FormValues, event: React.FormEvent<HTMLFormElement>) => {
+    // Get the action from the hidden input field
+    const formElement = event.target as HTMLFormElement;
+    const actionInput = formElement.querySelector('#form-action') as HTMLInputElement;
+    const formAction = actionInput?.value;
     
     await processFormSubmission(
       values,

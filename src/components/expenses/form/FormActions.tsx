@@ -25,6 +25,35 @@ const FormActions = ({
   showSaveAndAddAnother = false,
   isMobile = false
 }: FormActionsProps) => {
+  // Helper function to programmatically submit the form with a specific action
+  const submitFormWithAction = (action?: string) => {
+    const form = document.getElementById('expense-form') as HTMLFormElement;
+    if (!form) return;
+    
+    // Create a hidden input for the action if provided
+    if (action) {
+      let actionInput = document.getElementById('form-action') as HTMLInputElement;
+      if (!actionInput) {
+        actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.id = 'form-action';
+        actionInput.name = 'form-action';
+        form.appendChild(actionInput);
+      }
+      actionInput.value = action;
+    }
+    
+    form.requestSubmit();
+    
+    // Clean up the action input after submission
+    if (action) {
+      setTimeout(() => {
+        const actionInput = document.getElementById('form-action');
+        if (actionInput) actionInput.remove();
+      }, 100);
+    }
+  };
+  
   if (isMobile) {
     return (
       <div className="flex flex-col gap-3 mt-6 mb-4">
@@ -46,12 +75,7 @@ const FormActions = ({
               className="cursor-pointer"
               onSelect={(e) => {
                 e.preventDefault();
-                const submitBtn = document.createElement('button');
-                submitBtn.type = 'submit';
-                submitBtn.form = 'expense-form';
-                document.body.appendChild(submitBtn);
-                submitBtn.click();
-                submitBtn.remove();
+                submitFormWithAction();
               }}
             >
               <Save className="mr-2 h-4 w-4" />
@@ -63,13 +87,7 @@ const FormActions = ({
                 className="cursor-pointer"
                 onSelect={(e) => {
                   e.preventDefault();
-                  const submitBtn = document.createElement('button');
-                  submitBtn.type = 'submit';
-                  submitBtn.form = 'expense-form';
-                  submitBtn.value = 'saveAndAdd';
-                  document.body.appendChild(submitBtn);
-                  submitBtn.click();
-                  submitBtn.remove();
+                  submitFormWithAction('saveAndAdd');
                 }}
               >
                 <Plus className="mr-2 h-4 w-4" />
@@ -82,13 +100,7 @@ const FormActions = ({
                 className="cursor-pointer"
                 onSelect={(e) => {
                   e.preventDefault();
-                  const submitBtn = document.createElement('button');
-                  submitBtn.type = 'submit';
-                  submitBtn.form = 'expense-form';
-                  submitBtn.value = 'saveAndShare';
-                  document.body.appendChild(submitBtn);
-                  submitBtn.click();
-                  submitBtn.remove();
+                  submitFormWithAction('saveAndShare');
                 }}
               >
                 <Share className="mr-2 h-4 w-4" />
@@ -137,12 +149,7 @@ const FormActions = ({
             className="cursor-pointer"
             onSelect={(e) => {
               e.preventDefault();
-              const submitBtn = document.createElement('button');
-              submitBtn.type = 'submit';
-              submitBtn.form = 'expense-form';
-              document.body.appendChild(submitBtn);
-              submitBtn.click();
-              submitBtn.remove();
+              submitFormWithAction();
             }}
           >
             <Save className="mr-2 h-4 w-4" />
@@ -154,13 +161,7 @@ const FormActions = ({
               className="cursor-pointer"
               onSelect={(e) => {
                 e.preventDefault();
-                const submitBtn = document.createElement('button');
-                submitBtn.type = 'submit';
-                submitBtn.form = 'expense-form';
-                submitBtn.value = 'saveAndAdd';
-                document.body.appendChild(submitBtn);
-                submitBtn.click();
-                submitBtn.remove();
+                submitFormWithAction('saveAndAdd');
               }}
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -173,13 +174,7 @@ const FormActions = ({
               className="cursor-pointer"
               onSelect={(e) => {
                 e.preventDefault();
-                const submitBtn = document.createElement('button');
-                submitBtn.type = 'submit';
-                submitBtn.form = 'expense-form';
-                submitBtn.value = 'saveAndShare';
-                document.body.appendChild(submitBtn);
-                submitBtn.click();
-                submitBtn.remove();
+                submitFormWithAction('saveAndShare');
               }}
             >
               <Share className="mr-2 h-4 w-4" />
