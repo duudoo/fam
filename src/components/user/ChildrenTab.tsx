@@ -35,26 +35,26 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
 
       console.log("Adding child:", child);
       
-      // First, create the child record
-      const { data: newChild, error: childError } = await supabase
+      // First, create the child record - don't use the .single() modifier as it can cause issues
+      const { data, error: childError } = await supabase
         .from('children')
         .insert({
           name: child.name,
           date_of_birth: child.dateOfBirth,
           initials: child.initials
         })
-        .select()
-        .single();
+        .select();
 
       if (childError) {
         console.error('Error creating child:', childError);
         throw childError;
       }
       
-      if (!newChild) {
+      if (!data || data.length === 0) {
         throw new Error("Failed to create child");
       }
 
+      const newChild = data[0];
       console.log("Child created:", newChild);
 
       // Then, create the parent-child relationship

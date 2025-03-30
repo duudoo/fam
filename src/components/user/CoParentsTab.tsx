@@ -38,7 +38,7 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
         return;
       }
 
-      // Check if invitation already exists
+      // Check if invitation already exists - don't use .single() as it can cause errors
       const { data: existingInvites, error: checkError } = await supabase
         .from('co_parent_invites')
         .select('*')
@@ -55,8 +55,8 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
         return;
       }
 
-      // Create the invitation
-      const { data: invite, error } = await supabase
+      // Create the invitation - don't use .single() for the insert
+      const { data, error } = await supabase
         .from('co_parent_invites')
         .insert({
           email,
@@ -64,13 +64,18 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
           status: 'pending',
           message: message
         })
-        .select()
-        .single();
+        .select();
 
       if (error) {
         console.error("Error creating invitation:", error);
         throw error;
       }
+
+      if (!data || data.length === 0) {
+        throw new Error("Failed to create invitation");
+      }
+
+      const invite = data[0];
 
       // Generate invite link
       const inviteLink = `${window.location.origin}/signup?invite=true&email=${encodeURIComponent(email)}`;
