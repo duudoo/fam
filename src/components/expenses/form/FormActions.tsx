@@ -1,7 +1,5 @@
 
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Share, Plus, Save } from "lucide-react";
 
 interface FormActionsProps {
@@ -23,7 +21,7 @@ const FormActions = ({
 }: FormActionsProps) => {
   if (isMobile) {
     return (
-      <div className="flex flex-col gap-3 mt-6">
+      <div className="flex flex-col gap-3 mt-6 mb-4">
         <Button 
           type="submit" 
           form="expense-form"
@@ -76,7 +74,7 @@ const FormActions = ({
   }
   
   return (
-    <div className="flex justify-end gap-3 mt-6">
+    <div className="flex justify-end gap-3 mt-6 mb-4">
       <Button
         type="button"
         onClick={onCancel}

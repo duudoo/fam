@@ -24,15 +24,15 @@ const ExpenseDetailsSection = ({
   isMobile = false
 }: ExpenseDetailsSectionProps) => {
   return (
-    <>
+    <div className={isMobile ? "space-y-4" : "space-y-6"}>
       <DescriptionField form={form} />
       
-      <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-2 gap-4'}`}>
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-4'}`}>
         <AmountField form={form} />
         <DateField form={form} />
       </div>
       
-      <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-2 gap-4'}`}>
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-4'}`}>
         <CategoryField form={form} categories={categories} />
         <SplitMethodField 
           form={form} 
@@ -40,7 +40,7 @@ const ExpenseDetailsSection = ({
           onSplitMethodChange={onSplitMethodChange}
         />
       </div>
-    </>
+    </div>
   );
 };
 
