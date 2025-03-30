@@ -23,8 +23,21 @@ const CustomSplitField = ({ form, visible }: CustomSplitFieldProps) => {
       };
       
       form.setValue('splitPercentage', splitPercentage);
+      
+      // Log for debugging
+      console.log('Updated split percentages:', splitPercentage);
     }
   }, [parentAPercentage, user, visible, form]);
+  
+  // Initialize from existing values if available
+  useEffect(() => {
+    if (visible && user) {
+      const currentSplitPercentage = form.getValues().splitPercentage;
+      if (currentSplitPercentage && currentSplitPercentage[user.id]) {
+        setParentAPercentage(currentSplitPercentage[user.id]);
+      }
+    }
+  }, [visible, user, form]);
   
   if (!visible) return null;
   
@@ -42,7 +55,8 @@ const CustomSplitField = ({ form, visible }: CustomSplitFieldProps) => {
       </div>
       
       <Slider
-        defaultValue={[50]}
+        defaultValue={[parentAPercentage]}
+        value={[parentAPercentage]}
         min={0}
         max={100}
         step={5}

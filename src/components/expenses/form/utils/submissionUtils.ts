@@ -27,6 +27,9 @@ export const processFormSubmission = async (
   setIsSubmitting(true);
   
   try {
+    console.log("Processing expense with split method:", values.splitMethod);
+    console.log("Split percentages:", values.splitPercentage);
+    
     if (isEditing && expense) {
       await handleExpenseUpdate(
         expense.id,
@@ -104,7 +107,7 @@ const handleExpenseCreation = async (
     category: values.category,
     status: 'pending',
     splitMethod: values.splitMethod,
-    splitPercentage: values.splitPercentage,
+    splitPercentage: values.splitMethod === 'custom' ? values.splitPercentage : undefined,
     notes: values.notes || undefined,
     receiptUrl: receiptUrl || undefined,
     paidBy: user.id,
@@ -120,7 +123,7 @@ const handleExpenseCreation = async (
       
     if (!expenseError && expenseData) {
       // We'll send notification later when using Save & Share
-      if (values.splitMethod !== 'custom' || !values.splitPercentage) {
+      if (formAction !== 'saveAndShare') {
         await sendExpenseNotification({
           id: newExpense.id,
           description: values.description,
@@ -128,6 +131,7 @@ const handleExpenseCreation = async (
           date: format(values.date, 'yyyy-MM-dd'),
           category: values.category,
           splitMethod: values.splitMethod,
+          splitPercentage: values.splitPercentage,
           childIds: values.childIds,
           receiptUrl: receiptUrl
         }, expenseData.approval_token, user.id);

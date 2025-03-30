@@ -31,6 +31,7 @@ const ExpenseFormContent = ({ form }: ExpenseFormContentProps) => {
   );
   
   const handleSplitMethodChange = (method: SplitMethod) => {
+    console.log(`Split method changed to: ${method}, showing custom field: ${method === 'custom'}`);
     setShowCustomSplit(method === 'custom');
   };
 

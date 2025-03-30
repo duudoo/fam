@@ -18,6 +18,12 @@ export const SplitMethodField = ({ form, splitMethods, onSplitMethodChange }: Sp
     const subscription = form.watch((value, { name }) => {
       if (name === 'splitMethod' && onSplitMethodChange) {
         onSplitMethodChange(value.splitMethod as SplitMethod);
+        console.log('Split method changed to:', value.splitMethod);
+        
+        // If the split method is not 'custom', clear any existing splitPercentage
+        if (value.splitMethod !== 'custom') {
+          form.setValue('splitPercentage', undefined);
+        }
       }
     });
     
@@ -42,7 +48,7 @@ export const SplitMethodField = ({ form, splitMethods, onSplitMethodChange }: Sp
                 <SelectItem key={method} value={method}>
                   {method === "50/50" ? "50/50 Split" : 
                    method === "custom" ? "Custom Split" : 
-                   method}
+                   "No Split"}
                 </SelectItem>
               ))}
             </SelectContent>
