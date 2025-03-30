@@ -15,7 +15,7 @@ import {
   FormDescription 
 } from "@/components/ui/form";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Define the form schema with zod
 const formSchema = z.object({
@@ -28,10 +28,12 @@ type FormData = z.infer<typeof formSchema>;
 interface CoParentInviteProps {
   onSubmit: (email: string, message?: string) => Promise<void>;
   onCancel: () => void;
+  isSubmitting?: boolean;
 }
 
-const CoParentInvite = ({ onSubmit, onCancel }: CoParentInviteProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const CoParentInvite = ({ onSubmit, onCancel, isSubmitting = false }: CoParentInviteProps) => {
+  const [localSubmitting, setLocalSubmitting] = useState(false);
+  const submitting = isSubmitting || localSubmitting;
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -41,10 +43,17 @@ const CoParentInvite = ({ onSubmit, onCancel }: CoParentInviteProps) => {
     },
   });
 
-  const handleSubmit = async (data: FormData) => {
-    if (isSubmitting) return; // Prevent multiple submissions
+  // Sync external isSubmitting state with local state
+  useEffect(() => {
+    if (!isSubmitting && localSubmitting) {
+      setLocalSubmitting(false);
+    }
+  }, [isSubmitting]);
 
-    setIsSubmitting(true);
+  const handleSubmit = async (data: FormData) => {
+    if (submitting) return; // Prevent multiple submissions
+
+    setLocalSubmitting(true);
     try {
       await onSubmit(data.email, data.message);
       // Only reset the form if submission is successful
@@ -53,7 +62,7 @@ const CoParentInvite = ({ onSubmit, onCancel }: CoParentInviteProps) => {
       console.error('Error submitting form:', error);
       // Form will retain values if submission fails
     } finally {
-      setIsSubmitting(false);
+      setLocalSubmitting(false);
     }
   };
 
@@ -72,7 +81,7 @@ const CoParentInvite = ({ onSubmit, onCancel }: CoParentInviteProps) => {
                   {...field} 
                   autoFocus
                   type="email"
-                  disabled={isSubmitting}
+                  disabled={submitting}
                 />
               </FormControl>
               <FormMessage />
@@ -91,7 +100,7 @@ const CoParentInvite = ({ onSubmit, onCancel }: CoParentInviteProps) => {
                   placeholder="Add a personal message to your invitation" 
                   {...field} 
                   rows={3}
-                  disabled={isSubmitting}
+                  disabled={submitting}
                 />
               </FormControl>
               <FormDescription>
@@ -107,15 +116,15 @@ const CoParentInvite = ({ onSubmit, onCancel }: CoParentInviteProps) => {
             type="button" 
             variant="outline" 
             onClick={onCancel}
-            disabled={isSubmitting}
+            disabled={submitting}
           >
             Cancel
           </Button>
           <Button 
             type="submit"
-            disabled={isSubmitting}
+            disabled={submitting}
           >
-            {isSubmitting ? (
+            {submitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Sending...

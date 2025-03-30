@@ -3,6 +3,8 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Parent, CoParentInvite } from "@/utils/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Spinner } from "@/components/ui/spinner";
+import { Check, Clock, X } from "lucide-react";
 
 interface CoParentsListProps {
   currentUser: Parent;
@@ -10,6 +12,30 @@ interface CoParentsListProps {
 }
 
 const CoParentsList = ({ currentUser, invites }: CoParentsListProps) => {
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'accepted':
+        return <Check className="h-4 w-4 text-green-500" />;
+      case 'pending':
+        return <Clock className="h-4 w-4 text-yellow-500" />;
+      case 'declined':
+        return <X className="h-4 w-4 text-red-500" />;
+      default:
+        return null;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
+
   return (
     <div className="space-y-4">
       <Card>
@@ -37,33 +63,38 @@ const CoParentsList = ({ currentUser, invites }: CoParentsListProps) => {
 
       {invites.length > 0 && (
         <div>
-          <h3 className="text-lg font-medium mb-3">Co-Parents</h3>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Invited On</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {invites.map((invite) => (
-                <TableRow key={invite.id}>
-                  <TableCell>{invite.email}</TableCell>
-                  <TableCell>
-                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                      invite.status === "pending" ? "bg-yellow-100 text-yellow-800" : 
-                      invite.status === "accepted" ? "bg-green-100 text-green-800" : 
-                      "bg-red-100 text-red-800"
-                    }`}>
-                      {invite.status.charAt(0).toUpperCase() + invite.status.slice(1)}
-                    </span>
-                  </TableCell>
-                  <TableCell>{new Date(invite.invitedAt).toLocaleDateString()}</TableCell>
+          <h3 className="text-lg font-medium mb-3">Co-Parent Invitations</h3>
+          <Card>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Invited On</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {invites.map((invite) => (
+                  <TableRow key={invite.id}>
+                    <TableCell>{invite.email}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(invite.status)}
+                        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                          invite.status === "pending" ? "bg-yellow-100 text-yellow-800" : 
+                          invite.status === "accepted" ? "bg-green-100 text-green-800" : 
+                          "bg-red-100 text-red-800"
+                        }`}>
+                          {invite.status.charAt(0).toUpperCase() + invite.status.slice(1)}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{formatDate(invite.invitedAt)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
         </div>
       )}
     </div>

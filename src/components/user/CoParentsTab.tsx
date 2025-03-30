@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Plus, Users } from "lucide-react";
+import { Plus, Users, MailCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import CoParentInvite from "@/components/user/CoParentInvite";
 import CoParentsList from "@/components/user/CoParentsList";
 import { CoParentInvite as CoParentInviteType, Parent } from "@/utils/types";
 import { emailAPI } from "@/lib/api/email";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { Database } from "@/integrations/supabase/database.types";
 
 type Tables = Database['public']['Tables'];
@@ -24,6 +25,7 @@ interface CoParentsTabProps {
 const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoParentsTabProps) => {
   const [addingCoParent, setAddingCoParent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState<string | null>(null);
 
   const handleInviteCoParent = async (email: string, message?: string) => {
     if (isSubmitting) return; // Prevent multiple submissions
@@ -100,6 +102,12 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
         };
         
         setInvites(prev => [...prev, newInvite]);
+        setShowSuccess(email);
+        
+        // Clear success message after 5 seconds
+        setTimeout(() => {
+          setShowSuccess(null);
+        }, 5000);
       }
 
       setAddingCoParent(false);
@@ -123,6 +131,16 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
         </Button>
       </div>
       
+      {showSuccess && (
+        <Alert className="bg-green-50 border-green-200">
+          <MailCheck className="h-4 w-4 text-green-500" />
+          <AlertTitle>Invitation Sent!</AlertTitle>
+          <AlertDescription>
+            An invitation has been sent to {showSuccess}. They will receive an email with instructions to join as a co-parent.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {addingCoParent ? (
         <Card>
           <CardHeader>
@@ -133,6 +151,7 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
             <CoParentInvite 
               onSubmit={handleInviteCoParent} 
               onCancel={() => setAddingCoParent(false)} 
+              isSubmitting={isSubmitting}
             />
           </CardContent>
         </Card>
