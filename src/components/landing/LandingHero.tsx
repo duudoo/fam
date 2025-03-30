@@ -3,8 +3,11 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { ArrowRight, CreditCard, FileCheck, Calendar, MessageCircle } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const LandingHero = () => {
+  const isMobile = useIsMobile();
+  
   // Animation variants
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
@@ -40,9 +43,9 @@ const LandingHero = () => {
   ];
 
   return (
-    <section className="pt-12 pb-16 px-4">
+    <section className={`pt-8 ${isMobile ? 'pb-10' : 'pb-16'} px-4`}>
       <div className="max-w-7xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className={`grid ${isMobile ? 'grid-cols-1 gap-8' : 'md:grid-cols-2 gap-12'} items-center`}>
           {/* Left column - Hero content */}
           <motion.div 
             className="flex flex-col justify-center"
@@ -54,16 +57,17 @@ const LandingHero = () => {
               Simplifying Co-Parenting
             </div>
             
-            <h1 className="text-4xl md:text-5xl font-bold text-famacle-slate mb-6">
-              Manage childcare together, <span className="text-famacle-blue">even when apart</span>
+            <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'} font-bold text-famacle-slate mb-6`}>
+              Manage childcare together, {!isMobile && <br className="hidden md:block" />}
+              <span className="text-famacle-blue">even when apart</span>
             </h1>
             
-            <p className="text-xl text-gray-600 mb-8">
+            <p className={`${isMobile ? 'text-lg' : 'text-xl'} text-gray-600 mb-8`}>
               Famacle helps separated parents coordinate childcare expenses, 
               schedules, and communications in one seamless platform.
             </p>
             
-            <div className="hidden md:block">
+            <div className={`${isMobile ? 'hidden' : 'hidden md:block'}`}>
               <div className="flex flex-wrap gap-y-3 gap-x-8 mb-8">
                 {features.map((feature, index) => (
                   <div key={index} className="flex items-center gap-2">
@@ -89,9 +93,9 @@ const LandingHero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="bg-white p-8 rounded-xl shadow-soft text-center"
+            className={`bg-white ${isMobile ? 'p-6' : 'p-8'} rounded-xl shadow-soft text-center`}
           >
-            <h2 className="text-2xl font-bold text-famacle-slate mb-4">
+            <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-famacle-slate mb-4`}>
               Ready to simplify co-parenting?
             </h2>
             <p className="text-gray-600 mb-6">
@@ -99,7 +103,7 @@ const LandingHero = () => {
               easier, more organized, and less stressful.
             </p>
             <div className="space-y-4">
-              <Button asChild variant="default" size="lg" className="w-full">
+              <Button asChild variant="default" size={isMobile ? "default" : "lg"} className="w-full">
                 <Link to="/signup">
                   Sign up for free
                   <ArrowRight className="ml-2 h-5 w-5" />

@@ -4,6 +4,7 @@ import { Slider } from "@/components/ui/slider";
 import { UseFormReturn } from 'react-hook-form';
 import { FormValues } from '../schema';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CustomSplitFieldProps {
   form: UseFormReturn<FormValues, any, undefined>;
@@ -12,6 +13,7 @@ interface CustomSplitFieldProps {
 
 const CustomSplitField = ({ form, visible }: CustomSplitFieldProps) => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [parentAPercentage, setParentAPercentage] = useState(50);
   
   // Update the form with split percentages when slider changes
@@ -42,7 +44,7 @@ const CustomSplitField = ({ form, visible }: CustomSplitFieldProps) => {
   if (!visible) return null;
   
   return (
-    <div className="space-y-4 mt-4 p-4 border rounded-md bg-gray-50">
+    <div className={`space-y-4 mt-4 p-4 border rounded-md bg-gray-50 ${isMobile ? 'mx-0' : ''}`}>
       <div className="flex justify-between items-center">
         <div className="text-sm">
           <span className="font-medium">You</span>
@@ -61,6 +63,7 @@ const CustomSplitField = ({ form, visible }: CustomSplitFieldProps) => {
         max={100}
         step={5}
         onValueChange={(value) => setParentAPercentage(value[0])}
+        className={isMobile ? 'touch-manipulation' : ''}
       />
     </div>
   );

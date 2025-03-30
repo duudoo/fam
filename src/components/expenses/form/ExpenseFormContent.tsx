@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useExpenseFormContext } from './ExpenseFormContext';
 import ExpenseDetailsSection from './ExpenseDetailsSection';
 import ChildrenSelectionSection from './ChildrenSelectionSection';
@@ -10,6 +10,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { FormValues } from './schema';
 import { SplitMethod } from '@/utils/types';
 import CustomSplitField from './fields/CustomSplitField';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ExpenseFormContentProps {
   form: UseFormReturn<FormValues, any, undefined>;
@@ -25,6 +26,8 @@ const ExpenseFormContent = ({ form }: ExpenseFormContentProps) => {
     isSubmitting,
     isEditing
   } = useExpenseFormContext();
+  
+  const isMobile = useIsMobile();
   
   const [showCustomSplit, setShowCustomSplit] = useState(
     form.getValues().splitMethod === 'custom'
@@ -42,6 +45,7 @@ const ExpenseFormContent = ({ form }: ExpenseFormContentProps) => {
         categories={categories} 
         splitMethods={splitMethods} 
         onSplitMethodChange={handleSplitMethodChange}
+        isMobile={isMobile}
       />
       
       <CustomSplitField 
@@ -66,6 +70,7 @@ const ExpenseFormContent = ({ form }: ExpenseFormContentProps) => {
         isEditing={isEditing}
         showSaveAndShare={!isEditing}
         showSaveAndAddAnother={!isEditing}
+        isMobile={isMobile}
       />
     </>
   );

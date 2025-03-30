@@ -13,24 +13,26 @@ interface ExpenseDetailsSectionProps {
   categories: ExpenseCategory[];
   splitMethods: SplitMethod[];
   onSplitMethodChange?: (method: SplitMethod) => void;
+  isMobile?: boolean;
 }
 
 const ExpenseDetailsSection = ({ 
   form, 
   categories, 
   splitMethods,
-  onSplitMethodChange
+  onSplitMethodChange,
+  isMobile = false
 }: ExpenseDetailsSectionProps) => {
   return (
     <>
       <DescriptionField form={form} />
       
-      <div className="grid grid-cols-2 gap-4">
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-2 gap-4'}`}>
         <AmountField form={form} />
         <DateField form={form} />
       </div>
       
-      <div className="grid grid-cols-2 gap-4">
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-2 gap-4'}`}>
         <CategoryField form={form} categories={categories} />
         <SplitMethodField 
           form={form} 

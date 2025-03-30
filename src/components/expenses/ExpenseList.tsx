@@ -15,6 +15,7 @@ import StatusBadge from "./StatusBadge";
 import CategoryBadge from "./CategoryBadge";
 import ExpenseTableRow from "./ExpenseTableRow";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ExpenseListProps {
   expenses: Expense[] | undefined;
@@ -24,6 +25,8 @@ interface ExpenseListProps {
 
 const ExpenseList = ({ expenses = [], filteredStatus, onAddNewClick }: ExpenseListProps) => {
   const { currency } = useCurrency();
+  const isMobile = useIsMobile();
+  
   // Safely handle undefined expenses by providing a default empty array
   // Filter expenses by status if provided
   const filteredExpenses = expenses && filteredStatus && filteredStatus !== 'all'
@@ -48,6 +51,53 @@ const ExpenseList = ({ expenses = [], filteredStatus, onAddNewClick }: ExpenseLi
             Add Your First Expense
           </Button>
         ) : null}
+      </div>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <div className="space-y-4">
+        {filteredExpenses.map((expense) => (
+          <div 
+            key={expense.id} 
+            className="p-4 border rounded-lg bg-white shadow-sm"
+          >
+            <div className="flex justify-between items-start mb-2">
+              <div className="font-medium truncate pr-2">{expense.description}</div>
+              <StatusBadge status={expense.status as ExpenseStatus} />
+            </div>
+            
+            <div className="text-lg font-semibold mb-2">
+              {currency.symbol}{expense.amount.toFixed(2)}
+            </div>
+            
+            <div className="flex justify-between items-center text-sm text-gray-500 mb-2">
+              <div>{format(new Date(expense.date), 'MMM d, yyyy')}</div>
+              <CategoryBadge category={expense.category} />
+            </div>
+            
+            <div className="text-sm text-gray-500 mb-3">
+              Split: {expense.splitMethod === 'custom' 
+                ? `Custom (${expense.splitPercentage?.coParent}% / ${expense.splitPercentage?.[expense.paidBy]}%)` 
+                : expense.splitMethod
+              }
+            </div>
+            
+            <div className="flex justify-end space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs"
+                onClick={() => {
+                  // View expense details action
+                }}
+              >
+                View
+              </Button>
+            </div>
+          </div>
+        ))}
       </div>
     );
   }

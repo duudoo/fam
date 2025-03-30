@@ -1,115 +1,122 @@
 
 import { Button } from "@/components/ui/button";
-import { Send, Loader2, Save, Plus } from "lucide-react";
-import { useExpenseFormContext } from "./ExpenseFormContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Share, Plus, Save } from "lucide-react";
 
 interface FormActionsProps {
-  onCancel?: () => void;
-  isSubmitting?: boolean;
-  isEditing?: boolean;
+  onCancel: () => void;
+  isSubmitting: boolean;
+  isEditing: boolean;
   showSaveAndShare?: boolean;
   showSaveAndAddAnother?: boolean;
+  isMobile?: boolean;
 }
 
-const FormActions = ({ 
-  onCancel, 
-  isSubmitting = false, 
-  isEditing = false,
+const FormActions = ({
+  onCancel,
+  isSubmitting,
+  isEditing,
   showSaveAndShare = false,
-  showSaveAndAddAnother = false
+  showSaveAndAddAnother = false,
+  isMobile = false
 }: FormActionsProps) => {
-  const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [coParentEmail, setCoParentEmail] = useState("");
-  
-  const handleSaveAndShare = () => {
-    setShareDialogOpen(true);
-  };
-  
-  return (
-    <div className="flex flex-col sm:flex-row gap-2 justify-end mt-6">
-      {onCancel && (
+  if (isMobile) {
+    return (
+      <div className="flex flex-col gap-3 mt-6">
         <Button 
-          type="button" 
-          variant="outline" 
+          type="submit" 
+          form="expense-form"
+          disabled={isSubmitting}
+          className="w-full"
+        >
+          <Save className="mr-2 h-4 w-4" />
+          {isEditing ? "Update Expense" : "Save Expense"}
+        </Button>
+        
+        {showSaveAndShare && (
+          <Button 
+            type="submit" 
+            value="saveAndShare" 
+            form="expense-form"
+            disabled={isSubmitting}
+            variant="outline"
+            className="w-full"
+          >
+            <Share className="mr-2 h-4 w-4" />
+            Save & Share
+          </Button>
+        )}
+        
+        {showSaveAndAddAnother && (
+          <Button 
+            type="submit" 
+            value="saveAndAdd" 
+            form="expense-form"
+            disabled={isSubmitting}
+            variant="outline"
+            className="w-full"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Save & Add Another
+          </Button>
+        )}
+        
+        <Button
+          type="button"
           onClick={onCancel}
           disabled={isSubmitting}
+          variant="ghost"
+          className="w-full"
         >
           Cancel
         </Button>
-      )}
+      </div>
+    );
+  }
+  
+  return (
+    <div className="flex justify-end gap-3 mt-6">
+      <Button
+        type="button"
+        onClick={onCancel}
+        disabled={isSubmitting}
+        variant="ghost"
+      >
+        Cancel
+      </Button>
       
       {showSaveAndAddAnother && (
-        <Button
-          type="submit"
-          variant="outline"
-          name="action"
-          value="saveAndAdd"
+        <Button 
+          type="submit" 
+          value="saveAndAdd" 
+          form="expense-form"
           disabled={isSubmitting}
+          variant="outline"
         >
-          {isSubmitting ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Plus className="mr-2 h-4 w-4" />
-          )}
+          <Plus className="mr-2 h-4 w-4" />
           Save & Add Another
         </Button>
       )}
       
       {showSaveAndShare && (
-        <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-          <DialogTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleSaveAndShare}
-              disabled={isSubmitting}
-            >
-              <Send className="mr-2 h-4 w-4" />
-              Save & Share
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Share with Co-Parent</DialogTitle>
-            </DialogHeader>
-            <div className="py-4">
-              <label className="text-sm font-medium">Co-Parent Email</label>
-              <Input
-                className="mt-1"
-                type="email"
-                value={coParentEmail}
-                onChange={(e) => setCoParentEmail(e.target.value)}
-                placeholder="Enter co-parent's email"
-              />
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShareDialogOpen(false)}>Cancel</Button>
-              <Button 
-                type="submit"
-                name="action"
-                value="saveAndShare"
-                form="expense-form"
-                disabled={!coParentEmail || isSubmitting}
-              >
-                Share Expense
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <Button 
+          type="submit" 
+          value="saveAndShare" 
+          form="expense-form"
+          disabled={isSubmitting}
+          variant="outline"
+        >
+          <Share className="mr-2 h-4 w-4" />
+          Save & Share
+        </Button>
       )}
       
       <Button 
-        type="submit"
+        type="submit" 
+        form="expense-form"
         disabled={isSubmitting}
       >
-        {isSubmitting ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <Save className="mr-2 h-4 w-4" />
-        )}
         {isEditing ? "Update Expense" : "Save Expense"}
       </Button>
     </div>
