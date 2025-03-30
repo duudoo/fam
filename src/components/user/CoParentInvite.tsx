@@ -14,6 +14,8 @@ import {
   FormMessage,
   FormDescription 
 } from "@/components/ui/form";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 // Define the form schema with zod
 const formSchema = z.object({
@@ -24,11 +26,13 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 interface CoParentInviteProps {
-  onSubmit: (email: string, message?: string) => void;
+  onSubmit: (email: string, message?: string) => Promise<void>;
   onCancel: () => void;
 }
 
 const CoParentInvite = ({ onSubmit, onCancel }: CoParentInviteProps) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,6 +42,9 @@ const CoParentInvite = ({ onSubmit, onCancel }: CoParentInviteProps) => {
   });
 
   const handleSubmit = async (data: FormData) => {
+    if (isSubmitting) return; // Prevent multiple submissions
+
+    setIsSubmitting(true);
     try {
       await onSubmit(data.email, data.message);
       // Only reset the form if submission is successful
@@ -45,6 +52,8 @@ const CoParentInvite = ({ onSubmit, onCancel }: CoParentInviteProps) => {
     } catch (error) {
       console.error('Error submitting form:', error);
       // Form will retain values if submission fails
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -63,6 +72,7 @@ const CoParentInvite = ({ onSubmit, onCancel }: CoParentInviteProps) => {
                   {...field} 
                   autoFocus
                   type="email"
+                  disabled={isSubmitting}
                 />
               </FormControl>
               <FormMessage />
@@ -81,6 +91,7 @@ const CoParentInvite = ({ onSubmit, onCancel }: CoParentInviteProps) => {
                   placeholder="Add a personal message to your invitation" 
                   {...field} 
                   rows={3}
+                  disabled={isSubmitting}
                 />
               </FormControl>
               <FormDescription>
@@ -92,11 +103,26 @@ const CoParentInvite = ({ onSubmit, onCancel }: CoParentInviteProps) => {
         />
         
         <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
-          <Button type="submit">
-            Send Invitation
+          <Button 
+            type="submit"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              'Send Invitation'
+            )}
           </Button>
         </div>
       </form>
