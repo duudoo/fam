@@ -21,15 +21,19 @@ interface ChildrenTabProps {
 
 const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: ChildrenTabProps) => {
   const [addingChild, setAddingChild] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleAddChild = async (child: Omit<Child, "id" | "parentIds">) => {
     try {
+      setSubmitting(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error("Please sign in to add a child");
         return;
       }
 
+      console.log("Adding child:", child);
+      
       const { data: newChild, error: childError } = await supabase
         .from('children')
         .insert({
@@ -40,8 +44,14 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
         .select()
         .single();
 
-      if (childError) throw childError;
+      if (childError) {
+        console.error('Error creating child:', childError);
+        throw childError;
+      }
+      
       if (!newChild) throw new Error("Failed to create child");
+
+      console.log("Child created:", newChild);
 
       const { error: relationError } = await supabase
         .from('parent_children')
@@ -51,14 +61,31 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
           is_primary: true
         });
 
-      if (relationError) throw relationError;
+      if (relationError) {
+        console.error('Error creating parent-child relation:', relationError);
+        throw relationError;
+      }
 
       setAddingChild(false);
       toast.success(`Child ${child.name || child.initials} added successfully`);
-      onChildAdded?.();
+      
+      if (onChildAdded) {
+        onChildAdded();
+      } else {
+        // If no callback provided, update the local state
+        setChildren(prev => [...prev, {
+          id: newChild.id,
+          name: newChild.name || undefined,
+          dateOfBirth: newChild.date_of_birth || undefined,
+          initials: newChild.initials,
+          parentIds: [user.id]
+        }]);
+      }
     } catch (error) {
       console.error('Error adding child:', error);
       toast.error("Failed to add child");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -85,6 +112,7 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
             <ChildForm 
               onSubmit={handleAddChild} 
               onCancel={() => setAddingChild(false)} 
+              isSubmitting={submitting}
             />
           </CardContent>
         </Card>

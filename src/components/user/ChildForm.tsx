@@ -14,6 +14,7 @@ import {
   FormMessage 
 } from "@/components/ui/form";
 import { Child } from "@/utils/types";
+import { Loader2 } from "lucide-react";
 
 // Define the form schema with zod
 const formSchema = z.object({
@@ -29,9 +30,13 @@ type FormData = z.infer<typeof formSchema>;
 interface ChildFormProps {
   onSubmit: (data: Omit<Child, "id" | "parentIds">) => void;
   onCancel: () => void;
+  isSubmitting?: boolean;
 }
 
-const ChildForm = ({ onSubmit, onCancel }: ChildFormProps) => {
+const ChildForm = ({ onSubmit, onCancel, isSubmitting = false }: ChildFormProps) => {
+  const [localSubmitting, setLocalSubmitting] = useState(false);
+  const submitting = isSubmitting || localSubmitting;
+  
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -41,12 +46,21 @@ const ChildForm = ({ onSubmit, onCancel }: ChildFormProps) => {
     },
   });
 
-  const handleSubmit = (data: FormData) => {
-    onSubmit({
-      initials: data.initials.toUpperCase(),
-      name: data.name || undefined,
-      dateOfBirth: data.dateOfBirth || undefined,
-    });
+  const handleSubmit = async (data: FormData) => {
+    if (submitting) return; // Prevent multiple submissions
+    
+    setLocalSubmitting(true);
+    try {
+      onSubmit({
+        initials: data.initials.toUpperCase(),
+        name: data.name || undefined,
+        dateOfBirth: data.dateOfBirth || undefined,
+      });
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    } finally {
+      setLocalSubmitting(false);
+    }
   };
 
   return (
@@ -65,6 +79,7 @@ const ChildForm = ({ onSubmit, onCancel }: ChildFormProps) => {
                   onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                   autoFocus
                   maxLength={3}
+                  disabled={submitting}
                 />
               </FormControl>
               <FormMessage />
@@ -79,7 +94,11 @@ const ChildForm = ({ onSubmit, onCancel }: ChildFormProps) => {
             <FormItem>
               <FormLabel>Full Name (Optional)</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Jane Doe" {...field} />
+                <Input 
+                  placeholder="e.g. Jane Doe" 
+                  {...field} 
+                  disabled={submitting}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -93,7 +112,11 @@ const ChildForm = ({ onSubmit, onCancel }: ChildFormProps) => {
             <FormItem>
               <FormLabel>Date of Birth (Optional)</FormLabel>
               <FormControl>
-                <Input type="date" {...field} />
+                <Input 
+                  type="date" 
+                  {...field} 
+                  disabled={submitting}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -101,11 +124,24 @@ const ChildForm = ({ onSubmit, onCancel }: ChildFormProps) => {
         />
         
         <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+            disabled={submitting}
+          >
             Cancel
           </Button>
-          <Button type="submit">
-            Add Child
+          <Button 
+            type="submit"
+            disabled={submitting}
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Adding...
+              </>
+            ) : "Add Child"}
           </Button>
         </div>
       </form>
