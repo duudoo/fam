@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Plus, Users, MailCheck } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,12 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import CoParentInvite from "@/components/user/CoParentInvite";
 import CoParentsList from "@/components/user/CoParentsList";
 import { CoParentInvite as CoParentInviteType, Parent } from "@/utils/types";
-import { emailAPI } from "@/lib/api/email";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import type { Database } from "@/integrations/supabase/database.types";
-
-type Tables = Database['public']['Tables'];
-type CoParentInviteRow = Tables['co_parent_invites']['Row'];
 
 interface CoParentsTabProps {
   currentUser: Parent;
@@ -23,117 +17,95 @@ interface CoParentsTabProps {
 }
 
 const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoParentsTabProps) => {
-  const [addingCoParent, setAddingCoParent] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState<string | null>(null);
+  const [inviting, setInviting] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleInviteCoParent = async (email: string, message?: string) => {
-    if (isSubmitting) return; // Prevent multiple submissions
-    
-    setIsSubmitting(true);
+  const handleSendInvite = async (email: string, message?: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("Please sign in to send invites");
+      setSubmitting(true);
+      
+      // Validate inputs
+      if (!email) {
+        toast.error("Email is required");
+        return;
+      }
+      
+      if (!currentUser || !currentUser.id) {
+        console.error("No current user found");
+        toast.error("You must be logged in to send invitations");
         return;
       }
 
-      // Check if invitation already exists
-      const { data: existingInvites, error: checkError } = await supabase
-        .from('co_parent_invites')
-        .select('*')
-        .eq('email', email)
-        .eq('invited_by', user.id);
+      console.log("Sending invitation to:", email, "from user:", currentUser.id);
       
-      if (checkError) {
-        console.error("Error checking existing invites:", checkError);
-        toast.error(`Error checking invites: ${checkError.message}`);
+      // Check if invitation already exists
+      const checkResult = await supabase
+        .from('co_parent_invites')
+        .select()
+        .eq('email', email)
+        .eq('invited_by', currentUser.id);
+      
+      if (checkResult.error) {
+        console.error("Error checking existing invites:", checkResult.error);
+        toast.error(`Error checking invites: ${checkResult.error.message}`);
         return;
       }
       
-      if (existingInvites && existingInvites.length > 0) {
-        toast.error("This email has already been invited");
+      if (checkResult.data && checkResult.data.length > 0) {
+        toast.error("You have already invited this email address");
         return;
       }
 
       // Create the invitation
-      const { data, error } = await supabase
+      const inviteResult = await supabase
         .from('co_parent_invites')
         .insert({
-          email,
-          invited_by: user.id,
+          email: email,
+          invited_by: currentUser.id,
           status: 'pending',
-          message: message
+          message: message || null
         })
         .select();
 
-      if (error) {
-        console.error("Error creating invitation:", error);
-        toast.error(`Failed to create invitation: ${error.message}`);
+      if (inviteResult.error) {
+        console.error("Error creating invitation:", inviteResult.error);
+        toast.error(`Failed to create invitation: ${inviteResult.error.message}`);
         return;
       }
 
-      if (!data || data.length === 0) {
+      if (!inviteResult.data || inviteResult.data.length === 0) {
+        console.error("No data returned from invitation insert");
         toast.error("Failed to create invitation record");
         return;
       }
 
-      const invite = data[0];
-
-      // Generate invite link
-      const inviteLink = `${window.location.origin}/signup?invite=true&email=${encodeURIComponent(email)}`;
+      const invite = inviteResult.data[0];
+      console.log("Invitation created:", invite);
       
-      // Send invitation email
-      try {
-        console.log("Sending invitation email to:", email);
-        const emailResult = await emailAPI.sendCoParentInviteEmail(
-          email, 
-          currentUser.name || 'A co-parent', 
-          message, 
-          inviteLink
-        );
-        
-        if (emailResult?.error) {
-          console.error("Failed to send co-parent invitation email:", emailResult.error);
-          toast.warning("Invitation created but email delivery failed. The user can still sign up using the invitation link.");
-        } else {
-          console.log("Co-parent invitation email sent successfully");
-        }
-      } catch (emailError) {
-        console.error("Failed to send co-parent invitation email:", emailError);
-        toast.warning("Invitation created but email delivery failed. The user can still sign up using the invitation link.");
-      }
-
-      if (invite) {
-        // Add new invite to state
-        const newInvite: CoParentInviteType = {
+      // Close the form and show success message
+      setInviting(false);
+      toast.success(`Invitation sent to ${email}`);
+      
+      // Update UI
+      if (onInviteSent) {
+        onInviteSent();
+      } else {
+        // Update local state
+        setInvites(prevInvites => [...prevInvites, {
           id: invite.id,
           email: invite.email,
           status: invite.status as any,
           invitedBy: invite.invited_by,
           invitedAt: invite.invited_at,
           message: invite.message || undefined,
-          respondedAt: invite.responded_at || undefined
-        };
-        
-        setInvites(prev => [...prev, newInvite]);
-        setShowSuccess(email);
-        
-        // Clear success message after 5 seconds
-        setTimeout(() => {
-          setShowSuccess(null);
-        }, 5000);
+          respondedAt: undefined
+        }]);
       }
-
-      setAddingCoParent(false);
-      toast.success(`Invitation sent to ${email}`);
-      onInviteSent?.();
     } catch (error) {
-      console.error('Error sending invite:', error);
-      toast.error("Failed to send invitation");
-      // Don't close the form on error
+      console.error("Error sending invitation:", error);
+      toast.error("Failed to send invitation. Please try again.");
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
@@ -141,57 +113,30 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
     <div className="grid gap-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-famacle-slate">Co-Parents</h2>
-        <Button onClick={() => setAddingCoParent(true)}>
+        <Button onClick={() => setInviting(true)}>
           <Plus className="mr-2 h-4 w-4" /> Invite Co-Parent
         </Button>
       </div>
       
-      {showSuccess && (
-        <Alert className="bg-green-50 border-green-200">
-          <MailCheck className="h-4 w-4 text-green-500" />
-          <AlertTitle>Invitation Sent!</AlertTitle>
-          <AlertDescription>
-            An invitation has been sent to {showSuccess}. They will receive an email with instructions to join as a co-parent.
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      {addingCoParent ? (
+      {inviting ? (
         <Card>
           <CardHeader>
             <CardTitle>Invite Co-Parent</CardTitle>
-            <CardDescription>Send an invitation to your child's co-parent</CardDescription>
+            <CardDescription>
+              Invite another parent to co-manage this family account
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <CoParentInvite 
-              onSubmit={handleInviteCoParent} 
-              onCancel={() => setAddingCoParent(false)} 
-              isSubmitting={isSubmitting}
+              onSubmit={handleSendInvite} 
+              onCancel={() => setInviting(false)} 
+              isSubmitting={submitting}
             />
           </CardContent>
         </Card>
       ) : null}
       
-      {invites.length === 0 && !addingCoParent ? (
-        <Card className="p-6 text-center">
-          <Users className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium">No co-parents invited yet</h3>
-          <p className="text-gray-600 mt-2">
-            Invite co-parents to collaborate on child-related matters
-          </p>
-          <Button 
-            className="mt-4" 
-            onClick={() => setAddingCoParent(true)}
-          >
-            Invite First Co-Parent
-          </Button>
-        </Card>
-      ) : (
-        <CoParentsList 
-          currentUser={currentUser}
-          invites={invites}
-        />
-      )}
+      <CoParentsList invites={invites} />
     </div>
   );
 };

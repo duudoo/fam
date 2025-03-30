@@ -26,17 +26,20 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
   const handleAddChild = async (child: Omit<Child, "id" | "parentIds">) => {
     try {
       setSubmitting(true);
+      
       // Get the current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("Please sign in to add a child");
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        console.error('Error getting user:', userError);
+        toast.error("Authentication error. Please sign in again.");
         return;
       }
 
-      console.log("Adding child:", child);
+      console.log("Adding child with user ID:", user.id);
       
-      // First, create the child record
-      const { data, error: childError } = await supabase
+      // Step 1: Create the child record
+      const childInsertResult = await supabase
         .from('children')
         .insert({
           name: child.name,
@@ -45,22 +48,23 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
         })
         .select();
 
-      if (childError) {
-        console.error('Error creating child:', childError);
-        toast.error(`Failed to create child: ${childError.message}`);
+      if (childInsertResult.error) {
+        console.error('Error creating child:', childInsertResult.error);
+        toast.error(`Failed to create child: ${childInsertResult.error.message}`);
         return;
       }
       
-      if (!data || data.length === 0) {
+      if (!childInsertResult.data || childInsertResult.data.length === 0) {
+        console.error('No data returned after child insert');
         toast.error("Failed to create child record");
         return;
       }
 
-      const newChild = data[0];
+      const newChild = childInsertResult.data[0];
       console.log("Child created:", newChild);
 
-      // Then, create the parent-child relationship
-      const { error: relationError } = await supabase
+      // Step 2: Create the parent-child relationship
+      const relationResult = await supabase
         .from('parent_children')
         .insert({
           parent_id: user.id,
@@ -68,17 +72,20 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
           is_primary: true
         });
 
-      if (relationError) {
-        console.error('Error creating parent-child relation:', relationError);
-        toast.error(`Failed to link child to parent: ${relationError.message}`);
+      if (relationResult.error) {
+        console.error('Error creating parent-child relation:', relationResult.error);
+        toast.error(`Failed to link child to parent: ${relationResult.error.message}`);
+        
+        // Try to clean up the orphaned child record
+        await supabase.from('children').delete().eq('id', newChild.id);
         return;
       }
 
-      // Close the form and show success message
+      // Success! Close the form and show success message
       setAddingChild(false);
       toast.success(`Child ${child.name || child.initials} added successfully`);
       
-      // Update the UI either by callback or direct state update
+      // Update the UI
       if (onChildAdded) {
         onChildAdded();
       } else {
