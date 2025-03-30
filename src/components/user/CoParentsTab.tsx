@@ -45,7 +45,10 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
         .eq('email', email)
         .eq('invited_by', user.id);
       
-      if (checkError) throw checkError;
+      if (checkError) {
+        console.error("Error checking existing invites:", checkError);
+        throw checkError;
+      }
       
       if (existingInvites && existingInvites.length > 0) {
         toast.error("This email has already been invited");
@@ -64,13 +67,17 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating invitation:", error);
+        throw error;
+      }
 
       // Generate invite link
       const inviteLink = `${window.location.origin}/signup?invite=true&email=${encodeURIComponent(email)}`;
       
       // Send invitation email
       try {
+        console.log("Sending invitation email to:", email);
         const emailResult = await emailAPI.sendCoParentInviteEmail(
           email, 
           currentUser.name || 'A co-parent', 

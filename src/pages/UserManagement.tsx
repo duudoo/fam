@@ -79,13 +79,18 @@ const UserManagementPage = () => {
     try {
       if (!user) return;
 
+      console.log("Fetching invites for user:", user.id);
       const { data, error } = await supabase
         .from('co_parent_invites')
         .select('*')
         .eq('invited_by', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error in fetchInvites query:', error);
+        throw error;
+      }
 
+      console.log("Fetched invites:", data);
       if (data) {
         setInvites(data.map((invite) => ({
           id: invite.id,

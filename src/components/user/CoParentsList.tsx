@@ -3,7 +3,6 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Parent, CoParentInvite } from "@/utils/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Spinner } from "@/components/ui/spinner";
 import { Check, Clock, X } from "lucide-react";
 
 interface CoParentsListProps {

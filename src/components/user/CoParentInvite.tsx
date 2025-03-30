@@ -48,7 +48,7 @@ const CoParentInvite = ({ onSubmit, onCancel, isSubmitting = false }: CoParentIn
     if (!isSubmitting && localSubmitting) {
       setLocalSubmitting(false);
     }
-  }, [isSubmitting]);
+  }, [isSubmitting, localSubmitting]);
 
   const handleSubmit = async (data: FormData) => {
     if (submitting) return; // Prevent multiple submissions
@@ -56,8 +56,7 @@ const CoParentInvite = ({ onSubmit, onCancel, isSubmitting = false }: CoParentIn
     setLocalSubmitting(true);
     try {
       await onSubmit(data.email, data.message);
-      // Only reset the form if submission is successful
-      // The parent component will close the form on successful submission
+      // Don't reset the form here - parent component will close the form on successful submission
     } catch (error) {
       console.error('Error submitting form:', error);
       // Form will retain values if submission fails
