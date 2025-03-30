@@ -12,7 +12,7 @@ interface ChildrenSelectionSectionProps {
 }
 
 const ChildrenSelectionSection = ({ defaultSelectedIds = [] }: ChildrenSelectionSectionProps) => {
-  const { children, loading } = useChildren();
+  const { data: children = [], isLoading } = useChildren();
   const [selectedIds, setSelectedIds] = useState<string[]>(defaultSelectedIds);
   const form = useFormContext();
   
@@ -28,7 +28,7 @@ const ChildrenSelectionSection = ({ defaultSelectedIds = [] }: ChildrenSelection
     );
   };
   
-  if (loading) {
+  if (isLoading) {
     return <div className="my-4 animate-pulse h-12 bg-gray-100 rounded-md"></div>;
   }
   

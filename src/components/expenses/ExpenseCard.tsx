@@ -24,7 +24,7 @@ const ExpenseCard = ({ expense, showActions = true, className }: ExpenseCardProp
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const { children } = useChildren();
+  const { data: children = [] } = useChildren();
 
   if (isEditing) {
     return (

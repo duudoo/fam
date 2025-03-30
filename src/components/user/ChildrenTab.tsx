@@ -11,16 +11,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { useChildManagement } from "@/hooks/children/useChildManagement";
 import EmptyChildrenState from "@/components/user/children/EmptyChildrenState";
 import ChildrenList from "@/components/user/children/ChildrenList";
+import { useChildren } from "@/hooks/children";
 
 interface ChildrenTabProps {
-  children: Child[];
-  setChildren: React.Dispatch<React.SetStateAction<Child[]>>;
-  loading?: boolean;
   onChildAdded?: () => void;
 }
 
-const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: ChildrenTabProps) => {
+const ChildrenTab = ({ onChildAdded }: ChildrenTabProps) => {
   const { user } = useAuth();
+  const { data: children = [], isLoading } = useChildren();
   const { 
     addingChild, 
     submitting, 
@@ -28,7 +27,7 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
     handleAddChildClick, 
     handleAddChild, 
     setAddingChild 
-  } = useChildManagement(children, setChildren, onChildAdded);
+  } = useChildManagement(children, onChildAdded);
 
   // Check authentication status when component mounts
   useEffect(() => {
@@ -40,7 +39,7 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
     checkAuth();
   }, [user]);
 
-  if (loading) {
+  if (isLoading) {
     return <div className="text-center py-4">Loading...</div>;
   }
 

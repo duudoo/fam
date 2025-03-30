@@ -5,10 +5,10 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Child } from "@/utils/types";
 import { useAuth } from "@/hooks/useAuth";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const useChildManagement = (
-  children: Child[],
-  setChildren: React.Dispatch<React.SetStateAction<Child[]>>,
+  children: Child[] = [],
   onChildAdded?: () => void
 ) => {
   const [addingChild, setAddingChild] = useState(false);
@@ -16,6 +16,7 @@ export const useChildManagement = (
   const [authError, setAuthError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const checkAuth = async () => {
     const { data: { session }, error } = await supabase.auth.getSession();
@@ -128,14 +129,8 @@ export const useChildManagement = (
       if (onChildAdded) {
         onChildAdded();
       } else {
-        // If no callback provided, update the local state
-        setChildren(prev => [...prev, {
-          id: newChild.id,
-          name: newChild.name || undefined,
-          dateOfBirth: newChild.date_of_birth || undefined,
-          initials: newChild.initials,
-          parentIds: [user.id]
-        }]);
+        // Invalidate the children query to refetch the data
+        queryClient.invalidateQueries({ queryKey: ['children'] });
       }
     } catch (error) {
       console.error('Error adding child:', error);
