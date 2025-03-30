@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Child } from "@/utils/types";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 // Define the form schema with zod
 const formSchema = z.object({
@@ -51,13 +52,22 @@ const ChildForm = ({ onSubmit, onCancel, isSubmitting = false }: ChildFormProps)
     
     setLocalSubmitting(true);
     try {
-      onSubmit({
+      // Convert initials to uppercase and handle optional fields
+      const childData = {
         initials: data.initials.toUpperCase(),
         name: data.name || undefined,
         dateOfBirth: data.dateOfBirth || undefined,
-      });
+      };
+      
+      // Call the onSubmit prop with the prepared data
+      await onSubmit(childData);
+      
+      // Reset form on successful submission
+      form.reset();
+      toast.success(`Child ${childData.name || childData.initials} added successfully`);
     } catch (error) {
       console.error('Error submitting form:', error);
+      toast.error('Failed to add child. Please try again.');
     } finally {
       setLocalSubmitting(false);
     }

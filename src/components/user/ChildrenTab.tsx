@@ -26,6 +26,7 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
   const handleAddChild = async (child: Omit<Child, "id" | "parentIds">) => {
     try {
       setSubmitting(true);
+      // Get the current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error("Please sign in to add a child");
@@ -34,6 +35,7 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
 
       console.log("Adding child:", child);
       
+      // First, create the child record
       const { data: newChild, error: childError } = await supabase
         .from('children')
         .insert({
@@ -49,10 +51,13 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
         throw childError;
       }
       
-      if (!newChild) throw new Error("Failed to create child");
+      if (!newChild) {
+        throw new Error("Failed to create child");
+      }
 
       console.log("Child created:", newChild);
 
+      // Then, create the parent-child relationship
       const { error: relationError } = await supabase
         .from('parent_children')
         .insert({
@@ -66,9 +71,11 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
         throw relationError;
       }
 
+      // Close the form and show success message
       setAddingChild(false);
       toast.success(`Child ${child.name || child.initials} added successfully`);
       
+      // Update the UI either by callback or direct state update
       if (onChildAdded) {
         onChildAdded();
       } else {
@@ -83,7 +90,7 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
       }
     } catch (error) {
       console.error('Error adding child:', error);
-      toast.error("Failed to add child");
+      toast.error("Failed to add child. Please try again.");
     } finally {
       setSubmitting(false);
     }
