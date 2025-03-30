@@ -1,5 +1,5 @@
 
-import { CircleDollarSign } from 'lucide-react';
+import { Receipt } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -16,7 +16,7 @@ const ExpenseTotalCard = ({ total }: ExpenseTotalCardProps) => {
     <Card className="relative overflow-hidden">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-medium text-gray-700 flex items-center">
-          <CircleDollarSign className="w-5 h-5 mr-2 text-famacle-blue" />
+          <Receipt className="w-5 h-5 mr-2 text-famacle-blue" />
           Total Expenses
         </CardTitle>
       </CardHeader>
