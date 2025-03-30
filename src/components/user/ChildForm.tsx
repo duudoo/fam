@@ -21,7 +21,8 @@ import { toast } from "sonner";
 const formSchema = z.object({
   initials: z.string()
     .min(1, "Initials are required")
-    .max(3, "Initials should be at most 3 characters"),
+    .max(3, "Initials should be at most 3 characters")
+    .refine(val => /^[A-Z]+$/.test(val), "Initials must be uppercase letters only"),
   name: z.string().optional(),
   dateOfBirth: z.string().optional(),
 });
@@ -125,6 +126,7 @@ const ChildForm = ({ onSubmit, onCancel, isSubmitting = false }: ChildFormProps)
                   type="date" 
                   {...field} 
                   disabled={submitting}
+                  max={new Date().toISOString().split('T')[0]} // Prevent future dates
                 />
               </FormControl>
               <FormMessage />

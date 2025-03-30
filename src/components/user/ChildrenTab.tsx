@@ -126,7 +126,7 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
     <div className="grid gap-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-famacle-slate">Children</h2>
-        <Button onClick={() => setAddingChild(true)}>
+        <Button onClick={() => setAddingChild(true)} disabled={addingChild}>
           <Plus className="mr-2 h-4 w-4" /> Add Child
         </Button>
       </div>
@@ -157,6 +157,7 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
           <Button 
             className="mt-4" 
             onClick={() => setAddingChild(true)}
+            disabled={addingChild}
           >
             Add First Child
           </Button>
