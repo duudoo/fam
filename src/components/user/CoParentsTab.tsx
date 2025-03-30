@@ -136,7 +136,7 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
         </Card>
       ) : null}
       
-      <CoParentsList invites={invites} />
+      <CoParentsList currentUser={currentUser} invites={invites} />
     </div>
   );
 };
