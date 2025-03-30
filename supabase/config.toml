@@ -9,3 +9,4 @@ verify_jwt = false
 
 [functions.resend-verification-code]
 verify_jwt = false
+
