@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Plus, Users } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Users, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import ChildForm from "@/components/user/ChildForm";
 import { Child } from "@/utils/types";
 import type { Database } from "@/integrations/supabase/database.types";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 type Tables = Database['public']['Tables'];
 type ChildRow = Tables['children']['Row'];
@@ -22,6 +25,44 @@ interface ChildrenTabProps {
 const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: ChildrenTabProps) => {
   const [addingChild, setAddingChild] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Check authentication status when component mounts or when user tries to add a child
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("Error checking authentication:", error);
+        setAuthError("Authentication error: " + error.message);
+        return false;
+      }
+      
+      if (!session) {
+        setAuthError("You must be signed in to add children");
+        return false;
+      }
+      
+      setAuthError(null);
+      return true;
+    };
+    
+    checkAuth();
+  }, [user]);
+
+  const handleAddChildClick = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      toast.error("You must be signed in to add children");
+      navigate("/signin");
+      return;
+    }
+    
+    setAddingChild(true);
+  };
 
   const handleAddChild = async (child: Omit<Child, "id" | "parentIds">) => {
     try {
@@ -33,6 +74,7 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
       if (userError || !user) {
         console.error('Error getting user:', userError);
         toast.error("Authentication error. Please sign in again.");
+        navigate("/signin");
         return;
       }
 
@@ -54,6 +96,7 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
         // Check for specific error cases
         if (childInsertResult.error.message.includes('permission denied')) {
           toast.error("Permission denied. Please ensure you're signed in properly.");
+          navigate("/signin");
         } else {
           toast.error(`Failed to create child: ${childInsertResult.error.message}`);
         }
@@ -84,6 +127,7 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
         // Check for specific error cases
         if (relationResult.error.message.includes('permission denied')) {
           toast.error("Permission denied when linking child to parent. Please ensure you're signed in properly.");
+          navigate("/signin");
         } else {
           toast.error(`Failed to link child to parent: ${relationResult.error.message}`);
         }
@@ -124,9 +168,19 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
 
   return (
     <div className="grid gap-4">
+      {authError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{authError}</AlertDescription>
+        </Alert>
+      )}
+      
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-famacle-slate">Children</h2>
-        <Button onClick={() => setAddingChild(true)} disabled={addingChild}>
+        <Button 
+          onClick={handleAddChildClick} 
+          disabled={addingChild || submitting}
+        >
           <Plus className="mr-2 h-4 w-4" /> Add Child
         </Button>
       </div>
@@ -156,8 +210,8 @@ const ChildrenTab = ({ children, setChildren, loading = false, onChildAdded }: C
           </p>
           <Button 
             className="mt-4" 
-            onClick={() => setAddingChild(true)}
-            disabled={addingChild}
+            onClick={handleAddChildClick}
+            disabled={addingChild || submitting}
           >
             Add First Child
           </Button>

@@ -24,7 +24,9 @@ const formSchema = z.object({
     .max(3, "Initials should be at most 3 characters")
     .refine(val => /^[A-Z]+$/.test(val), "Initials must be uppercase letters only"),
   name: z.string().optional(),
-  dateOfBirth: z.string().optional(),
+  dateOfBirth: z.string()
+    .optional()
+    .refine(val => !val || new Date(val) <= new Date(), "Date of birth cannot be in the future"),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -33,18 +35,24 @@ interface ChildFormProps {
   onSubmit: (data: Omit<Child, "id" | "parentIds">) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
+  initialData?: Partial<FormData>;
 }
 
-const ChildForm = ({ onSubmit, onCancel, isSubmitting = false }: ChildFormProps) => {
+const ChildForm = ({ 
+  onSubmit, 
+  onCancel, 
+  isSubmitting = false,
+  initialData 
+}: ChildFormProps) => {
   const [localSubmitting, setLocalSubmitting] = useState(false);
   const submitting = isSubmitting || localSubmitting;
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      initials: "",
-      name: "",
-      dateOfBirth: "",
+      initials: initialData?.initials || "",
+      name: initialData?.name || "",
+      dateOfBirth: initialData?.dateOfBirth || "",
     },
   });
 
