@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { MobileMenu } from './MobileMenu';
 import { useAuth } from '@/hooks/useAuth';
-import Logo from './Logo';
+import { Logo } from './Logo';
 
 const MobileNavigation = () => {
   const { user, signOut } = useAuth();
@@ -19,7 +19,7 @@ const MobileNavigation = () => {
   return (
     <div className="md:hidden flex items-center justify-between w-full px-4 py-2">
       <Link to="/" className="flex items-center">
-        <Logo height={36} />
+        <Logo />
       </Link>
       
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
