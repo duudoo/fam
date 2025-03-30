@@ -27,7 +27,6 @@ import { SplitMethod } from '@/utils/types';
 const splitMethods: SplitMethod[] = [
   'none',
   '50/50',
-  'income-based',
   'custom'
 ];
 
@@ -87,8 +86,8 @@ const ExpenseSettings = () => {
                     {splitMethods.map((method) => (
                       <SelectItem key={method} value={method}>
                         {method === '50/50' ? '50/50 Split' : 
-                         method === 'income-based' ? 'Income-based Split' : 
-                         method === 'custom' ? 'Custom Split Ratio' : 'No Split'}
+                         method === 'custom' ? 'Custom Split Ratio' : 
+                         'No Split'}
                       </SelectItem>
                     ))}
                   </SelectContent>

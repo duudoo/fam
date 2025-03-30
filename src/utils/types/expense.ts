@@ -28,7 +28,8 @@ export type ExpenseStatus =
  */
 export type SplitMethod = 
   | '50/50'
-  | 'custom';
+  | 'custom'
+  | 'none';
 
 /**
  * Expense record

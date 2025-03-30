@@ -17,5 +17,6 @@ export const useExpenseFilters = () => {
     searchQuery,
     searchInputValue,
     setSearchInputValue,
+    setSearchQuery: setSearchInputValue, // Alias for compatibility with useExpenses
   };
 };
