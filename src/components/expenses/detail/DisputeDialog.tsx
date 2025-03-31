@@ -28,7 +28,7 @@ const DisputeDialog = ({
 
   const handleSubmit = async () => {
     if (!disputeNote.trim()) {
-      toast.error("Please provide a reason for the dispute");
+      toast.error("Please provide a reason for the clarification");
       return;
     }
     
@@ -41,14 +41,14 @@ const DisputeDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Dispute Expense</DialogTitle>
+          <DialogTitle>Clarify Expense</DialogTitle>
         </DialogHeader>
         
         <div className="py-4">
-          <label className="text-sm font-medium">Reason for dispute</label>
+          <label className="text-sm font-medium">Reason for clarification</label>
           <Textarea
             className="mt-2"
-            placeholder="Please explain why you're disputing this expense..."
+            placeholder="Please explain why you're requesting clarification for this expense..."
             value={disputeNote}
             onChange={(e) => setDisputeNote(e.target.value)}
             disabled={isProcessing}
@@ -68,7 +68,7 @@ const DisputeDialog = ({
             onClick={handleSubmit}
             disabled={!disputeNote.trim() || isProcessing}
           >
-            Dispute Expense
+            Request Clarification
           </Button>
         </DialogFooter>
       </DialogContent>

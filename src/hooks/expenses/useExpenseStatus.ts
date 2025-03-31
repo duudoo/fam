@@ -32,7 +32,7 @@ export const useExpenseStatus = ({
           message = "Expense approved";
           break;
         case 'disputed':
-          message = "Expense disputed";
+          message = "Clarification requested";
           break;
         case 'paid':
           message = "Expense marked as paid";

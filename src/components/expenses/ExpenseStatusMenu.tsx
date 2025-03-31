@@ -9,10 +9,10 @@ import {
 import { 
   MoreVertical, 
   Check, 
-  X, 
   HelpCircle, 
   CreditCard, 
-  Trash 
+  Trash,
+  QuestionMark
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useExpenseStatus } from '@/hooks/expenses/useExpenseStatus';
@@ -89,7 +89,7 @@ const ExpenseStatusMenu: FC<ExpenseStatusMenuProps> = ({
           )}
           {currentStatus !== 'disputed' && (
             <DropdownMenuItem onClick={() => setDisputeDialogOpen(true)}>
-              <X className="mr-2 h-4 w-4 text-red-500" />
+              <QuestionMark className="mr-2 h-4 w-4 text-amber-500" />
               Clarify
             </DropdownMenuItem>
           )}
