@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,6 +24,10 @@ import * as z from 'zod';
 import { toast } from 'sonner';
 import { Spinner } from '@/components/ui/spinner';
 import { SplitMethod } from '@/utils/types';
+import { useExpenseCategories } from '@/hooks/useExpenseCategories';
+import { X, Plus, Trash2 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 
 const splitMethods: SplitMethod[] = [
   'none',
@@ -40,6 +45,13 @@ type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
 
 const ExpenseSettings = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [newCategory, setNewCategory] = useState('');
+  const { 
+    categories, 
+    isLoading: categoriesLoading, 
+    addCategory, 
+    deleteCategory 
+  } = useExpenseCategories();
   
   // For now, default to 50/50. In a real app, this would be loaded from user preferences
   const form = useForm<ExpenseFormValues>({
@@ -57,6 +69,22 @@ const ExpenseSettings = () => {
       toast.success("Expense settings updated");
       setIsLoading(false);
     }, 1000);
+  };
+
+  const handleAddCategory = async () => {
+    if (!newCategory.trim()) return;
+    
+    const result = await addCategory(newCategory);
+    if (result) {
+      setNewCategory('');
+    }
+  };
+
+  const handleDeleteCategory = async (category: string) => {
+    // Confirm before deleting
+    if (window.confirm(`Are you sure you want to delete the "${category}" category?`)) {
+      await deleteCategory(category);
+    }
   };
 
   return (
@@ -106,6 +134,59 @@ const ExpenseSettings = () => {
           </Button>
         </form>
       </Form>
+      
+      <Separator className="my-6" />
+      
+      <div>
+        <h3 className="text-lg font-medium">Expense Categories</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Manage the categories available when creating expenses
+        </p>
+        
+        <div className="flex gap-2 mb-4">
+          <Input
+            placeholder="New category name"
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value)}
+            className="flex-1"
+          />
+          <Button 
+            onClick={handleAddCategory} 
+            disabled={!newCategory.trim() || categoriesLoading}
+            type="button"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add
+          </Button>
+        </div>
+        
+        {categoriesLoading ? (
+          <div className="flex justify-center py-4">
+            <Spinner />
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {categories.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No custom categories yet. Add some above!</p>
+            ) : (
+              categories.map((category) => (
+                <Badge key={category} variant="outline" className="py-2 px-3 capitalize flex items-center gap-1">
+                  {category}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 ml-1 p-0 text-gray-500 hover:text-red-500"
+                    onClick={() => handleDeleteCategory(category)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    <span className="sr-only">Delete {category}</span>
+                  </Button>
+                </Badge>
+              ))
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

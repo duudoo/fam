@@ -1,6 +1,7 @@
 
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { Expense, ExpenseCategory, SplitMethod } from '@/utils/types';
+import { useExpenseCategories } from '@/hooks/useExpenseCategories';
 
 interface ExpenseFormContextProps {
   isEditing: boolean;
@@ -57,7 +58,11 @@ export const ExpenseFormProvider = ({
   
   const isEditing = !!expense;
   
-  const categories: ExpenseCategory[] = [
+  // Get user-defined categories
+  const { categories: userCategories, isLoading: categoriesLoading } = useExpenseCategories();
+  
+  // Default categories as fallback
+  const defaultCategories: ExpenseCategory[] = [
     'medical',
     'education',
     'clothing',
@@ -65,6 +70,11 @@ export const ExpenseFormProvider = ({
     'food',
     'other'
   ];
+  
+  // Combine user categories with defaults (removing duplicates)
+  const categories: ExpenseCategory[] = userCategories.length > 0 
+    ? userCategories as ExpenseCategory[]
+    : defaultCategories;
   
   const splitMethods: SplitMethod[] = [
     '50/50',

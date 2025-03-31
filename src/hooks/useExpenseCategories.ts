@@ -1,0 +1,75 @@
+
+import { useState, useEffect } from 'react';
+import { useAuth } from './useAuth';
+import { getUserExpenseCategories, addExpenseCategory, deleteExpenseCategory } from '@/lib/api/expenseCategories';
+import { toast } from 'sonner';
+
+export const useExpenseCategories = () => {
+  const { user } = useAuth();
+  const [categories, setCategories] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    if (user) {
+      fetchCategories();
+    }
+  }, [user]);
+
+  const fetchCategories = async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      const data = await getUserExpenseCategories(user.id);
+      setCategories(data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+      setError(err instanceof Error ? err : new Error('Failed to fetch categories'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const addCategory = async (newCategory: string) => {
+    if (!user) return null;
+    if (!newCategory.trim()) return null;
+
+    try {
+      await addExpenseCategory(user.id, newCategory);
+      await fetchCategories(); // Refresh the categories list
+      toast.success(`Category "${newCategory}" added`);
+      return newCategory;
+    } catch (err) {
+      console.error('Error adding category:', err);
+      toast.error(`Failed to add category: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      return null;
+    }
+  };
+
+  const deleteCategory = async (category: string) => {
+    if (!user) return false;
+
+    try {
+      await deleteExpenseCategory(user.id, category);
+      setCategories(prev => prev.filter(c => c !== category));
+      toast.success(`Category "${category}" deleted`);
+      return true;
+    } catch (err) {
+      console.error('Error deleting category:', err);
+      toast.error(`Failed to delete category: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      return false;
+    }
+  };
+
+  return {
+    categories,
+    isLoading,
+    error,
+    fetchCategories,
+    addCategory,
+    deleteCategory
+  };
+};
