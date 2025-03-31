@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useExpenseMutations } from '@/hooks/expenses';
 import { Expense } from '@/utils/types';
 import { ExpenseFormProvider } from './ExpenseFormContext';
-import { processFormSubmission } from './expenseFormUtils';
+import { processFormSubmission } from './utils/submissionUtils';
 import { expenseFormSchema, FormValues } from './schema';
 import ExpenseFormContent from './ExpenseFormContent';
 import { useState } from 'react';
