@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { Expense } from "@/utils/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ShareExpenseDialogProps {
   expense: Expense | null;
@@ -19,8 +20,8 @@ interface ShareExpenseDialogProps {
 
 const ShareExpenseDialog = ({ expense, open, onOpenChange }: ShareExpenseDialogProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [copied, setCopied] = useState(false);
-  const [recipientEmail, setRecipientEmail] = useState("");
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   
@@ -42,26 +43,41 @@ const ShareExpenseDialog = ({ expense, open, onOpenChange }: ShareExpenseDialogP
   
   // Handle sharing the expense via the messaging system
   const handleShareViaMessage = async () => {
-    if (!expense) return;
+    if (!expense || !user) {
+      toast.error("Cannot share expense: missing data");
+      return;
+    }
     
     setIsSending(true);
     
     try {
-      // Add a message to the messages table that includes the expense link
+      // Get the receiver ID (for demo, we can hardcode, but in a real app this would be dynamic)
+      // This would typically come from a co-parent relationship table
+      const receiverId = "Sarah"; // Hardcoded for demo
+      
+      // Format message text
+      const messageText = message || 
+        `I've shared an expense with you: ${expense.description} for ${expense.amount}`;
+      
+      // Add a message to the messages table with correctly formatted data
       const { error } = await supabase.from('messages').insert({
-        sender_id: expense.paidBy,
-        receiver_id: "Sarah", // Hardcoded for demo - in a real app, this would be the co-parent's ID
-        text: message || `I've shared an expense with you: ${expense.description} for ${expense.amount}`,
+        sender_id: user.id,
+        receiver_id: receiverId,
+        text: messageText,
         attachments: [
           {
             type: "link",
             url: expenseLink,
             name: `Expense: ${expense.description}`
           }
-        ]
+        ],
+        status: 'sent'
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
       
       toast.success("Expense shared successfully via message");
       onOpenChange(false);
