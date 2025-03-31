@@ -17,6 +17,16 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useExpenseStatus } from '@/hooks/expenses/useExpenseStatus';
 import DisputeDialog from '@/components/expenses/detail/DisputeDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ExpenseStatusMenuProps {
   expenseId: string;
@@ -35,6 +45,7 @@ const ExpenseStatusMenu: FC<ExpenseStatusMenuProps> = ({
 }) => {
   const { user } = useAuth();
   const [disputeDialogOpen, setDisputeDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
   const { isProcessing, updateStatus } = useExpenseStatus({
     expenseId,
@@ -48,6 +59,11 @@ const ExpenseStatusMenu: FC<ExpenseStatusMenuProps> = ({
   
   const handleDisputeSubmit = async (note: string) => {
     await updateStatus('disputed', note);
+  };
+
+  const handleDelete = () => {
+    setDeleteDialogOpen(false);
+    onDelete();
   };
 
   const isDisabled = isProcessing || externalProcessing;
@@ -74,7 +90,7 @@ const ExpenseStatusMenu: FC<ExpenseStatusMenuProps> = ({
           {currentStatus !== 'disputed' && (
             <DropdownMenuItem onClick={() => setDisputeDialogOpen(true)}>
               <X className="mr-2 h-4 w-4 text-red-500" />
-              Dispute
+              Clarify
             </DropdownMenuItem>
           )}
           {currentStatus !== 'pending' && (
@@ -84,7 +100,10 @@ const ExpenseStatusMenu: FC<ExpenseStatusMenuProps> = ({
             </DropdownMenuItem>
           )}
           {currentStatus !== 'paid' && (
-            <DropdownMenuItem className="text-red-600" onClick={onDelete}>
+            <DropdownMenuItem 
+              className="text-red-600" 
+              onClick={() => setDeleteDialogOpen(true)}
+            >
               <Trash className="mr-2 h-4 w-4" />
               Delete
             </DropdownMenuItem>
@@ -98,6 +117,23 @@ const ExpenseStatusMenu: FC<ExpenseStatusMenuProps> = ({
         onDisputeSubmit={handleDisputeSubmit}
         isProcessing={isDisabled}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Expense</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this expense? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

@@ -20,7 +20,7 @@ export type ExpenseCategory =
 export type ExpenseStatus = 
   | 'pending'
   | 'approved'
-  | 'disputed'
+  | 'disputed'  // Despite UI showing "Clarify", we keep the backend status as "disputed"
   | 'paid';
 
 /**
