@@ -59,14 +59,6 @@ export const processFormSubmission = async (
           position: 'top-center',
         });
       }
-      
-      if (newExpense && formAction === 'saveAndShare') {
-        // Get the co-parent email from the form submission
-        const coParentEmail = document.querySelector('input[type="email"]') as HTMLInputElement;
-        if (coParentEmail && coParentEmail.value) {
-          await sendExpenseToCoParent(newExpense.id, coParentEmail.value, values, user);
-        }
-      }
     }
     
     console.log("Expense successfully processed:", newExpense);
@@ -139,7 +131,8 @@ const handleExpenseCreation = async (
       .single();
       
     if (!expenseError && expenseData) {
-      // We'll send notification later when using Save & Share
+      // We'll only send automatic email notification if not using Save & Share option
+      // For Save & Share, we'll handle it separately with a dialog
       if (formAction !== 'saveAndShare') {
         await sendExpenseNotification({
           id: newExpense.id,
@@ -157,31 +150,4 @@ const handleExpenseCreation = async (
   }
   
   return newExpense;
-};
-
-// Function to send expense to co-parent
-const sendExpenseToCoParent = async (
-  expenseId: string,
-  coParentEmail: string,
-  values: FormValues,
-  user: any
-) => {
-  try {
-    console.log("Sharing expense with co-parent:", coParentEmail);
-    
-    // This would usually call an edge function to send an email
-    
-    // Create a notification for the co-parent
-    await supabase.from('notifications').insert({
-      user_id: user.id, // This will need to be updated to the co-parent's ID in a real implementation
-      type: 'expense_shared',
-      message: `New expense shared: ${values.description} for $${values.amount}`,
-      related_id: expenseId
-    });
-    
-    return true;
-  } catch (error) {
-    console.error("Error sharing expense:", error);
-    return false;
-  }
 };

@@ -12,6 +12,7 @@ import { expenseFormSchema, FormValues } from './schema';
 import ExpenseFormContent from './ExpenseFormContent';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import ShareExpenseDialog from '../share/ShareExpenseDialog';
 
 interface ExpenseFormProps {
   expense?: Expense;
@@ -25,6 +26,8 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
   const isEditing = !!expense;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [receiptUrl, setReceiptUrl] = useState(expense?.receiptUrl || '');
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [sharedExpense, setSharedExpense] = useState<Expense | null>(null);
   
   const defaultValues = expense ? {
     description: expense.description,
@@ -67,7 +70,7 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
     try {
       setIsSubmitting(true);
       
-      await processFormSubmission(
+      const newExpense = await processFormSubmission(
         values,
         isEditing,
         expense,
@@ -79,7 +82,11 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
       );
       
       // Handle post-submission actions
-      if (formAction === 'saveAndAdd') {
+      if (formAction === 'saveAndShare' && newExpense) {
+        console.log("Save and share option selected, showing share dialog...");
+        setSharedExpense(newExpense);
+        setShowShareDialog(true);
+      } else if (formAction === 'saveAndAdd') {
         console.log("Save and add another option selected, resetting form...");
         // Reset form but don't close it
         form.reset({
@@ -139,6 +146,13 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
             </form>
           </Form>
         </ExpenseFormProvider>
+        
+        {/* Share Expense Dialog */}
+        <ShareExpenseDialog 
+          expense={sharedExpense}
+          open={showShareDialog}
+          onOpenChange={setShowShareDialog}
+        />
       </CardContent>
     </Card>
   );
