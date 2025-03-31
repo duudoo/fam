@@ -20,14 +20,20 @@ const Navbar = () => {
     <header className="fixed top-0 left-0 right-0 z-50 glass-morphism border-b border-gray-100">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          <Logo />
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <Logo />
+          </div>
           
-          {/* Desktop menu */}
-          <nav className="hidden md:flex items-center space-x-1">
-            <NavItems />
-          </nav>
+          {/* Desktop menu - centered */}
+          <div className="hidden md:flex flex-1 justify-center">
+            <nav className="flex items-center space-x-1">
+              <NavItems />
+            </nav>
+          </div>
 
-          <div className="flex items-center ml-auto">
+          {/* Right side items */}
+          <div className="flex items-center">
             {/* Notifications Icon */}
             {user && (
               <Link 
