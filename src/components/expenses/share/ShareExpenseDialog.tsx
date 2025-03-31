@@ -50,29 +50,25 @@ const ShareExpenseDialog = ({ expense, open, onOpenChange }: ShareExpenseDialogP
     setIsSending(true);
     
     try {
-      // Determine the correct sender and receiver
       // The current user is always the sender
       const senderId = user.id;
       
-      // The receiver should be the co-parent
-      // In a full implementation, we would query the co-parent relationship
-      // For this demo, we'll determine if current user is the expense creator (paidBy)
-      // If yes, send to the demo co-parent ID, if not, send to the expense creator
-      const isCurrentUserCreator = expense.paidBy === user.id;
-      
       // For the demo we'll use a valid UUID as the co-parent ID
-      // In a real app, this would come from a database query
+      // In a real app, this would come from a database query of co-parent relationships
       const coParentId = "02430ec4-1ae7-4b48-9a01-249b5839e461";
+      
+      // Determine if current user is the expense creator (paidBy)
+      const isCurrentUserCreator = expense.paidBy === user.id;
       
       // If current user created the expense, send to co-parent
       // Otherwise, send to the expense creator
       const receiverId = isCurrentUserCreator ? coParentId : expense.paidBy;
       
+      console.log("Sending message from", senderId, "to", receiverId);
+      
       // Format message text
       const messageText = message || 
         `I've shared an expense with you: ${expense.description} for ${expense.amount}`;
-      
-      console.log("Sending message from", senderId, "to", receiverId);
       
       // Add a message to the messages table with correctly formatted data
       const { error } = await supabase.from('messages').insert({
@@ -83,7 +79,8 @@ const ShareExpenseDialog = ({ expense, open, onOpenChange }: ShareExpenseDialogP
           {
             type: "link",
             url: expenseLink,
-            name: `Expense: ${expense.description}`
+            name: `Expense: ${expense.description}`,
+            id: `${Date.now()}-expense-attachment` // Add a unique ID for the attachment
           }
         ],
         status: 'sent'
