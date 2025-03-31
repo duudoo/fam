@@ -1,10 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useExpenseCategories } from '@/hooks/useExpenseCategories';
 import { ExpenseCategory } from '@/utils/types';
@@ -20,6 +20,7 @@ const defaultCategories: ExpenseCategory[] = [
 
 export const CategoryManager = () => {
   const [newCategory, setNewCategory] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const { 
     categories: userCategories, 
     isLoading: categoriesLoading, 
@@ -88,6 +89,8 @@ export const CategoryManager = () => {
             categories={userCategories} 
             isDefaultCategory={isDefaultCategory}
             onDelete={handleDeleteCategory}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
           />
         </>
       )}
@@ -114,8 +117,27 @@ const DefaultCategories = ({ categories }: CategoryListProps) => (
   </div>
 );
 
-const CustomCategories = ({ categories, isDefaultCategory, onDelete }: CategoryListProps) => {
+interface CustomCategoriesProps extends CategoryListProps {
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+}
+
+const CustomCategories = ({ 
+  categories, 
+  isDefaultCategory, 
+  onDelete,
+  searchQuery,
+  onSearchChange
+}: CustomCategoriesProps) => {
   const customCategories = categories.filter(category => !isDefaultCategory?.(category));
+  
+  // Filter categories based on search query
+  const filteredCategories = useMemo(() => {
+    if (!searchQuery.trim()) return customCategories;
+    return customCategories.filter(category => 
+      category.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [customCategories, searchQuery]);
   
   if (customCategories.length === 0) {
     return (
@@ -128,23 +150,39 @@ const CustomCategories = ({ categories, isDefaultCategory, onDelete }: CategoryL
   
   return (
     <div className="mt-4">
-      <h4 className="text-sm font-medium text-muted-foreground mb-2">Custom Categories</h4>
-      <div className="flex flex-wrap gap-2">
-        {customCategories.map((category) => (
-          <Badge key={category} variant="outline" className="py-2 px-3 capitalize flex items-center gap-1">
-            {category}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-5 w-5 ml-1 p-0 text-gray-500 hover:text-red-500"
-              onClick={() => onDelete?.(category)}
-            >
-              <Trash2 className="h-3 w-3" />
-              <span className="sr-only">Delete {category}</span>
-            </Button>
-          </Badge>
-        ))}
+      <div className="flex justify-between items-center mb-2">
+        <h4 className="text-sm font-medium text-muted-foreground">Custom Categories</h4>
+        <div className="relative w-1/3">
+          <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Search categories..."
+            className="pl-8 h-8 text-sm"
+          />
+        </div>
       </div>
+      
+      {filteredCategories.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No categories match your search.</p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {filteredCategories.map((category) => (
+            <Badge key={category} variant="outline" className="py-2 px-3 capitalize flex items-center gap-1">
+              {category}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5 ml-1 p-0 text-gray-500 hover:text-red-500"
+                onClick={() => onDelete?.(category)}
+              >
+                <Trash2 className="h-3 w-3" />
+                <span className="sr-only">Delete {category}</span>
+              </Button>
+            </Badge>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
