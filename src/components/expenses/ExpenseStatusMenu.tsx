@@ -1,3 +1,4 @@
+
 import { FC, useState } from 'react';
 import { 
   DropdownMenu, 
@@ -11,11 +12,13 @@ import {
   HelpCircle, 
   CreditCard, 
   Trash,
-  HelpCircle as QuestionIcon
+  HelpCircle as QuestionIcon,
+  Share2
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useExpenseStatus } from '@/hooks/expenses/useExpenseStatus';
 import DisputeDialog from '@/components/expenses/detail/DisputeDialog';
+import ShareExpenseDialog from '@/components/expenses/share/ShareExpenseDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +29,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Expense } from '@/utils/types';
 
 interface ExpenseStatusMenuProps {
   expenseId: string;
@@ -33,6 +37,7 @@ interface ExpenseStatusMenuProps {
   isProcessing?: boolean;
   onStatusChange: () => void;
   onDelete: () => void;
+  expense?: Expense; // Add the expense prop for sharing
 }
 
 const ExpenseStatusMenu: FC<ExpenseStatusMenuProps> = ({ 
@@ -40,11 +45,13 @@ const ExpenseStatusMenu: FC<ExpenseStatusMenuProps> = ({
   currentStatus, 
   isProcessing: externalProcessing = false,
   onStatusChange,
-  onDelete
+  onDelete,
+  expense
 }) => {
   const { user } = useAuth();
   const [disputeDialogOpen, setDisputeDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
   
   const { isProcessing, updateStatus } = useExpenseStatus({
     expenseId,
@@ -98,6 +105,12 @@ const ExpenseStatusMenu: FC<ExpenseStatusMenuProps> = ({
               Mark as Pending
             </DropdownMenuItem>
           )}
+          {expense && (
+            <DropdownMenuItem onClick={() => setShareDialogOpen(true)}>
+              <Share2 className="mr-2 h-4 w-4 text-blue-500" />
+              Share
+            </DropdownMenuItem>
+          )}
           {currentStatus !== 'paid' && (
             <DropdownMenuItem 
               className="text-red-600" 
@@ -116,6 +129,14 @@ const ExpenseStatusMenu: FC<ExpenseStatusMenuProps> = ({
         onDisputeSubmit={handleDisputeSubmit}
         isProcessing={isDisabled}
       />
+
+      {expense && (
+        <ShareExpenseDialog 
+          expense={expense}
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+        />
+      )}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
