@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -51,18 +50,33 @@ const ShareExpenseDialog = ({ expense, open, onOpenChange }: ShareExpenseDialogP
     setIsSending(true);
     
     try {
-      // In a real app, this would come from the user's co-parent relationship
-      // For demo purposes, we'll use a valid UUID format for the receiver
-      // This is a temporary solution - in production, you would query for real user IDs
-      const receiverId = "02430ec4-1ae7-4b48-9a01-249b5839e461"; // Using a valid UUID format
+      // Determine the correct sender and receiver
+      // The current user is always the sender
+      const senderId = user.id;
+      
+      // The receiver should be the co-parent
+      // In a full implementation, we would query the co-parent relationship
+      // For this demo, we'll determine if current user is the expense creator (paidBy)
+      // If yes, send to the demo co-parent ID, if not, send to the expense creator
+      const isCurrentUserCreator = expense.paidBy === user.id;
+      
+      // For the demo we'll use a valid UUID as the co-parent ID
+      // In a real app, this would come from a database query
+      const coParentId = "02430ec4-1ae7-4b48-9a01-249b5839e461";
+      
+      // If current user created the expense, send to co-parent
+      // Otherwise, send to the expense creator
+      const receiverId = isCurrentUserCreator ? coParentId : expense.paidBy;
       
       // Format message text
       const messageText = message || 
         `I've shared an expense with you: ${expense.description} for ${expense.amount}`;
       
+      console.log("Sending message from", senderId, "to", receiverId);
+      
       // Add a message to the messages table with correctly formatted data
       const { error } = await supabase.from('messages').insert({
-        sender_id: user.id,
+        sender_id: senderId,
         receiver_id: receiverId,
         text: messageText,
         attachments: [
