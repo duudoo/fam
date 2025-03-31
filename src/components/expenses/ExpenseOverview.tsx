@@ -1,8 +1,8 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Expense, ExpenseCategory } from '@/utils/types';
-import { formatCurrency, getCategoryColor } from '@/utils/expenseUtils';
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+import { formatCurrency } from '@/utils/expenseUtils';
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell } from 'recharts';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface ExpenseOverviewProps {
@@ -74,17 +74,12 @@ const ExpenseOverview = ({ expenses = [] }: ExpenseOverviewProps) => {
                   />
                   <Bar
                     dataKey="amount"
-                    fill="#9b87f5"
-                    radius={[4, 4, 0, 0]}
-                    fillOpacity={0.85}
                     name="Amount"
+                    radius={[4, 4, 0, 0]}
                     isAnimationActive={true}
                   >
                     {chartData.map((entry, index) => (
-                      <rect 
-                        key={`rect-${index}`} 
-                        fill={entry.color} 
-                      />
+                      <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Bar>
                 </BarChart>
