@@ -1,3 +1,4 @@
+
 import { FC, useState } from 'react';
 import { 
   DropdownMenu, 
@@ -104,12 +105,10 @@ const ExpenseStatusMenu: FC<ExpenseStatusMenuProps> = ({
               Mark as Pending
             </DropdownMenuItem>
           )}
-          {expense && (
-            <DropdownMenuItem onClick={() => setShareDialogOpen(true)}>
-              <Share2 className="mr-2 h-4 w-4 text-blue-500" />
-              Share
-            </DropdownMenuItem>
-          )}
+          <DropdownMenuItem onClick={() => setShareDialogOpen(true)}>
+            <Share2 className="mr-2 h-4 w-4 text-blue-500" />
+            Share
+          </DropdownMenuItem>
           {currentStatus !== 'paid' && (
             <DropdownMenuItem 
               className="text-red-600" 
