@@ -14,7 +14,7 @@ export const useExpenseMutations = (userId: string | undefined) => {
       return await expensesAPI.createExpense(userId, newExpense);
     },
     onSuccess: () => {
-      toast.success("Expense created successfully");
+      // Removed toast.success("Expense created successfully") to avoid duplicate notifications
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
     },
     onError: (error) => {
@@ -36,7 +36,7 @@ export const useExpenseMutations = (userId: string | undefined) => {
       return await expensesAPI.updateExpense(id, updates);
     },
     onSuccess: () => {
-      toast.success("Expense updated successfully");
+      // Removed toast.success("Expense updated successfully") to avoid duplicate notifications
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
     },
     onError: (error) => {
