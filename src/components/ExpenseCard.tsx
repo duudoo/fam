@@ -1,4 +1,3 @@
-
 import { FC, useState } from 'react';
 import { format } from 'date-fns';
 import { 
@@ -73,6 +72,7 @@ const ExpenseCard: FC<ExpenseCardProps> = ({
             isProcessing={isDeleting || isUpdating}
             onStatusChange={() => setIsUpdating(true)}
             onDelete={deleteExpense}
+            expense={expense}
           />
         </div>
       </div>
