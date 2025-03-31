@@ -51,9 +51,10 @@ const ShareExpenseDialog = ({ expense, open, onOpenChange }: ShareExpenseDialogP
     setIsSending(true);
     
     try {
-      // Get the receiver ID (for demo, we can hardcode, but in a real app this would be dynamic)
-      // This would typically come from a co-parent relationship table
-      const receiverId = "Sarah"; // Hardcoded for demo
+      // In a real app, this would come from the user's co-parent relationship
+      // For demo purposes, we'll use a valid UUID format for the receiver
+      // This is a temporary solution - in production, you would query for real user IDs
+      const receiverId = "02430ec4-1ae7-4b48-9a01-249b5839e461"; // Using a valid UUID format
       
       // Format message text
       const messageText = message || 
@@ -82,7 +83,7 @@ const ShareExpenseDialog = ({ expense, open, onOpenChange }: ShareExpenseDialogP
       toast.success("Expense shared successfully via message");
       onOpenChange(false);
       
-      // Optionally navigate to the communications page
+      // Navigate to the communications page to see the message
       navigate("/communications");
     } catch (error) {
       console.error("Error sharing expense via message:", error);
