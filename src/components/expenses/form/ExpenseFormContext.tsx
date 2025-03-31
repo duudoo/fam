@@ -72,9 +72,13 @@ export const ExpenseFormProvider = ({
   ];
   
   // Combine user categories with defaults (removing duplicates)
-  const categories: ExpenseCategory[] = userCategories.length > 0 
-    ? userCategories as ExpenseCategory[]
-    : defaultCategories;
+  const allCategories = [...new Set([...userCategories, ...defaultCategories])];
+  
+  // Ensure all categories are valid ExpenseCategory types
+  const categories: ExpenseCategory[] = allCategories.filter(
+    (category): category is ExpenseCategory => 
+      typeof category === 'string'
+  ) as ExpenseCategory[];
   
   const splitMethods: SplitMethod[] = [
     '50/50',

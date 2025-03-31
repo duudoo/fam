@@ -23,7 +23,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
 import { Spinner } from '@/components/ui/spinner';
-import { SplitMethod } from '@/utils/types';
+import { SplitMethod, ExpenseCategory } from '@/utils/types';
 import { useExpenseCategories } from '@/hooks/useExpenseCategories';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -33,6 +33,16 @@ const splitMethods: SplitMethod[] = [
   'none',
   '50/50',
   'custom'
+];
+
+// Default expense categories that all users have access to
+const defaultCategories: ExpenseCategory[] = [
+  'medical',
+  'education',
+  'clothing',
+  'activities',
+  'food',
+  'other'
 ];
 
 const expenseFormSchema = z.object({
@@ -47,7 +57,7 @@ const ExpenseSettings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [newCategory, setNewCategory] = useState('');
   const { 
-    categories, 
+    categories: userCategories, 
     isLoading: categoriesLoading, 
     addCategory, 
     deleteCategory 
@@ -81,11 +91,21 @@ const ExpenseSettings = () => {
   };
 
   const handleDeleteCategory = async (category: string) => {
+    // Don't allow deleting default categories
+    if (defaultCategories.includes(category as ExpenseCategory)) {
+      toast.error(`Cannot delete default category "${category}"`);
+      return;
+    }
+    
     // Confirm before deleting
     if (window.confirm(`Are you sure you want to delete the "${category}" category?`)) {
       await deleteCategory(category);
     }
   };
+
+  // Check if a category is a default category
+  const isDefaultCategory = (category: string) => 
+    defaultCategories.includes(category as ExpenseCategory);
 
   return (
     <div className="space-y-6">
@@ -165,26 +185,44 @@ const ExpenseSettings = () => {
             <Spinner />
           </div>
         ) : (
-          <div className="flex flex-wrap gap-2 mt-2">
-            {categories.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No custom categories yet. Add some above!</p>
-            ) : (
-              categories.map((category) => (
-                <Badge key={category} variant="outline" className="py-2 px-3 capitalize flex items-center gap-1">
-                  {category}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-5 w-5 ml-1 p-0 text-gray-500 hover:text-red-500"
-                    onClick={() => handleDeleteCategory(category)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                    <span className="sr-only">Delete {category}</span>
-                  </Button>
-                </Badge>
-              ))
-            )}
-          </div>
+          <>
+            <div className="mb-2">
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">Default Categories</h4>
+              <div className="flex flex-wrap gap-2">
+                {defaultCategories.map((category) => (
+                  <Badge key={category} variant="secondary" className="py-2 px-3 capitalize flex items-center gap-1">
+                    {category}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">Custom Categories</h4>
+              <div className="flex flex-wrap gap-2">
+                {userCategories.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No custom categories yet. Add some above!</p>
+                ) : (
+                  userCategories
+                    .filter(category => !isDefaultCategory(category))
+                    .map((category) => (
+                      <Badge key={category} variant="outline" className="py-2 px-3 capitalize flex items-center gap-1">
+                        {category}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5 ml-1 p-0 text-gray-500 hover:text-red-500"
+                          onClick={() => handleDeleteCategory(category)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          <span className="sr-only">Delete {category}</span>
+                        </Button>
+                      </Badge>
+                    ))
+                )}
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>
