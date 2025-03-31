@@ -84,7 +84,19 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
       // Handle post-submission actions
       if (formAction === 'saveAndShare' && newExpense) {
         console.log("Save and share option selected, showing share dialog...");
-        setSharedExpense(newExpense);
+        
+        // Make sure the newExpense has all the required properties for sharing
+        setSharedExpense({
+          ...newExpense,
+          // Ensure these are set correctly
+          paidBy: user.id,
+          description: values.description,
+          category: values.category,
+          date: values.date ? new Date(values.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          amount: parseFloat(values.amount),
+          splitMethod: values.splitMethod
+        });
+        
         setShowShareDialog(true);
       } else if (formAction === 'saveAndAdd') {
         console.log("Save and add another option selected, resetting form...");
