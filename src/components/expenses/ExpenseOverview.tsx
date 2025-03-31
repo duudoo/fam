@@ -1,7 +1,7 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Expense, ExpenseCategory } from '@/utils/types';
-import { formatCurrency } from '@/utils/expenseUtils';
+import { formatCurrency, getCategoryColor } from '@/utils/expenseUtils';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
@@ -28,6 +28,7 @@ const ExpenseOverview = ({ expenses = [] }: ExpenseOverviewProps) => {
   const chartData = Object.entries(expensesByCategory).map(([category, amount]) => ({
     category,
     amount,
+    color: getCategoryColorHex(category as ExpenseCategory)
   }));
 
   return (
@@ -75,7 +76,17 @@ const ExpenseOverview = ({ expenses = [] }: ExpenseOverviewProps) => {
                     dataKey="amount"
                     fill="#9b87f5"
                     radius={[4, 4, 0, 0]}
-                  />
+                    fillOpacity={0.85}
+                    name="Amount"
+                    isAnimationActive={true}
+                  >
+                    {chartData.map((entry, index) => (
+                      <rect 
+                        key={`rect-${index}`} 
+                        fill={entry.color} 
+                      />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -102,6 +113,20 @@ const getCategoryColorClass = (category: ExpenseCategory): string => {
   };
   
   return categoryColors[category] || 'bg-gray-500';
+};
+
+// Helper function to get hex color values for the chart
+const getCategoryColorHex = (category: ExpenseCategory): string => {
+  const categoryHexColors: Record<ExpenseCategory, string> = {
+    medical: '#ef4444',   // red-500
+    education: '#3b82f6', // blue-500
+    clothing: '#a855f7',  // purple-500
+    activities: '#22c55e', // green-500
+    food: '#f97316',      // orange-500
+    other: '#6b7280',     // gray-500
+  };
+  
+  return categoryHexColors[category] || '#6b7280';
 };
 
 export default ExpenseOverview;

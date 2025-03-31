@@ -165,43 +165,52 @@ export type Database = {
       expenses: {
         Row: {
           amount: number
+          approval_token: string | null
           category: string
           created_at: string
           date: string
           description: string
+          dispute_notes: string | null
           id: string
           notes: string | null
           paid_by: string
           receipt_url: string | null
           split_method: string
+          split_percentage: Json | null
           status: string
           updated_at: string
         }
         Insert: {
           amount: number
+          approval_token?: string | null
           category: string
           created_at?: string
           date: string
           description: string
+          dispute_notes?: string | null
           id?: string
           notes?: string | null
           paid_by: string
           receipt_url?: string | null
           split_method?: string
+          split_percentage?: Json | null
           status?: string
           updated_at?: string
         }
         Update: {
           amount?: number
+          approval_token?: string | null
           category?: string
           created_at?: string
           date?: string
           description?: string
+          dispute_notes?: string | null
           id?: string
           notes?: string | null
           paid_by?: string
           receipt_url?: string | null
           split_method?: string
+          split_percentage?: Json | null
           status?: string
           updated_at?: string
         }
