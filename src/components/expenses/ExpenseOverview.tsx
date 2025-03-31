@@ -62,9 +62,9 @@ const ExpenseOverview = ({ expenses = [] }: ExpenseOverviewProps) => {
             </div>
           </div>
           
-          <div className="lg:col-span-2 pt-12">
+          <div className="lg:col-span-2 pt-4">
             {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={chartData} margin={{ top: 0, right: 20, left: 10, bottom: 5 }}>
                   <XAxis dataKey="category" />
                   <YAxis />
