@@ -67,8 +67,7 @@ export const ExpenseFormProvider = ({
     'education',
     'clothing',
     'activities',
-    'food',
-    'other'
+    'food'
   ];
   
   // Combine user categories with defaults (removing duplicates)

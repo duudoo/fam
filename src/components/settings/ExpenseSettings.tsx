@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { 
   Form, 
@@ -25,7 +24,7 @@ import { toast } from 'sonner';
 import { Spinner } from '@/components/ui/spinner';
 import { SplitMethod, ExpenseCategory } from '@/utils/types';
 import { useExpenseCategories } from '@/hooks/useExpenseCategories';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 
@@ -41,8 +40,7 @@ const defaultCategories: ExpenseCategory[] = [
   'education',
   'clothing',
   'activities',
-  'food',
-  'other'
+  'food'
 ];
 
 const expenseFormSchema = z.object({
