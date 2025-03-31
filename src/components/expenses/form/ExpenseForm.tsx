@@ -26,27 +26,29 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [receiptUrl, setReceiptUrl] = useState(expense?.receiptUrl || '');
   
+  const defaultValues = expense ? {
+    description: expense.description,
+    amount: expense.amount.toString(),
+    date: new Date(expense.date),
+    category: expense.category,
+    splitMethod: expense.splitMethod,
+    notes: expense.notes || "",
+    childIds: expense.childIds || [],
+    splitPercentage: expense.splitPercentage || undefined
+  } : {
+    description: "",
+    amount: "",
+    date: new Date(),
+    category: "education",
+    splitMethod: "50/50",
+    notes: "",
+    childIds: [],
+    splitPercentage: undefined
+  };
+  
   const form = useForm<FormValues>({
     resolver: zodResolver(expenseFormSchema),
-    defaultValues: expense ? {
-      description: expense.description,
-      amount: expense.amount.toString(),
-      date: new Date(expense.date),
-      category: expense.category,
-      splitMethod: expense.splitMethod,
-      notes: expense.notes || "",
-      childIds: expense.childIds || [],
-      splitPercentage: expense.splitPercentage || undefined
-    } : {
-      description: "",
-      amount: "",
-      date: new Date(),
-      category: "education",
-      splitMethod: "50/50",
-      notes: "",
-      childIds: [],
-      splitPercentage: undefined
-    },
+    defaultValues: defaultValues,
   });
   
   const handleSubmit = async (values: FormValues, event: React.FormEvent<HTMLFormElement>) => {
@@ -78,6 +80,7 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
       
       // Handle post-submission actions
       if (formAction === 'saveAndAdd') {
+        console.log("Save and add another option selected, resetting form...");
         // Reset form but don't close it
         form.reset({
           description: "",
@@ -93,6 +96,7 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
         toast.success("Expense added. You can add another one.");
       } else {
         // Close form and reset
+        console.log("Standard save option selected, closing form...");
         form.reset();
         setReceiptUrl('');
         if (onExpenseAdded) onExpenseAdded();
@@ -103,6 +107,10 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
       toast.error(isEditing ? "Failed to update expense" : "Failed to add expense");
     } finally {
       setIsSubmitting(false);
+      // Clear the action input value after form submission
+      if (actionInput) {
+        actionInput.value = '';
+      }
     }
   };
   

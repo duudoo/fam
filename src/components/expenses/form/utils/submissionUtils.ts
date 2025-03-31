@@ -17,15 +17,17 @@ export const processFormSubmission = async (
   console.log("Processing expense submission:", { values, isEditing, formAction });
   
   try {
+    let newExpense;
+    
     if (isEditing && expense) {
-      await handleExpenseUpdate(
+      newExpense = await handleExpenseUpdate(
         expense.id,
         values,
         receiptUrl,
         updateExpense
       );
     } else {
-      const newExpense = await handleExpenseCreation(
+      newExpense = await handleExpenseCreation(
         values,
         receiptUrl,
         user,
@@ -42,7 +44,8 @@ export const processFormSubmission = async (
       }
     }
     
-    return true;
+    console.log("Expense successfully processed:", newExpense);
+    return newExpense;
   } catch (error) {
     console.error(isEditing ? "Error updating expense:" : "Error adding expense:", error);
     throw error;

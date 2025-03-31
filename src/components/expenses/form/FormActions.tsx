@@ -33,20 +33,21 @@ const FormActions = ({
       return;
     }
     
-    // Create a hidden input for the action if provided
-    if (action) {
-      let actionInput = document.getElementById('form-action') as HTMLInputElement;
-      if (!actionInput) {
-        actionInput = document.createElement('input');
-        actionInput.type = 'hidden';
-        actionInput.id = 'form-action';
-        actionInput.name = 'form-action';
-        form.appendChild(actionInput);
-      }
-      actionInput.value = action;
+    // Set the action in the hidden input field
+    let actionInput = document.getElementById('form-action') as HTMLInputElement;
+    if (!actionInput) {
+      actionInput = document.createElement('input');
+      actionInput.type = 'hidden';
+      actionInput.id = 'form-action';
+      actionInput.name = 'form-action';
+      form.appendChild(actionInput);
     }
     
-    console.log("Submitting form with action:", action);
+    // Set the action value BEFORE submitting the form
+    actionInput.value = action || '';
+    console.log(`Setting form action to: ${action || 'default'} and submitting...`);
+    
+    // Submit the form programmatically
     form.requestSubmit();
   };
   
