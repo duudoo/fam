@@ -59,7 +59,7 @@ export const ExpenseFormProvider = ({
   const isEditing = !!expense;
   
   // Get user-defined categories
-  const { categories: userCategories, isLoading: categoriesLoading } = useExpenseCategories();
+  const { categories: userCategories, isLoading: categoriesLoading, fetchCategories } = useExpenseCategories();
   
   // Default categories as fallback
   const defaultCategories: ExpenseCategory[] = [
@@ -78,6 +78,12 @@ export const ExpenseFormProvider = ({
     (category): category is ExpenseCategory => 
       typeof category === 'string'
   ) as ExpenseCategory[];
+  
+  // Ensure categories are refreshed when the form is opened
+  useEffect(() => {
+    // Fetch latest categories when the form is opened
+    fetchCategories();
+  }, [fetchCategories]);
   
   const splitMethods: SplitMethod[] = [
     '50/50',

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn } from 'react-hook-form';
@@ -19,7 +19,12 @@ interface CategoryFieldProps {
 export const CategoryField = ({ form, categories }: CategoryFieldProps) => {
   const [newCategory, setNewCategory] = useState('');
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const { addCategory } = useExpenseCategories();
+  const { addCategory, fetchCategories } = useExpenseCategories();
+
+  // Ensure category dropdown shows the latest categories
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
@@ -30,6 +35,9 @@ export const CategoryField = ({ form, categories }: CategoryFieldProps) => {
       form.setValue('category', result as ExpenseCategory);
       setNewCategory('');
       setIsPopoverOpen(false);
+      
+      // Refresh categories to ensure the new one is visible in other components
+      fetchCategories();
     }
   };
 

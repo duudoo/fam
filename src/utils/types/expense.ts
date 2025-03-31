@@ -12,7 +12,7 @@ export type ExpenseCategory =
   | 'clothing'
   | 'activities'
   | 'food'
-  | 'other';
+  | string; // Allow custom categories
 
 /**
  * Status of an expense
