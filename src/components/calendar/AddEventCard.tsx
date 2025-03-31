@@ -18,10 +18,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Calendar, Clock, MapPin } from 'lucide-react';
 import EventForm from './EventForm';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import useAuth from '@/hooks/useAuth';
+import { motion } from 'framer-motion';
 
 const AddEventCard = () => {
   const [open, setOpen] = useState(false);
@@ -63,26 +64,45 @@ const AddEventCard = () => {
   };
 
   return (
-    <>
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="text-lg">Add New Event</CardTitle>
-          <CardDescription>Schedule a new activity or appointment</CardDescription>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.2 }}
+    >
+      <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center text-famacle-slate">
+            <Calendar className="w-5 h-5 mr-2 text-famacle-blue" />
+            Create New Event
+          </CardTitle>
+          <CardDescription>Schedule activities, appointments or important dates</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Create new events to keep track of important activities and appointments.
-          </p>
-          <div className="space-y-2">
-            <Badge className="mr-2 bg-famacle-coral text-white">High Priority</Badge>
-            <Badge className="mr-2 bg-famacle-blue text-white">Medium Priority</Badge>
-            <Badge className="mr-2 bg-famacle-slate-light">Low Priority</Badge>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+            <div className="flex flex-col items-center justify-center p-3 bg-famacle-blue-light/20 rounded-lg">
+              <Clock className="h-8 w-8 mb-2 text-famacle-blue" />
+              <p className="text-sm text-center">Schedule one-time or recurring events</p>
+            </div>
+            <div className="flex flex-col items-center justify-center p-3 bg-famacle-blue-light/20 rounded-lg">
+              <MapPin className="h-8 w-8 mb-2 text-famacle-blue" />
+              <p className="text-sm text-center">Add location details and notes</p>
+            </div>
+            <div className="flex flex-col items-center justify-center p-3 bg-famacle-blue-light/20 rounded-lg">
+              <Calendar className="h-8 w-8 mb-2 text-famacle-blue" />
+              <p className="text-sm text-center">Sync and share with family members</p>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap gap-2 mt-4">
+            <Badge className="bg-famacle-coral text-white border-0">High Priority</Badge>
+            <Badge className="bg-famacle-blue text-white border-0">Medium Priority</Badge>
+            <Badge className="bg-famacle-slate-light text-white border-0">Low Priority</Badge>
           </div>
         </CardContent>
         <CardFooter>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="w-full" disabled={isPending}>
+              <Button className="w-full bg-famacle-blue hover:bg-famacle-blue/90" disabled={isPending}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add New Event
               </Button>
@@ -103,7 +123,7 @@ const AddEventCard = () => {
           </Dialog>
         </CardFooter>
       </Card>
-    </>
+    </motion.div>
   );
 };
 

@@ -1,7 +1,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarIcon, CalendarDays, CalendarClock } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import {
   Popover,
@@ -44,22 +44,27 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(date, i - date.getDay()));
   
   return (
-    <div className="flex justify-between items-center">
-      <div className="flex items-center gap-2">
-        <h2 className="text-2xl font-semibold text-famacle-slate">
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex items-center">
+        <h2 className="text-xl font-semibold text-famacle-slate mr-2">
           {view === 'month' 
             ? format(date, 'MMMM yyyy')
-            : `Week of ${format(weekDays[0], 'MMM d')} - ${format(weekDays[6], 'MMM d, yyyy')}`
+            : `${format(weekDays[0], 'MMM d')} - ${format(weekDays[6], 'MMM d, yyyy')}`
           }
         </h2>
+        {view === 'month' ? (
+          <CalendarDays className="h-5 w-5 text-famacle-blue" />
+        ) : (
+          <CalendarClock className="h-5 w-5 text-famacle-blue" />
+        )}
       </div>
       
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button 
           variant="outline" 
           size="sm" 
           onClick={goToPreviousPeriod}
-          className="h-8 w-8 p-0"
+          className="h-8 w-8 p-0 rounded-full"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -68,7 +73,7 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
           variant="outline" 
           size="sm" 
           onClick={goToToday}
-          className="h-8"
+          className="h-8 rounded-full"
         >
           Today
         </Button>
@@ -77,14 +82,14 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
           variant="outline" 
           size="sm" 
           onClick={goToNextPeriod}
-          className="h-8 w-8 p-0"
+          className="h-8 w-8 p-0 rounded-full"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
         
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8">
+            <Button variant="outline" size="sm" className="h-8 rounded-full">
               <CalendarIcon className="h-4 w-4 mr-2" />
               Select
             </Button>
@@ -104,7 +109,7 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
           variant="outline" 
           size="sm" 
           onClick={toggleView}
-          className="h-8"
+          className="h-8 bg-famacle-blue-light text-famacle-blue hover:bg-famacle-blue hover:text-white rounded-full"
         >
           {view === 'month' ? 'Week View' : 'Month View'}
         </Button>
