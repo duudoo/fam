@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useExpenseFormContext } from './ExpenseFormContext';
 import ExpenseDetailsSection from './ExpenseDetailsSection';
 import ChildrenSelectionSection from './ChildrenSelectionSection';

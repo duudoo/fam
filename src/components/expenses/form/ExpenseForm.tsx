@@ -130,6 +130,7 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
               className="space-y-6"
             >
               <ExpenseFormContent form={form} />
+              <input type="hidden" id="form-action" name="form-action" value="" />
             </form>
           </Form>
         </ExpenseFormProvider>
