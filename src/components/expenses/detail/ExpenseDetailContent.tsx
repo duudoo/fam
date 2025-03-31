@@ -101,7 +101,7 @@ const ExpenseDetailContent = ({
                 isLink
                 url={expense.receiptUrl}
                 linkText="View Receipt"
-                value="View Receipt" // Adding the missing value property
+                value="View Receipt"
               />
             )}
             
