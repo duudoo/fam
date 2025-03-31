@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from 'react-router-dom';
-import { Bell, Calendar, List, Home, MessageCircle } from 'lucide-react';
+import { Bell, Calendar, Note, Home, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type NavItemProps = {
@@ -33,7 +33,7 @@ export const NavItem = ({ path, label, icon, isActive, onClick }: NavItemProps) 
 
 export const getNavItems = () => [
   { path: '/dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
-  { path: '/expenses', label: 'Expenses', icon: <List className="w-5 h-5" /> },
+  { path: '/expenses', label: 'Expenses', icon: <Note className="w-5 h-5" /> },
   { path: '/calendar', label: 'Calendar', icon: <Calendar className="w-5 h-5" /> },
   { path: '/communications', label: 'Communications', icon: <MessageCircle className="w-5 h-5" /> },
   { path: '/notifications', label: 'Notifications', icon: <Bell className="w-5 h-5" /> }
