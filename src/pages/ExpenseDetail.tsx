@@ -15,6 +15,7 @@ import CategoryBadge from "@/components/expenses/CategoryBadge";
 import StatusBadge from "@/components/expenses/StatusBadge";
 import ExpenseStatusMenu from "@/components/expenses/ExpenseStatusMenu";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { toast } from "sonner";
 
 const ExpenseDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +25,7 @@ const ExpenseDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { currency } = useCurrency();
+  const [isDeleting, setIsDeleting] = useState(false);
   
   useEffect(() => {
     const fetchExpense = async () => {
@@ -86,6 +88,35 @@ const ExpenseDetailPage = () => {
   
   const handleBack = () => {
     navigate('/expenses');
+  };
+
+  const handleStatusChange = () => {
+    // This will be passed to ExpenseStatusMenu to handle status changes
+    // When status changes, we don't need to do anything special here
+    // as we'll reload the page to refresh the data
+  };
+
+  const handleDelete = async () => {
+    if (!expense || !user) return;
+    
+    try {
+      setIsDeleting(true);
+      
+      const { error } = await supabase
+        .from('expenses')
+        .delete()
+        .eq('id', expense.id);
+      
+      if (error) throw error;
+      
+      toast.success("Expense deleted successfully");
+      navigate('/expenses');
+    } catch (err: any) {
+      console.error("Error deleting expense:", err);
+      toast.error("Failed to delete expense");
+    } finally {
+      setIsDeleting(false);
+    }
   };
   
   return (
@@ -216,11 +247,11 @@ const ExpenseDetailPage = () => {
                     <div className="mt-4">
                       <p className="text-sm font-medium text-gray-500 mb-2">Update Status</p>
                       <ExpenseStatusMenu 
-                        expense={expense}
-                        onSuccess={() => {
-                          // Refresh the expense data
-                          window.location.reload();
-                        }}
+                        expenseId={expense.id}
+                        currentStatus={expense.status}
+                        isProcessing={isDeleting}
+                        onStatusChange={handleStatusChange}
+                        onDelete={handleDelete}
                       />
                     </div>
                   )}
