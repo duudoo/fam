@@ -1,4 +1,3 @@
-
 import { FC, useState } from 'react';
 import { 
   DropdownMenu, 
@@ -12,7 +11,7 @@ import {
   HelpCircle, 
   CreditCard, 
   Trash,
-  QuestionMark
+  HelpCircle as QuestionIcon
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useExpenseStatus } from '@/hooks/expenses/useExpenseStatus';
@@ -89,7 +88,7 @@ const ExpenseStatusMenu: FC<ExpenseStatusMenuProps> = ({
           )}
           {currentStatus !== 'disputed' && (
             <DropdownMenuItem onClick={() => setDisputeDialogOpen(true)}>
-              <QuestionMark className="mr-2 h-4 w-4 text-amber-500" />
+              <QuestionIcon className="mr-2 h-4 w-4 text-amber-500" />
               Clarify
             </DropdownMenuItem>
           )}
