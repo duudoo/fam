@@ -93,18 +93,15 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
           splitPercentage: undefined
         });
         setReceiptUrl('');
-        toast.success("Expense added. You can add another one.");
       } else {
         // Close form and reset
         console.log("Standard save option selected, closing form...");
         form.reset();
         setReceiptUrl('');
         if (onExpenseAdded) onExpenseAdded();
-        toast.success(isEditing ? "Expense updated successfully" : "Expense added successfully");
       }
     } catch (error) {
       console.error("Error processing expense:", error);
-      toast.error(isEditing ? "Failed to update expense" : "Failed to add expense");
     } finally {
       setIsSubmitting(false);
       // Clear the action input value after form submission

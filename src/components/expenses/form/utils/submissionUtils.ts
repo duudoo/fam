@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from 'date-fns';
 import { FormValues } from '../schema';
 import { sendExpenseNotification } from './notificationUtils';
+import { toast } from "sonner";
 
 export const processFormSubmission = async (
   values: FormValues, 
@@ -26,6 +27,12 @@ export const processFormSubmission = async (
         receiptUrl,
         updateExpense
       );
+      
+      // Show confirmation toast for update
+      toast.success(`Expense "${values.description}" updated successfully`, {
+        duration: 3000,
+        position: 'top-center',
+      });
     } else {
       newExpense = await handleExpenseCreation(
         values,
@@ -34,6 +41,24 @@ export const processFormSubmission = async (
         createExpense,
         formAction
       );
+      
+      // Show specific confirmation toast based on action
+      if (formAction === 'saveAndAdd') {
+        toast.success(`Expense "${values.description}" saved. You can add another one.`, {
+          duration: 3000,
+          position: 'top-center',
+        });
+      } else if (formAction === 'saveAndShare') {
+        toast.success(`Expense "${values.description}" saved and ready to share.`, {
+          duration: 3000,
+          position: 'top-center',
+        });
+      } else {
+        toast.success(`Expense "${values.description}" created successfully`, {
+          duration: 3000,
+          position: 'top-center',
+        });
+      }
       
       if (newExpense && formAction === 'saveAndShare') {
         // Get the co-parent email from the form submission
@@ -48,6 +73,11 @@ export const processFormSubmission = async (
     return newExpense;
   } catch (error) {
     console.error(isEditing ? "Error updating expense:" : "Error adding expense:", error);
+    // Show error toast
+    toast.error(`Failed to ${isEditing ? 'update' : 'create'} expense. Please try again.`, {
+      duration: 4000,
+      position: 'top-center',
+    });
     throw error;
   }
 };

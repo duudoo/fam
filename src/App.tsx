@@ -20,6 +20,7 @@ import VerifyEmailPage from './pages/VerifyEmail';
 import Demo from './pages/Demo';
 import ExpenseSuccess from './pages/ExpenseSuccess';
 import ExpenseError from './pages/ExpenseError';
+import { Toaster } from '@/components/ui/sonner';
 
 const App = () => {
   const { user, loading } = useAuth();
@@ -47,6 +48,7 @@ const App = () => {
 
   return (
     <div className="relative min-h-screen">
+      <Toaster position="top-center" richColors />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/signin" element={
