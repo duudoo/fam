@@ -62,10 +62,10 @@ const ExpenseOverview = ({ expenses = [] }: ExpenseOverviewProps) => {
             </div>
           </div>
           
-          <div className="lg:col-span-2 h-64 flex items-center justify-center">
+          <div className="lg:col-span-2 pt-12">
             {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="95%">
-                <BarChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={chartData} margin={{ top: 0, right: 20, left: 10, bottom: 5 }}>
                   <XAxis dataKey="category" />
                   <YAxis />
                   <Tooltip
