@@ -11,9 +11,9 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Receipt, Clock, Calendar, DollarSign, Tag, User, SplitSquareVertical } from "lucide-react";
 import { formatCurrency } from "@/utils/expenseUtils";
 import { format } from "date-fns";
-import { CategoryBadge } from "@/components/expenses/CategoryBadge";
-import { StatusBadge } from "@/components/expenses/StatusBadge";
-import { ExpenseStatusMenu } from "@/components/expenses/ExpenseStatusMenu";
+import CategoryBadge from "@/components/expenses/CategoryBadge";
+import StatusBadge from "@/components/expenses/StatusBadge";
+import ExpenseStatusMenu from "@/components/expenses/ExpenseStatusMenu";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
 const ExpenseDetailPage = () => {
