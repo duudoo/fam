@@ -20,9 +20,10 @@ export const SplitMethodField = ({ form, splitMethods, onSplitMethodChange }: Sp
         onSplitMethodChange(value.splitMethod as SplitMethod);
         console.log('Split method changed to:', value.splitMethod);
         
-        // If the split method is not 'custom', clear any existing splitPercentage
+        // If the split method is not 'custom', clear any existing splitPercentage and splitAmounts
         if (value.splitMethod !== 'custom') {
           form.setValue('splitPercentage', undefined);
+          form.setValue('splitAmounts', undefined);
         }
       }
     });

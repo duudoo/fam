@@ -27,9 +27,9 @@ export type ExpenseStatus =
  * Methods for splitting expenses between co-parents
  */
 export type SplitMethod = 
+  | 'none'
   | '50/50'
-  | 'custom'
-  | 'none';
+  | 'custom';
 
 /**
  * Expense record

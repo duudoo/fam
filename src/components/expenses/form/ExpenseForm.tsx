@@ -37,7 +37,8 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
     splitMethod: expense.splitMethod,
     notes: expense.notes || "",
     childIds: expense.childIds || [],
-    splitPercentage: expense.splitPercentage || undefined
+    splitPercentage: expense.splitPercentage || undefined,
+    splitAmounts: expense.splitAmounts || undefined
   } : {
     description: "",
     amount: "",
@@ -46,7 +47,8 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
     splitMethod: "50/50",
     notes: "",
     childIds: [],
-    splitPercentage: undefined
+    splitPercentage: undefined,
+    splitAmounts: undefined
   };
   
   const form = useForm<FormValues>({
@@ -94,7 +96,9 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
           category: values.category,
           date: values.date ? new Date(values.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
           amount: parseFloat(values.amount),
-          splitMethod: values.splitMethod
+          splitMethod: values.splitMethod,
+          splitPercentage: values.splitPercentage,
+          splitAmounts: values.splitAmounts
         });
         
         setShowShareDialog(true);
@@ -109,7 +113,8 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
           splitMethod: "50/50",
           notes: "",
           childIds: [],
-          splitPercentage: undefined
+          splitPercentage: undefined,
+          splitAmounts: undefined
         });
         setReceiptUrl('');
       } else {

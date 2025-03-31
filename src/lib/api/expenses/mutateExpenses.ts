@@ -19,6 +19,7 @@ export const createExpense = async (userId: string, newExpense: Omit<Expense, 'i
       status: newExpense.status,
       split_method: newExpense.splitMethod,
       split_percentage: newExpense.splitPercentage,
+      split_amounts: newExpense.splitAmounts,
       notes: newExpense.notes,
       dispute_notes: newExpense.disputeNotes
     })
@@ -71,6 +72,7 @@ export const updateExpense = async (
   if (updates.status !== undefined) dbUpdates.status = updates.status;
   if (updates.splitMethod !== undefined) dbUpdates.split_method = updates.splitMethod;
   if (updates.splitPercentage !== undefined) dbUpdates.split_percentage = updates.splitPercentage;
+  if (updates.splitAmounts !== undefined) dbUpdates.split_amounts = updates.splitAmounts;
   if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
   if (updates.disputeNotes !== undefined) dbUpdates.dispute_notes = updates.disputeNotes;
 

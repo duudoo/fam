@@ -15,6 +15,7 @@ export const expenseFormSchema = z.object({
   category: z.string(),
   splitMethod: z.string(),
   splitPercentage: z.record(z.string(), z.number()).optional(),
+  splitAmounts: z.record(z.string(), z.number()).optional(),
   notes: z.string().optional(),
   childIds: z.array(z.string()).optional(),
 });

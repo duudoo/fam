@@ -1,107 +1,81 @@
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, ReactNode, useState, Dispatch, SetStateAction } from 'react';
 import { Expense, ExpenseCategory, SplitMethod } from '@/utils/types';
-import { useExpenseCategories } from '@/hooks/useExpenseCategories';
 
-interface ExpenseFormContextProps {
-  isEditing: boolean;
-  isSubmitting: boolean;
-  setIsSubmitting: (value: boolean) => void;
-  receiptUrl: string;
-  setReceiptUrl: (url: string) => void;
-  categories: ExpenseCategory[];
-  splitMethods: SplitMethod[];
+// Define available categories and split methods
+const categories: ExpenseCategory[] = [
+  'medical',
+  'education',
+  'clothing',
+  'activities',
+  'food',
+  'other'
+];
+
+const splitMethods: SplitMethod[] = [
+  'none',
+  '50/50',
+  'custom'
+];
+
+interface ExpenseFormContextType {
   expense?: Expense;
   onExpenseAdded?: () => void;
   onCancel?: () => void;
+  categories: ExpenseCategory[];
+  splitMethods: SplitMethod[];
+  isSubmitting: boolean;
+  setIsSubmitting: Dispatch<SetStateAction<boolean>>;
+  receiptUrl: string;
+  setReceiptUrl: Dispatch<SetStateAction<string>>;
+  isEditing: boolean;
 }
 
-export const ExpenseFormContext = createContext<ExpenseFormContextProps | undefined>(undefined);
+const ExpenseFormContext = createContext<ExpenseFormContextType | undefined>(undefined);
 
 export const useExpenseFormContext = () => {
   const context = useContext(ExpenseFormContext);
   if (!context) {
-    throw new Error('useExpenseFormContext must be used within an ExpenseFormProvider');
+    throw new Error('useExpenseFormContext must be used within a ExpenseFormProvider');
   }
   return context;
 };
 
 interface ExpenseFormProviderProps {
-  children: React.ReactNode;
+  children: ReactNode;
   expense?: Expense;
-  isSubmitting?: boolean;
-  setIsSubmitting?: (value: boolean) => void;
-  receiptUrl?: string;
-  setReceiptUrl?: (url: string) => void;
   onExpenseAdded?: () => void;
   onCancel?: () => void;
+  isSubmitting: boolean;
+  setIsSubmitting: Dispatch<SetStateAction<boolean>>;
+  receiptUrl: string;
+  setReceiptUrl: Dispatch<SetStateAction<string>>;
 }
 
-export const ExpenseFormProvider = ({ 
-  children, 
+export const ExpenseFormProvider = ({
+  children,
   expense,
-  isSubmitting: externalIsSubmitting,
-  setIsSubmitting: externalSetIsSubmitting,
-  receiptUrl: externalReceiptUrl,
-  setReceiptUrl: externalSetReceiptUrl, 
-  onExpenseAdded, 
-  onCancel 
+  onExpenseAdded,
+  onCancel,
+  isSubmitting,
+  setIsSubmitting,
+  receiptUrl,
+  setReceiptUrl
 }: ExpenseFormProviderProps) => {
-  // Use external state if provided, otherwise create local state
-  const [localIsSubmitting, setLocalIsSubmitting] = useState(false);
-  const [localReceiptUrl, setLocalReceiptUrl] = useState<string>(expense?.receiptUrl || '');
-  
-  const isSubmitting = externalIsSubmitting !== undefined ? externalIsSubmitting : localIsSubmitting;
-  const setIsSubmitting = externalSetIsSubmitting || setLocalIsSubmitting;
-  const receiptUrl = externalReceiptUrl !== undefined ? externalReceiptUrl : localReceiptUrl;
-  const setReceiptUrl = externalSetReceiptUrl || setLocalReceiptUrl;
-  
   const isEditing = !!expense;
-  
-  // Get user-defined categories
-  const { categories: userCategories, isLoading: categoriesLoading, fetchCategories } = useExpenseCategories();
-  
-  // Default categories as fallback
-  const defaultCategories: ExpenseCategory[] = [
-    'medical',
-    'education',
-    'clothing',
-    'activities',
-    'food'
-  ];
-  
-  // Combine user categories with defaults (removing duplicates)
-  const allCategories = [...new Set([...userCategories, ...defaultCategories])];
-  
-  // Ensure all categories are valid ExpenseCategory types
-  const categories: ExpenseCategory[] = allCategories.filter(
-    (category): category is ExpenseCategory => 
-      typeof category === 'string'
-  ) as ExpenseCategory[];
-  
-  // Ensure categories are refreshed when the form is opened
-  useEffect(() => {
-    // Fetch latest categories when the form is opened
-    fetchCategories();
-  }, [fetchCategories]);
-  
-  const splitMethods: SplitMethod[] = [
-    '50/50',
-    'custom'
-  ];
 
   return (
     <ExpenseFormContext.Provider value={{
-      isEditing,
+      expense,
+      onExpenseAdded,
+      onCancel,
+      categories,
+      splitMethods,
       isSubmitting,
       setIsSubmitting,
       receiptUrl,
       setReceiptUrl,
-      categories,
-      splitMethods,
-      expense,
-      onExpenseAdded,
-      onCancel
+      isEditing
     }}>
       {children}
     </ExpenseFormContext.Provider>
