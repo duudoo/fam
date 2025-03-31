@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { format } from 'date-fns';
-import { toast } from 'sonner';
 import { FormValues } from '../schema';
 import { sendExpenseNotification } from './notificationUtils';
 
@@ -13,23 +12,11 @@ export const processFormSubmission = async (
   user: any,
   createExpense: any,
   updateExpense: any,
-  setIsSubmitting: (value: boolean) => void,
-  resetForm: () => void,
-  setReceiptUrl: (url: string) => void,
-  onComplete?: () => void,
   formAction?: string
 ) => {
-  if (!user) {
-    toast.error("You must be signed in to add an expense");
-    return;
-  }
-
-  setIsSubmitting(true);
+  console.log("Processing expense submission:", { values, isEditing, formAction });
   
   try {
-    console.log("Processing expense with split method:", values.splitMethod);
-    console.log("Split percentages:", values.splitPercentage);
-    
     if (isEditing && expense) {
       await handleExpenseUpdate(
         expense.id,
@@ -55,19 +42,10 @@ export const processFormSubmission = async (
       }
     }
     
-    if (formAction !== 'saveAndAdd') {
-      resetForm();
-      setReceiptUrl('');
-    }
-    
-    if (onComplete) {
-      onComplete();
-    }
+    return true;
   } catch (error) {
     console.error(isEditing ? "Error updating expense:" : "Error adding expense:", error);
-    toast.error(isEditing ? "Failed to update expense" : "Failed to add expense");
-  } finally {
-    setIsSubmitting(false);
+    throw error;
   }
 };
 
@@ -78,7 +56,9 @@ const handleExpenseUpdate = async (
   receiptUrl: string, 
   updateExpense: any
 ) => {
-  await updateExpense.mutateAsync({
+  console.log("Updating expense:", expenseId);
+  
+  return await updateExpense.mutateAsync({
     id: expenseId,
     updates: {
       description: values.description,
@@ -102,6 +82,8 @@ const handleExpenseCreation = async (
   createExpense: any,
   formAction?: string
 ) => {
+  console.log("Creating new expense with values:", values);
+  
   const newExpense = await createExpense.mutateAsync({
     description: values.description,
     amount: parseFloat(values.amount),
@@ -152,8 +134,9 @@ const sendExpenseToCoParent = async (
   user: any
 ) => {
   try {
+    console.log("Sharing expense with co-parent:", coParentEmail);
+    
     // This would usually call an edge function to send an email
-    toast.success(`Expense shared with ${coParentEmail}`);
     
     // Create a notification for the co-parent
     await supabase.from('notifications').insert({
@@ -166,7 +149,6 @@ const sendExpenseToCoParent = async (
     return true;
   } catch (error) {
     console.error("Error sharing expense:", error);
-    toast.error("Failed to share expense");
     return false;
   }
 };

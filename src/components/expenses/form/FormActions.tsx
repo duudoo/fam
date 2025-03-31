@@ -28,7 +28,10 @@ const FormActions = ({
   // Helper function to programmatically submit the form with a specific action
   const submitFormWithAction = (action?: string) => {
     const form = document.getElementById('expense-form') as HTMLFormElement;
-    if (!form) return;
+    if (!form) {
+      console.error("Form element not found");
+      return;
+    }
     
     // Create a hidden input for the action if provided
     if (action) {
@@ -43,15 +46,8 @@ const FormActions = ({
       actionInput.value = action;
     }
     
+    console.log("Submitting form with action:", action);
     form.requestSubmit();
-    
-    // Clean up the action input after submission
-    if (action) {
-      setTimeout(() => {
-        const actionInput = document.getElementById('form-action');
-        if (actionInput) actionInput.remove();
-      }, 100);
-    }
   };
   
   if (isMobile) {
@@ -62,6 +58,7 @@ const FormActions = ({
             <Button 
               className="w-full justify-between"
               disabled={isSubmitting}
+              type="button"
             >
               <div className="flex items-center">
                 <Save className="mr-2 h-4 w-4" />
@@ -73,7 +70,7 @@ const FormActions = ({
           <DropdownMenuContent align="end" className="w-[200px]">
             <DropdownMenuItem 
               className="cursor-pointer"
-              onSelect={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 submitFormWithAction();
               }}
@@ -85,7 +82,7 @@ const FormActions = ({
             {showSaveAndAddAnother && (
               <DropdownMenuItem 
                 className="cursor-pointer"
-                onSelect={(e) => {
+                onClick={(e) => {
                   e.preventDefault();
                   submitFormWithAction('saveAndAdd');
                 }}
@@ -98,7 +95,7 @@ const FormActions = ({
             {showSaveAndShare && (
               <DropdownMenuItem 
                 className="cursor-pointer"
-                onSelect={(e) => {
+                onClick={(e) => {
                   e.preventDefault();
                   submitFormWithAction('saveAndShare');
                 }}
@@ -136,7 +133,7 @@ const FormActions = ({
       
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button disabled={isSubmitting}>
+          <Button disabled={isSubmitting} type="button">
             <div className="flex items-center">
               <Save className="mr-2 h-4 w-4" />
               {isEditing ? "Update Expense" : "Save Expense"}
@@ -147,7 +144,7 @@ const FormActions = ({
         <DropdownMenuContent align="end" className="w-[200px]">
           <DropdownMenuItem 
             className="cursor-pointer"
-            onSelect={(e) => {
+            onClick={(e) => {
               e.preventDefault();
               submitFormWithAction();
             }}
@@ -159,7 +156,7 @@ const FormActions = ({
           {showSaveAndAddAnother && (
             <DropdownMenuItem 
               className="cursor-pointer"
-              onSelect={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 submitFormWithAction('saveAndAdd');
               }}
@@ -172,7 +169,7 @@ const FormActions = ({
           {showSaveAndShare && (
             <DropdownMenuItem 
               className="cursor-pointer"
-              onSelect={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 submitFormWithAction('saveAndShare');
               }}

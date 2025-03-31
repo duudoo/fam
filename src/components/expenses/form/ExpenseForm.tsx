@@ -11,6 +11,7 @@ import { processFormSubmission } from './expenseFormUtils';
 import { expenseFormSchema, FormValues } from './schema';
 import ExpenseFormContent from './ExpenseFormContent';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface ExpenseFormProps {
   expense?: Expense;
@@ -49,42 +50,60 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
   });
   
   const handleSubmit = async (values: FormValues, event: React.FormEvent<HTMLFormElement>) => {
+    if (!user) {
+      toast.error("You must be signed in to add an expense");
+      return;
+    }
+    
     // Get the action from the hidden input field
     const formElement = event.target as HTMLFormElement;
     const actionInput = formElement.querySelector('#form-action') as HTMLInputElement;
     const formAction = actionInput?.value;
     
-    await processFormSubmission(
-      values,
-      isEditing,
-      expense,
-      receiptUrl,
-      user,
-      createExpense,
-      updateExpense,
-      setIsSubmitting,
-      form.reset,
-      setReceiptUrl,
-      () => {
-        if (formAction === 'saveAndAdd') {
-          // Reset form but don't close it
-          form.reset({
-            description: "",
-            amount: "",
-            date: new Date(),
-            category: "education",
-            splitMethod: "50/50",
-            notes: "",
-            childIds: [],
-            splitPercentage: undefined
-          });
-        } else {
-          // Close form
-          if (onExpenseAdded) onExpenseAdded();
-        }
-      },
-      formAction
-    );
+    console.log("Form submission triggered with action:", formAction);
+    
+    try {
+      setIsSubmitting(true);
+      
+      await processFormSubmission(
+        values,
+        isEditing,
+        expense,
+        receiptUrl,
+        user,
+        createExpense,
+        updateExpense,
+        formAction
+      );
+      
+      // Handle post-submission actions
+      if (formAction === 'saveAndAdd') {
+        // Reset form but don't close it
+        form.reset({
+          description: "",
+          amount: "",
+          date: new Date(),
+          category: "education",
+          splitMethod: "50/50",
+          notes: "",
+          childIds: [],
+          splitPercentage: undefined
+        });
+        setReceiptUrl('');
+        toast.success("Expense added. You can add another one.");
+      } else {
+        // Close form and reset
+        form.reset();
+        setReceiptUrl('');
+        if (onExpenseAdded) onExpenseAdded();
+        toast.success(isEditing ? "Expense updated successfully" : "Expense added successfully");
+      }
+    } catch (error) {
+      console.error("Error processing expense:", error);
+      toast.error(isEditing ? "Failed to update expense" : "Failed to add expense");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   return (
