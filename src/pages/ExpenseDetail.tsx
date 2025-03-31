@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import StatusBadge from "@/components/expenses/StatusBadge";
 import CategoryBadge from "@/components/expenses/CategoryBadge";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/utils/expenseUtils";
 
 const ExpenseDetail = () => {
   const { id } = useParams();
@@ -127,11 +127,11 @@ const ExpenseDetail = () => {
             </div>
           )}
 
-          {expense.receipt_url && (
+          {expense.receiptUrl && (
             <div>
               <p className="text-sm text-gray-500 mb-1">Receipt</p>
               <a
-                href={expense.receipt_url}
+                href={expense.receiptUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-famacle-blue hover:underline flex items-center gap-1"
@@ -143,7 +143,7 @@ const ExpenseDetail = () => {
 
           <div className="pt-4 border-t">
             <p className="text-sm text-gray-500 mb-1">Split Method</p>
-            <p className="text-gray-700">{expense.split_method}</p>
+            <p className="text-gray-700">{expense.splitMethod}</p>
           </div>
         </div>
       </Card>
