@@ -35,8 +35,7 @@ export const getNavItems = () => [
   { path: '/dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
   { path: '/expenses', label: 'Expenses', icon: <FileText className="w-5 h-5" /> },
   { path: '/calendar', label: 'Calendar', icon: <Calendar className="w-5 h-5" /> },
-  { path: '/communications', label: 'Communications', icon: <MessageCircle className="w-5 h-5" /> },
-  { path: '/notifications', label: 'Notifications', icon: <Bell className="w-5 h-5" /> }
+  { path: '/communications', label: 'Communications', icon: <MessageCircle className="w-5 h-5" /> }
 ];
 
 export const NavItems = ({ isMobile, onItemClick }: { isMobile?: boolean; onItemClick?: () => void }) => {
