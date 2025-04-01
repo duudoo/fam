@@ -61,7 +61,7 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(date, i - date.getDay()));
   
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div className="flex items-center">
         <h2 className="text-xl font-semibold text-famacle-slate mr-2">
           {view === 'month' 
@@ -111,7 +111,7 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
               Select
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 z-50 bg-white" align="end">
+          <PopoverContent className="w-auto p-0 bg-white" align="end">
             <Calendar
               mode="single"
               selected={date}
