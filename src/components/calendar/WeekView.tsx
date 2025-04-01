@@ -48,7 +48,7 @@ const WeekView = ({ date, events, onDayClick }: WeekViewProps) => {
               <WeekEvents events={events} selectedDate={selectedDate} />
             </div>
           ) : (
-            <UpcomingEvents events={events} limit={2} />
+            <UpcomingEvents events={events} limit={4} alwaysShowToggle={true} />
           )}
         </div>
       </div>

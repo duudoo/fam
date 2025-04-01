@@ -3,20 +3,24 @@ import { useState, useEffect } from 'react';
 import { format, parseISO, isPast, isToday } from 'date-fns';
 import { Event } from '@/utils/types';
 import EventDetail from './EventDetail';
-import { Calendar } from 'lucide-react';
+import { Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 
 interface UpcomingEventsProps {
   events: Event[];
   limit?: number;
+  alwaysShowToggle?: boolean;
 }
 
-const UpcomingEvents = ({ events, limit = 2 }: UpcomingEventsProps) => {
+const UpcomingEvents = ({ events, limit = 2, alwaysShowToggle = false }: UpcomingEventsProps) => {
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
+  const [showAll, setShowAll] = useState(false);
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   
   useEffect(() => {
-    // Filter and sort upcoming events
+    // Filter and sort all upcoming events
     const now = new Date();
     const filtered = events
       .filter(event => {
@@ -25,18 +29,48 @@ const UpcomingEvents = ({ events, limit = 2 }: UpcomingEventsProps) => {
       })
       .sort((a, b) => {
         return parseISO(a.startDate).getTime() - parseISO(b.startDate).getTime();
-      })
-      .slice(0, limit);
+      });
     
-    setUpcomingEvents(filtered);
-  }, [events, limit]);
+    setFilteredEvents(filtered);
+    
+    // Only limit events if showAll is false
+    const displayEvents = showAll ? filtered : filtered.slice(0, limit);
+    setUpcomingEvents(displayEvents);
+  }, [events, limit, showAll]);
+  
+  const handleToggleShowAll = () => {
+    setShowAll(prev => !prev);
+  };
+  
+  const shouldShowToggle = alwaysShowToggle || filteredEvents.length > limit;
   
   return (
     <div className="bg-famacle-blue-light/10 p-4 rounded-lg">
-      <h3 className="text-lg font-medium mb-2 flex items-center text-famacle-slate">
-        <Calendar className="h-5 w-5 mr-2 text-famacle-blue" />
-        Upcoming Events
-      </h3>
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-lg font-medium flex items-center text-famacle-slate">
+          <Calendar className="h-5 w-5 mr-2 text-famacle-blue" />
+          Upcoming Events
+        </h3>
+        
+        {shouldShowToggle && upcomingEvents.length > 0 && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleToggleShowAll}
+            className="text-famacle-blue hover:text-famacle-blue/80 text-xs flex items-center h-7 px-2"
+          >
+            {showAll ? (
+              <>
+                Show Less <ChevronUp className="ml-1 h-3 w-3" />
+              </>
+            ) : (
+              <>
+                Show All {filteredEvents.length > 0 && `(${filteredEvents.length})`} <ChevronDown className="ml-1 h-3 w-3" />
+              </>
+            )}
+          </Button>
+        )}
+      </div>
       
       <div className="space-y-2 mt-4">
         {upcomingEvents.length > 0 ? (

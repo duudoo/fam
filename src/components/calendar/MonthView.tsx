@@ -49,7 +49,7 @@ const MonthView = ({ date, setDate, events, showDayEvents = false }: MonthViewPr
           {showDayEvents ? (
             <SelectedDayEvents date={date} events={todayEvents} />
           ) : (
-            <UpcomingEvents events={events} limit={2} />
+            <UpcomingEvents events={events} limit={4} alwaysShowToggle={true} />
           )}
         </div>
       </div>
