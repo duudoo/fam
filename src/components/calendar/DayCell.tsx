@@ -4,6 +4,9 @@ import { cn } from '@/lib/utils';
 import { Event } from '@/utils/types';
 import { DayContentProps } from 'react-day-picker';
 import { motion } from 'framer-motion';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Clock, MapPin } from 'lucide-react';
+import { parseISO } from 'date-fns';
 
 interface DayCellProps extends DayContentProps {
   events: Event[];
@@ -67,20 +70,50 @@ const DayCell = ({
       {hasEvents && dayEvents.length > 0 && (
         <div className="mt-1 space-y-1">
           {dayEvents.slice(0, 2).map((event, idx) => (
-            <motion.div 
-              key={event.id} 
-              className={cn(
-                "text-xs truncate rounded px-1 py-0.5",
-                isSelected
-                  ? "bg-white/20 text-famacle-slate" 
-                  : "bg-famacle-blue-light/80 text-famacle-slate"
-              )}
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2, delay: 0.1 + idx * 0.1 }}
-            >
-              {event.title}
-            </motion.div>
+            <TooltipProvider key={event.id}>
+              <Tooltip delayDuration={300}>
+                <TooltipTrigger asChild>
+                  <motion.div 
+                    className={cn(
+                      "text-xs truncate rounded px-1 py-0.5 cursor-pointer",
+                      isSelected
+                        ? "bg-white/20 text-famacle-slate" 
+                        : "bg-famacle-blue-light/80 text-famacle-slate"
+                    )}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2, delay: 0.1 + idx * 0.1 }}
+                  >
+                    {event.title}
+                  </motion.div>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-xs p-3 bg-white border border-gray-100 shadow-md rounded-md z-50">
+                  <div className="space-y-2">
+                    <div className="font-medium text-famacle-slate">{event.title}</div>
+                    {!event.allDay && (
+                      <div className="text-xs flex items-center gap-1 text-gray-500">
+                        <Clock className="h-3 w-3" />
+                        <span>
+                          {format(parseISO(event.startDate), 'h:mm a')}
+                          {event.endDate && ` - ${format(parseISO(event.endDate), 'h:mm a')}`}
+                        </span>
+                      </div>
+                    )}
+                    {event.location && (
+                      <div className="text-xs flex items-center gap-1 text-gray-500">
+                        <MapPin className="h-3 w-3" />
+                        <span>{event.location}</span>
+                      </div>
+                    )}
+                    {event.description && (
+                      <div className="text-xs text-gray-600 pt-1 mt-1 border-t border-gray-100">
+                        {event.description}
+                      </div>
+                    )}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           ))}
           {dayEvents.length > 2 && (
             <div className="text-xs text-muted-foreground">
