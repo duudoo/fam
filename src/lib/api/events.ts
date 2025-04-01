@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Event } from "@/utils/types";
+import { Event, Reminder } from "@/utils/types";
 
 export const eventsAPI = {
   /**
@@ -9,7 +9,10 @@ export const eventsAPI = {
   getEvents: async () => {
     const { data, error } = await supabase
       .from('events')
-      .select('*')
+      .select(`
+        *,
+        reminders (*)
+      `)
       .order('start_date', { ascending: true });
     
     if (error) {
@@ -28,7 +31,16 @@ export const eventsAPI = {
       createdBy: event.created_by,
       source: event.source || undefined,
       sourceEventId: event.source_event_id || undefined,
-      reminders: [], // We'll fetch reminders separately if needed
+      recurring: event.recurring_type ? {
+        type: event.recurring_type,
+        endsOn: event.recurring_ends_on || undefined
+      } : undefined,
+      reminders: event.reminders?.map((reminder: any) => ({
+        id: reminder.id,
+        time: reminder.time,
+        type: reminder.type,
+        sent: reminder.sent
+      })) || [],
       createdAt: event.created_at,
       updatedAt: event.updated_at
     }));
@@ -37,42 +49,69 @@ export const eventsAPI = {
   /**
    * Create a new event
    */
-  createEvent: async (newEvent: Omit<Event, 'id' | 'createdBy' | 'createdAt' | 'updatedAt' | 'reminders'>, userId: string) => {
-    const { data, error } = await supabase
+  createEvent: async (newEvent: Omit<Event, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'>, userId: string) => {
+    const { reminders, recurring, ...eventData } = newEvent;
+    
+    // Create the event
+    const { data: eventData, error: eventError } = await supabase
       .from('events')
       .insert({
-        title: newEvent.title,
-        description: newEvent.description,
-        start_date: newEvent.startDate,
-        end_date: newEvent.endDate,
-        all_day: newEvent.allDay,
-        location: newEvent.location,
-        priority: newEvent.priority,
-        created_by: userId
+        title: eventData.title,
+        description: eventData.description,
+        start_date: eventData.startDate,
+        end_date: eventData.endDate,
+        all_day: eventData.allDay,
+        location: eventData.location,
+        priority: eventData.priority,
+        created_by: userId,
+        recurring_type: recurring?.type,
+        recurring_ends_on: recurring?.endsOn
       })
       .select()
       .single();
     
-    if (error) {
-      throw error;
+    if (eventError) {
+      throw eventError;
     }
     
-    return data;
+    // If we have reminders, create them
+    if (reminders && reminders.length > 0) {
+      const reminderPromises = reminders.map(reminder => {
+        return supabase
+          .from('reminders')
+          .insert({
+            event_id: eventData.id,
+            time: reminder.time,
+            type: reminder.type,
+            sent: false
+          });
+      });
+      
+      await Promise.all(reminderPromises);
+    }
+    
+    return eventData;
   },
 
   /**
    * Update an event
    */
-  updateEvent: async (eventId: string, updates: Partial<Omit<Event, 'id' | 'createdBy' | 'createdAt' | 'updatedAt' | 'reminders'>>) => {
+  updateEvent: async (eventId: string, updates: Partial<Omit<Event, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'>>) => {
+    const { reminders, recurring, ...eventUpdates } = updates;
     const dbUpdates: Record<string, any> = {};
     
-    if (updates.title !== undefined) dbUpdates.title = updates.title;
-    if (updates.description !== undefined) dbUpdates.description = updates.description;
-    if (updates.startDate !== undefined) dbUpdates.start_date = updates.startDate;
-    if (updates.endDate !== undefined) dbUpdates.end_date = updates.endDate;
-    if (updates.allDay !== undefined) dbUpdates.all_day = updates.allDay;
-    if (updates.location !== undefined) dbUpdates.location = updates.location;
-    if (updates.priority !== undefined) dbUpdates.priority = updates.priority;
+    if (eventUpdates.title !== undefined) dbUpdates.title = eventUpdates.title;
+    if (eventUpdates.description !== undefined) dbUpdates.description = eventUpdates.description;
+    if (eventUpdates.startDate !== undefined) dbUpdates.start_date = eventUpdates.startDate;
+    if (eventUpdates.endDate !== undefined) dbUpdates.end_date = eventUpdates.endDate;
+    if (eventUpdates.allDay !== undefined) dbUpdates.all_day = eventUpdates.allDay;
+    if (eventUpdates.location !== undefined) dbUpdates.location = eventUpdates.location;
+    if (eventUpdates.priority !== undefined) dbUpdates.priority = eventUpdates.priority;
+    
+    if (recurring !== undefined) {
+      dbUpdates.recurring_type = recurring?.type || null;
+      dbUpdates.recurring_ends_on = recurring?.endsOn || null;
+    }
     
     dbUpdates.updated_at = new Date().toISOString();
 
@@ -87,6 +126,31 @@ export const eventsAPI = {
       throw error;
     }
     
+    // Handle reminders updates if provided
+    if (reminders !== undefined) {
+      // Delete existing reminders
+      await supabase
+        .from('reminders')
+        .delete()
+        .eq('event_id', eventId);
+      
+      // Add new reminders if any
+      if (reminders && reminders.length > 0) {
+        const reminderPromises = reminders.map((reminder: Reminder) => {
+          return supabase
+            .from('reminders')
+            .insert({
+              event_id: eventId,
+              time: reminder.time,
+              type: reminder.type,
+              sent: reminder.sent || false
+            });
+        });
+        
+        await Promise.all(reminderPromises);
+      }
+    }
+    
     return data;
   },
 
@@ -94,6 +158,13 @@ export const eventsAPI = {
    * Delete an event
    */
   deleteEvent: async (eventId: string) => {
+    // Delete associated reminders first
+    await supabase
+      .from('reminders')
+      .delete()
+      .eq('event_id', eventId);
+    
+    // Then delete the event
     const { error } = await supabase
       .from('events')
       .delete()
@@ -127,6 +198,17 @@ export const eventsAPI = {
           event: '*',
           schema: 'public',
           table: 'events'
+        },
+        (payload) => {
+          callback(payload);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'reminders'
         },
         (payload) => {
           callback(payload);

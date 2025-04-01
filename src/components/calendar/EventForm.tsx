@@ -4,8 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Clock, Flag } from "lucide-react";
-import { EventPriority } from "@/utils/types";
+import { CalendarIcon, Clock, Flag, Bell, Repeat } from "lucide-react";
+import { EventPriority, ReminderType } from "@/utils/types";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
@@ -43,6 +44,16 @@ const formSchema = z.object({
   allDay: z.boolean().default(false),
   startTime: z.string().optional(),
   endTime: z.string().optional(),
+  
+  // New fields for recurring events
+  isRecurring: z.boolean().default(false),
+  recurrenceType: z.enum(["daily", "weekly", "monthly", "yearly"]).optional(),
+  recurrenceEndsOn: z.date().optional(),
+  
+  // New fields for reminders
+  reminder: z.boolean().default(false),
+  reminderTime: z.string().optional(),
+  reminderType: z.enum(["push", "email", "sms"]).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -55,6 +66,8 @@ interface EventFormProps {
 
 const EventForm = ({ onSubmit, onCancel, isPending = false }: EventFormProps) => {
   const [isAllDay, setIsAllDay] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [hasReminder, setHasReminder] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -67,6 +80,11 @@ const EventForm = ({ onSubmit, onCancel, isPending = false }: EventFormProps) =>
       allDay: false,
       startTime: "09:00",
       endTime: "10:00",
+      isRecurring: false,
+      recurrenceType: "weekly",
+      reminder: false,
+      reminderTime: "30",
+      reminderType: "push" as ReminderType,
     },
   });
 
@@ -180,14 +198,12 @@ const EventForm = ({ onSubmit, onCancel, isPending = false }: EventFormProps) =>
           render={({ field }) => (
             <FormItem className="flex flex-row items-center gap-2 space-y-0">
               <FormControl>
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={field.value}
-                  onChange={(e) => {
-                    field.onChange(e.target.checked);
-                    setIsAllDay(e.target.checked);
+                  onCheckedChange={(checked) => {
+                    field.onChange(checked);
+                    setIsAllDay(!!checked);
                   }}
-                  className="h-4 w-4 rounded border-gray-300 text-famacle-blue focus:ring-famacle-blue"
                 />
               </FormControl>
               <FormLabel className="mt-0">All day event</FormLabel>
@@ -234,6 +250,184 @@ const EventForm = ({ onSubmit, onCancel, isPending = false }: EventFormProps) =>
                       />
                     </div>
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+
+        {/* Recurring Event Options */}
+        <FormField
+          control={form.control}
+          name="isRecurring"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center gap-2 space-y-0">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={(checked) => {
+                    field.onChange(checked);
+                    setIsRecurring(!!checked);
+                  }}
+                />
+              </FormControl>
+              <div className="flex items-center">
+                <Repeat className="mr-2 h-4 w-4 text-gray-400" />
+                <FormLabel className="mt-0">Recurring event</FormLabel>
+              </div>
+            </FormItem>
+          )}
+        />
+
+        {isRecurring && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-8 border-l-2 border-famacle-blue-light/30 ml-2">
+            <FormField
+              control={form.control}
+              name="recurrenceType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Repeat</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select frequency" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="daily">Daily</SelectItem>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="yearly">Yearly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="recurrenceEndsOn"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Ends On</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Select end date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value || undefined}
+                        onSelect={field.onChange}
+                        initialFocus
+                        disabled={(date) => 
+                          date < form.getValues().date
+                        }
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+
+        {/* Reminder Options */}
+        <FormField
+          control={form.control}
+          name="reminder"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center gap-2 space-y-0">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={(checked) => {
+                    field.onChange(checked);
+                    setHasReminder(!!checked);
+                  }}
+                />
+              </FormControl>
+              <div className="flex items-center">
+                <Bell className="mr-2 h-4 w-4 text-gray-400" />
+                <FormLabel className="mt-0">Add reminder</FormLabel>
+              </div>
+            </FormItem>
+          )}
+        />
+
+        {hasReminder && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-8 border-l-2 border-famacle-blue-light/30 ml-2">
+            <FormField
+              control={form.control}
+              name="reminderTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Remind me</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select time" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="10">10 minutes before</SelectItem>
+                      <SelectItem value="30">30 minutes before</SelectItem>
+                      <SelectItem value="60">1 hour before</SelectItem>
+                      <SelectItem value="120">2 hours before</SelectItem>
+                      <SelectItem value="1440">1 day before</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="reminderType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notification Type</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="push">Push Notification</SelectItem>
+                      <SelectItem value="email">Email</SelectItem>
+                      <SelectItem value="sms">SMS</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

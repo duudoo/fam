@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { parseISO, isWithinInterval, isSameDay } from 'date-fns';
-import { Event } from '@/utils/types';
+import { Event, Reminder } from '@/utils/types';
 import { eventsAPI } from '@/lib/api/events';
 
 export const useCalendarEvents = () => {
@@ -31,7 +31,7 @@ export const useCalendarEvents = () => {
       newEvent, 
       userId 
     }: { 
-      newEvent: Omit<Event, 'id' | 'createdBy' | 'reminders' | 'createdAt' | 'updatedAt'>, 
+      newEvent: Omit<Event, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'>, 
       userId: string 
     }) => {
       return await eventsAPI.createEvent(newEvent, userId);
@@ -138,7 +138,7 @@ export const useCalendarEvents = () => {
     setView,
     getEventsByDate,
     eventForDate,
-    createEvent: (newEvent: Omit<Event, 'id' | 'createdBy' | 'reminders' | 'createdAt' | 'updatedAt'>, userId: string) => 
+    createEvent: (newEvent: Omit<Event, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'>, userId: string) => 
       createEventMutation.mutate({ newEvent, userId }),
     updateEvent: updateEventMutation.mutate,
     deleteEvent: deleteEventMutation.mutate,
