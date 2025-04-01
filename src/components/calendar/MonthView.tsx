@@ -9,14 +9,16 @@ import DayCell from './DayCell';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import UpcomingEvents from './UpcomingEvents';
 
 interface MonthViewProps {
   date: Date;
   setDate: (date: Date) => void;
   events: Event[];
+  showDayEvents?: boolean;
 }
 
-const MonthView = ({ date, setDate, events }: MonthViewProps) => {
+const MonthView = ({ date, setDate, events, showDayEvents = false }: MonthViewProps) => {
   // Helper function to determine if a date has events
   const eventForDate = (day: Date) => {
     return events.some(event => {
@@ -68,7 +70,7 @@ const MonthView = ({ date, setDate, events }: MonthViewProps) => {
           <Calendar
             mode="single"
             selected={date}
-            onSelect={(newDate) => newDate && setDate(newDate)}
+            onSelect={(newDate) => newDate && handleDayClick(newDate)}
             className="rounded-md border overflow-hidden"
             modifiers={{
               event: (day) => eventForDate(day),
@@ -83,33 +85,37 @@ const MonthView = ({ date, setDate, events }: MonthViewProps) => {
         </div>
         
         <div className="md:col-span-3">
-          <div className="bg-famacle-blue-light/10 p-4 rounded-lg">
-            <h3 className="text-lg font-medium mb-2 flex items-center text-famacle-slate">
-              <span className="bg-white p-1 rounded mr-2 shadow-sm">
-                {format(date, 'd')}
-              </span>
-              Events for {format(date, 'MMMM d, yyyy')}
-            </h3>
-            
-            <div className="space-y-2 mt-4">
-              {todayEvents.length > 0 ? (
-                todayEvents.map(event => (
-                  <EventDetail key={event.id} event={event} />
-                ))
-              ) : (
-                <div className="bg-white p-4 rounded-md text-center border border-dashed border-gray-200">
-                  <p className="text-gray-500 mb-2">No events scheduled for this day.</p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="mt-1 text-famacle-blue border-famacle-blue-light"
-                  >
-                    <Check className="mr-1 h-4 w-4" /> Add Event
-                  </Button>
-                </div>
-              )}
+          {showDayEvents ? (
+            <div className="bg-famacle-blue-light/10 p-4 rounded-lg">
+              <h3 className="text-lg font-medium mb-2 flex items-center text-famacle-slate">
+                <span className="bg-white p-1 rounded mr-2 shadow-sm">
+                  {format(date, 'd')}
+                </span>
+                Events for {format(date, 'MMMM d, yyyy')}
+              </h3>
+              
+              <div className="space-y-2 mt-4">
+                {todayEvents.length > 0 ? (
+                  todayEvents.map(event => (
+                    <EventDetail key={event.id} event={event} />
+                  ))
+                ) : (
+                  <div className="bg-white p-4 rounded-md text-center border border-dashed border-gray-200">
+                    <p className="text-gray-500 mb-2">No events scheduled for this day.</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-1 text-famacle-blue border-famacle-blue-light"
+                    >
+                      <Check className="mr-1 h-4 w-4" /> Add Event
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <UpcomingEvents events={events} limit={2} />
+          )}
         </div>
       </div>
     </TooltipProvider>

@@ -1,10 +1,11 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import CalendarNav from './CalendarNav';
 import MonthView from './MonthView';
 import WeekView from './WeekView';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
+import UpcomingEvents from './UpcomingEvents';
 
 const CalendarView = () => {
   const { 
@@ -16,6 +17,13 @@ const CalendarView = () => {
     isLoading
   } = useCalendarEvents();
 
+  const [dateSelected, setDateSelected] = useState(false);
+
+  // Reset dateSelected flag when view changes
+  useEffect(() => {
+    setDateSelected(false);
+  }, [view]);
+
   const toggleView = () => {
     setView(view === 'month' ? 'week' : 'month');
   };
@@ -23,6 +31,7 @@ const CalendarView = () => {
   // Handler for day clicks in week view
   const handleDayClick = (date: Date) => {
     setSelectedDate(date);
+    setDateSelected(true);
   };
   
   return (
@@ -36,7 +45,10 @@ const CalendarView = () => {
         <CalendarNav 
           date={selectedDate}
           view={view}
-          setDate={setSelectedDate}
+          setDate={(date) => {
+            setSelectedDate(date);
+            setDateSelected(false);
+          }}
           toggleView={toggleView}
         />
         
@@ -55,8 +67,9 @@ const CalendarView = () => {
             {view === 'month' ? (
               <MonthView 
                 date={selectedDate}
-                setDate={setSelectedDate}
+                setDate={handleDayClick}
                 events={events}
+                showDayEvents={dateSelected}
               />
             ) : (
               <WeekView 
