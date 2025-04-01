@@ -1,10 +1,12 @@
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import EventForm from './EventForm';
+import { Dialog } from '@/components/ui/dialog';
+import { Drawer } from '@/components/ui/drawer';
+import EventDialogContent from './EventDialogContent';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import useAuth from '@/hooks/useAuth';
 import { Event } from '@/utils/types';
 import { FormValues } from './form/EventFormSchema';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface AddEventDialogProps {
   open: boolean;
@@ -15,6 +17,7 @@ interface AddEventDialogProps {
 const AddEventDialog = ({ open, onOpenChange, eventToEdit }: AddEventDialogProps) => {
   const { createEvent, updateEvent, isPending } = useCalendarEvents();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
 
   // Map event data to form values for editing
   const mapEventToFormValues = (): FormValues | undefined => {
@@ -112,24 +115,30 @@ const AddEventDialog = ({ open, onOpenChange, eventToEdit }: AddEventDialogProps
     onOpenChange(false);
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{eventToEdit ? 'Edit Event' : 'Create New Event'}</DialogTitle>
-          <DialogDescription>
-            {eventToEdit 
-              ? 'Update the details of your calendar event.' 
-              : 'Fill in the details below to add a new event to your calendar.'}
-          </DialogDescription>
-        </DialogHeader>
-        <EventForm 
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <EventDialogContent
+          isEditing={!!eventToEdit}
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
           isPending={isPending}
           initialValues={mapEventToFormValues()}
+          inDrawer={true}
         />
-      </DialogContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <EventDialogContent
+        isEditing={!!eventToEdit}
+        onSubmit={handleSubmit}
+        onCancel={() => onOpenChange(false)}
+        isPending={isPending}
+        initialValues={mapEventToFormValues()}
+      />
     </Dialog>
   );
 };

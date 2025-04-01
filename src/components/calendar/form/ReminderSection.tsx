@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Bell } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "./EventFormSchema";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ReminderSectionProps {
   form: UseFormReturn<FormValues>;
@@ -13,6 +14,8 @@ interface ReminderSectionProps {
 }
 
 const ReminderSection = ({ form, hasReminder, setHasReminder }: ReminderSectionProps) => {
+  const isMobile = useIsMobile();
+  
   return (
     <>
       <FormField
@@ -31,14 +34,14 @@ const ReminderSection = ({ form, hasReminder, setHasReminder }: ReminderSectionP
             </FormControl>
             <div className="flex items-center">
               <Bell className="mr-2 h-4 w-4 text-gray-400" />
-              <FormLabel className="mt-0">Add reminder</FormLabel>
+              <FormLabel className="mt-0 text-base">Add reminder</FormLabel>
             </div>
           </FormItem>
         )}
       />
 
       {hasReminder && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-8 border-l-2 border-famacle-blue-light/30 ml-2">
+        <div className={`${isMobile ? 'grid grid-cols-1 gap-4' : 'grid grid-cols-1 md:grid-cols-2 gap-4'} pl-8 border-l-2 border-famacle-blue-light/30 ml-2`}>
           <FormField
             control={form.control}
             name="reminderTime"

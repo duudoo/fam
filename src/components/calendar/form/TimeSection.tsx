@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Clock } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "./EventFormSchema";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TimeSectionProps {
   form: UseFormReturn<FormValues>;
@@ -11,10 +12,12 @@ interface TimeSectionProps {
 }
 
 const TimeSection = ({ form, isAllDay }: TimeSectionProps) => {
+  const isMobile = useIsMobile();
+  
   if (isAllDay) return null;
   
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'md:grid-cols-2 gap-4'}`}>
       <FormField
         control={form.control}
         name="startTime"
@@ -27,7 +30,7 @@ const TimeSection = ({ form, isAllDay }: TimeSectionProps) => {
                 <Input
                   type="time"
                   {...field}
-                  className="w-full"
+                  className="w-full text-base md:text-sm"
                 />
               </div>
             </FormControl>
@@ -48,7 +51,7 @@ const TimeSection = ({ form, isAllDay }: TimeSectionProps) => {
                 <Input
                   type="time"
                   {...field}
-                  className="w-full"
+                  className="w-full text-base md:text-sm"
                 />
               </div>
             </FormControl>

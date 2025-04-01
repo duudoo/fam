@@ -2,14 +2,15 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CalendarIcon, RepeatIcon } from "lucide-react";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Repeat } from "lucide-react";
-import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "./EventFormSchema";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface RecurringSectionProps {
   form: UseFormReturn<FormValues>;
@@ -18,6 +19,8 @@ interface RecurringSectionProps {
 }
 
 const RecurringSection = ({ form, isRecurring, setIsRecurring }: RecurringSectionProps) => {
+  const isMobile = useIsMobile();
+  
   return (
     <>
       <FormField
@@ -35,15 +38,15 @@ const RecurringSection = ({ form, isRecurring, setIsRecurring }: RecurringSectio
               />
             </FormControl>
             <div className="flex items-center">
-              <Repeat className="mr-2 h-4 w-4 text-gray-400" />
-              <FormLabel className="mt-0">Recurring event</FormLabel>
+              <RepeatIcon className="mr-2 h-4 w-4 text-gray-400" />
+              <FormLabel className="mt-0 text-base">Recurring event</FormLabel>
             </div>
           </FormItem>
         )}
       />
 
       {isRecurring && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-8 border-l-2 border-famacle-blue-light/30 ml-2">
+        <div className={`${isMobile ? 'grid grid-cols-1 gap-4' : 'grid grid-cols-1 md:grid-cols-2 gap-4'} pl-8 border-l-2 border-famacle-blue-light/30 ml-2`}>
           <FormField
             control={form.control}
             name="recurrenceType"
@@ -62,8 +65,8 @@ const RecurringSection = ({ form, isRecurring, setIsRecurring }: RecurringSectio
                   <SelectContent>
                     <SelectItem value="daily">Daily</SelectItem>
                     <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="biweekly">Bi-weekly</SelectItem>
                     <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -76,7 +79,7 @@ const RecurringSection = ({ form, isRecurring, setIsRecurring }: RecurringSectio
             name="recurrenceEndsOn"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Ends On</FormLabel>
+                <FormLabel>Until</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
@@ -90,21 +93,18 @@ const RecurringSection = ({ form, isRecurring, setIsRecurring }: RecurringSectio
                         {field.value ? (
                           format(field.value, "PPP")
                         ) : (
-                          <span>Select end date</span>
+                          <span>No end date</span>
                         )}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className={cn("w-auto p-0", isMobile ? "max-w-[280px]" : "")} align="start">
                     <Calendar
                       mode="single"
-                      selected={field.value || undefined}
+                      selected={field.value}
                       onSelect={field.onChange}
                       initialFocus
-                      disabled={(date) => 
-                        date < form.getValues().date
-                      }
                       className="pointer-events-auto"
                     />
                   </PopoverContent>

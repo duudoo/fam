@@ -1,13 +1,16 @@
+
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import { Dialog } from '@/components/ui/dialog';
+import { Drawer } from '@/components/ui/drawer';
 import EventManager from './EventManager';
 import CalendarHeader from './CalendarHeader';
 import CalendarViewWrapper from './CalendarViewWrapper';
 import EventDialogContent from './EventDialogContent';
 import LoadingSpinner from './LoadingSpinner';
 import useAuth from '@/hooks/useAuth';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const CalendarView = () => {
   const { 
@@ -22,6 +25,7 @@ const CalendarView = () => {
   } = useCalendarEvents();
   
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [dateSelected, setDateSelected] = useState(false);
   const [openAddEvent, setOpenAddEvent] = useState(false);
   
@@ -100,15 +104,27 @@ const CalendarView = () => {
         )}
       </div>
       
-      {/* Add Event Modal */}
-      <Dialog open={openAddEvent} onOpenChange={setOpenAddEvent}>
-        <EventDialogContent 
-          isEditing={false}
-          onSubmit={handleSubmitEvent}
-          onCancel={() => setOpenAddEvent(false)}
-          isPending={eventManager.isPending}
-        />
-      </Dialog>
+      {/* Add Event Modal - Dialog for desktop, Drawer for mobile */}
+      {isMobile ? (
+        <Drawer open={openAddEvent} onOpenChange={setOpenAddEvent}>
+          <EventDialogContent 
+            isEditing={false}
+            onSubmit={handleSubmitEvent}
+            onCancel={() => setOpenAddEvent(false)}
+            isPending={eventManager.isPending}
+            inDrawer={true}
+          />
+        </Drawer>
+      ) : (
+        <Dialog open={openAddEvent} onOpenChange={setOpenAddEvent}>
+          <EventDialogContent 
+            isEditing={false}
+            onSubmit={handleSubmitEvent}
+            onCancel={() => setOpenAddEvent(false)}
+            isPending={eventManager.isPending}
+          />
+        </Dialog>
+      )}
     </motion.div>
   );
 };

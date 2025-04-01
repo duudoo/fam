@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import { formSchema, FormValues, defaultValues } from "./form/EventFormSchema";
 import BasicInfoSection from "./form/BasicInfoSection";
@@ -29,6 +30,7 @@ const EventForm = ({
   const [isAllDay, setIsAllDay] = useState(initialValues?.allDay || false);
   const [isRecurring, setIsRecurring] = useState(initialValues?.isRecurring || false);
   const [hasReminder, setHasReminder] = useState(initialValues?.reminder || false);
+  const isMobile = useIsMobile();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -50,12 +52,14 @@ const EventForm = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className={`space-y-${isMobile ? '3' : '4'}`}>
         <BasicInfoSection form={form} setIsAllDay={setIsAllDay} />
         
         <TimeSection form={form} isAllDay={isAllDay} />
         
         <PrioritySection form={form} />
+        
+        <LocationSection form={form} />
         
         <RecurringSection 
           form={form} 
@@ -68,8 +72,6 @@ const EventForm = ({
           hasReminder={hasReminder} 
           setHasReminder={setHasReminder} 
         />
-        
-        <LocationSection form={form} />
         
         <FormActions 
           onCancel={onCancel} 

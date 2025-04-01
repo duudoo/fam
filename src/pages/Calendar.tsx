@@ -5,8 +5,9 @@ import CalendarView from "@/components/calendar";
 import { Toaster } from "@/components/ui/toaster";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import EventForm from "@/components/calendar/EventForm";
+import { Dialog } from "@/components/ui/dialog";
+import { Drawer } from "@/components/ui/drawer";
+import EventDialogContent from "@/components/calendar/EventDialogContent";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import useAuth from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -162,22 +163,27 @@ const CalendarPage = () => {
         </div>
       </main>
       
-      {/* Add Event Modal */}
-      <Dialog open={openAddEvent} onOpenChange={setOpenAddEvent}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create New Event</DialogTitle>
-            <DialogDescription>
-              Fill in the details below to add a new event to your calendar.
-            </DialogDescription>
-          </DialogHeader>
-          <EventForm 
+      {/* Add Event Modal - Dialog for desktop, Drawer for mobile */}
+      {isMobile ? (
+        <Drawer open={openAddEvent} onOpenChange={setOpenAddEvent}>
+          <EventDialogContent 
+            isEditing={false}
+            onSubmit={handleCreateEvent}
+            onCancel={() => setOpenAddEvent(false)}
+            isPending={isPending}
+            inDrawer={true}
+          />
+        </Drawer>
+      ) : (
+        <Dialog open={openAddEvent} onOpenChange={setOpenAddEvent}>
+          <EventDialogContent 
+            isEditing={false}
             onSubmit={handleCreateEvent}
             onCancel={() => setOpenAddEvent(false)}
             isPending={isPending}
           />
-        </DialogContent>
-      </Dialog>
+        </Dialog>
+      )}
       
       <Toaster />
     </div>

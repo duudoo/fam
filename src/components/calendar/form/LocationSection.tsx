@@ -17,7 +17,7 @@ const LocationSection = ({ form }: LocationSectionProps) => {
         <FormItem>
           <FormLabel>Location (Optional)</FormLabel>
           <FormControl>
-            <Input placeholder="Enter location" {...field} />
+            <Input placeholder="Enter location" className="text-base md:text-sm" {...field} />
           </FormControl>
           <FormMessage />
         </FormItem>

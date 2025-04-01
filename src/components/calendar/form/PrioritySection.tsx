@@ -22,7 +22,7 @@ const PrioritySection = ({ form }: PrioritySectionProps) => {
             defaultValue={field.value}
           >
             <FormControl>
-              <SelectTrigger>
+              <SelectTrigger className="text-base md:text-sm">
                 <SelectValue placeholder="Select a priority" />
               </SelectTrigger>
             </FormControl>

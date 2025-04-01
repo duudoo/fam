@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "./EventFormSchema";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BasicInfoSectionProps {
   form: UseFormReturn<FormValues>;
@@ -18,6 +19,8 @@ interface BasicInfoSectionProps {
 }
 
 const BasicInfoSection = ({ form, setIsAllDay }: BasicInfoSectionProps) => {
+  const isMobile = useIsMobile();
+  
   return (
     <>
       <FormField
@@ -60,7 +63,13 @@ const BasicInfoSection = ({ form, setIsAllDay }: BasicInfoSectionProps) => {
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent 
+                  className={cn(
+                    "w-auto p-0", 
+                    isMobile ? "max-w-[280px]" : ""
+                  )} 
+                  align="start"
+                >
                   <Calendar
                     mode="single"
                     selected={field.value}
@@ -89,7 +98,7 @@ const BasicInfoSection = ({ form, setIsAllDay }: BasicInfoSectionProps) => {
                   }}
                 />
               </FormControl>
-              <FormLabel className="mt-0">All day event</FormLabel>
+              <FormLabel className="mt-0 text-base">All day event</FormLabel>
             </FormItem>
           )}
         />
