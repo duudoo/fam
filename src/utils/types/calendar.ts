@@ -21,6 +21,25 @@ export type CalendarSource =
   | 'outlook';
 
 /**
+ * Recurring event types
+ */
+export type RecurringType =
+  | 'daily'
+  | 'weekly'
+  | 'monthly'
+  | 'yearly';
+
+/**
+ * Recurring event settings
+ */
+export type RecurringSettings = {
+  /** Type of recurrence */
+  type: RecurringType;
+  /** Optional end date for the recurring event */
+  endsOn?: string;
+};
+
+/**
  * Calendar event
  */
 export type Event = {
@@ -44,6 +63,8 @@ export type Event = {
   createdBy: string;
   /** Reminders associated with this event */
   reminders: Reminder[];
+  /** Optional recurrence settings */
+  recurring?: RecurringSettings;
   /** Optional source of the event (for synced calendars) */
   source?: CalendarSource;
   /** Optional source event ID (for synced calendars) */

@@ -50,19 +50,19 @@ export const eventsAPI = {
    * Create a new event
    */
   createEvent: async (newEvent: Omit<Event, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'>, userId: string) => {
-    const { reminders, recurring, ...eventData } = newEvent;
+    const { reminders, recurring, ...eventFields } = newEvent;
     
     // Create the event
-    const { data: eventData, error: eventError } = await supabase
+    const { data: createdEvent, error: eventError } = await supabase
       .from('events')
       .insert({
-        title: eventData.title,
-        description: eventData.description,
-        start_date: eventData.startDate,
-        end_date: eventData.endDate,
-        all_day: eventData.allDay,
-        location: eventData.location,
-        priority: eventData.priority,
+        title: eventFields.title,
+        description: eventFields.description,
+        start_date: eventFields.startDate,
+        end_date: eventFields.endDate,
+        all_day: eventFields.allDay,
+        location: eventFields.location,
+        priority: eventFields.priority,
         created_by: userId,
         recurring_type: recurring?.type,
         recurring_ends_on: recurring?.endsOn
@@ -80,7 +80,7 @@ export const eventsAPI = {
         return supabase
           .from('reminders')
           .insert({
-            event_id: eventData.id,
+            event_id: createdEvent.id,
             time: reminder.time,
             type: reminder.type,
             sent: false
@@ -90,7 +90,7 @@ export const eventsAPI = {
       await Promise.all(reminderPromises);
     }
     
-    return eventData;
+    return createdEvent;
   },
 
   /**
