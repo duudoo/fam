@@ -1,8 +1,7 @@
-
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { ChevronLeft, ChevronRight, CalendarIcon, CalendarDays, CalendarClock } from 'lucide-react';
-import { format, addDays } from 'date-fns';
+import { format, addDays, addMonths, subMonths } from 'date-fns';
 import {
   Popover,
   PopoverContent,
@@ -19,9 +18,7 @@ interface CalendarNavProps {
 const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
   const goToPreviousPeriod = () => {
     if (view === 'month') {
-      const previousMonth = new Date(date);
-      previousMonth.setMonth(previousMonth.getMonth() - 1);
-      setDate(previousMonth);
+      setDate(subMonths(date, 1));
     } else {
       setDate(addDays(date, -7));
     }
@@ -29,9 +26,7 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
   
   const goToNextPeriod = () => {
     if (view === 'month') {
-      const nextMonth = new Date(date);
-      nextMonth.setMonth(nextMonth.getMonth() + 1);
-      setDate(nextMonth);
+      setDate(addMonths(date, 1));
     } else {
       setDate(addDays(date, 7));
     }
