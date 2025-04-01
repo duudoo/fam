@@ -8,6 +8,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface CalendarNavProps {
   date: Date;
@@ -17,6 +19,8 @@ interface CalendarNavProps {
 }
 
 const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
+  const [open, setOpen] = useState(false);
+
   const goToPreviousPeriod = () => {
     if (view === 'month') {
       // Use subMonths for month view
@@ -49,6 +53,15 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
     const today = new Date();
     console.log('Going to today:', format(today, 'MMMM yyyy'));
     setDate(today);
+  };
+
+  const handleDateSelect = (newDate: Date | undefined) => {
+    if (newDate) {
+      console.log('Date selected from popup:', format(newDate, 'MMMM d, yyyy'));
+      setDate(newDate);
+      setOpen(false);
+      toast.success(`Calendar view updated to ${format(newDate, 'MMMM d, yyyy')}`);
+    }
   };
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(date, i - date.getDay()));
@@ -97,7 +110,7 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
           <ChevronRight className="h-4 w-4" />
         </Button>
         
-        <Popover>
+        <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="h-8 rounded-full">
               <CalendarIcon className="h-4 w-4 mr-2" />
@@ -108,7 +121,7 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
             <Calendar
               mode="single"
               selected={date}
-              onSelect={(newDate) => newDate && setDate(newDate)}
+              onSelect={handleDateSelect}
               className="p-3 pointer-events-auto"
               initialFocus
             />

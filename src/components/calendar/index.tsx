@@ -5,7 +5,6 @@ import CalendarNav from './CalendarNav';
 import MonthView from './MonthView';
 import WeekView from './WeekView';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
-import UpcomingEvents from './UpcomingEvents';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { LinkIcon } from 'lucide-react';
@@ -80,7 +79,7 @@ const CalendarView = () => {
           </div>
         ) : (
           <motion.div
-            key={`${view}-${selectedDate.toISOString()}`}
+            key={`calendar-${view}-${selectedDate.toISOString()}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2 }}
