@@ -6,6 +6,9 @@ import MonthView from './MonthView';
 import WeekView from './WeekView';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import UpcomingEvents from './UpcomingEvents';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { LinkIcon } from 'lucide-react';
 
 const CalendarView = () => {
   const { 
@@ -42,15 +45,24 @@ const CalendarView = () => {
       transition={{ duration: 0.3 }}
     >
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-        <CalendarNav 
-          date={selectedDate}
-          view={view}
-          setDate={(date) => {
-            setSelectedDate(date);
-            setDateSelected(false);
-          }}
-          toggleView={toggleView}
-        />
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4">
+          <CalendarNav 
+            date={selectedDate}
+            view={view}
+            setDate={(date) => {
+              setSelectedDate(date);
+              setDateSelected(false);
+            }}
+            toggleView={toggleView}
+          />
+          
+          <Link to="/settings?tab=calendar" className="mt-2 sm:mt-0">
+            <Button variant="outline" size="sm" className="text-famacle-slate flex items-center gap-1">
+              <LinkIcon size={14} />
+              Sync Calendars
+            </Button>
+          </Link>
+        </div>
         
         {isLoading ? (
           <div className="flex justify-center items-center h-96">

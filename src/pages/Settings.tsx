@@ -7,9 +7,10 @@ import UserSettings from '@/components/settings/UserSettings';
 import CurrencySettings from '@/components/settings/CurrencySettings';
 import ExpenseSettings from '@/components/settings/ExpenseSettings';
 import NotificationSettings from '@/components/settings/NotificationSettings';
+import CalendarSyncSettings from '@/components/calendar/CalendarSyncSettings';
 import { Spinner } from '@/components/ui/spinner';
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
-import { Circle } from 'lucide-react';
+import { Circle, Calendar } from 'lucide-react';
 
 const SettingsPage = () => {
   const { user, loading } = useAuth();
@@ -19,7 +20,7 @@ const SettingsPage = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
-    if (tab && ['user', 'circle', 'currency', 'expenses', 'notifications'].includes(tab)) {
+    if (tab && ['user', 'circle', 'currency', 'expenses', 'notifications', 'calendar'].includes(tab)) {
       setSelectedTab(tab);
     }
   }, []);
@@ -49,12 +50,13 @@ const SettingsPage = () => {
         </div>
 
         <Tabs defaultValue={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-          <TabsList className="grid grid-cols-2 md:grid-cols-5 gap-2">
+          <TabsList className="grid grid-cols-2 md:grid-cols-6 gap-2">
             <TabsTrigger value="user">User Settings</TabsTrigger>
             <TabsTrigger value="circle">Circle</TabsTrigger>
             <TabsTrigger value="currency">Currency</TabsTrigger>
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="calendar">Calendar</TabsTrigger>
           </TabsList>
 
           <TabsContent value="user" className="space-y-4">
@@ -130,6 +132,23 @@ const SettingsPage = () => {
               </CardHeader>
               <CardContent>
                 <NotificationSettings />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="calendar" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-famacle-blue" />
+                  <span>Calendar Settings</span>
+                </CardTitle>
+                <CardDescription>
+                  Connect and synchronize your external calendars
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CalendarSyncSettings />
               </CardContent>
             </Card>
           </TabsContent>

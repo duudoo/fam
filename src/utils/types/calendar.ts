@@ -14,6 +14,13 @@ export type EventPriority =
   | 'low';
 
 /**
+ * External calendar sources
+ */
+export type CalendarSource = 
+  | 'google'
+  | 'outlook';
+
+/**
  * Calendar event
  */
 export type Event = {
@@ -37,6 +44,10 @@ export type Event = {
   createdBy: string;
   /** Reminders associated with this event */
   reminders: Reminder[];
+  /** Optional source of the event (for synced calendars) */
+  source?: CalendarSource;
+  /** Optional source event ID (for synced calendars) */
+  sourceEventId?: string;
   /** ISO timestamp when the event was created */
   createdAt?: string;
   /** ISO timestamp when the event was last updated */

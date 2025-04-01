@@ -73,6 +73,30 @@ export const useCalendarEvents = () => {
     }
   });
 
+  // Sync calendars mutation
+  const syncCalendarsMutation = useMutation({
+    mutationFn: async ({ 
+      provider, 
+      token, 
+      userId 
+    }: { 
+      provider: 'google' | 'outlook', 
+      token: string, 
+      userId: string 
+    }) => {
+      const { data, error } = await eventsAPI.syncExternalCalendar(provider, token, userId);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Calendar synced successfully');
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+    },
+    onError: () => {
+      toast.error('Failed to sync calendar');
+    }
+  });
+
   // Helper functions for event filtering
   const getEventsByDate = (date: Date) => {
     if (!events) return [];
@@ -118,6 +142,8 @@ export const useCalendarEvents = () => {
       createEventMutation.mutate({ newEvent, userId }),
     updateEvent: updateEventMutation.mutate,
     deleteEvent: deleteEventMutation.mutate,
-    isPending: createEventMutation.isPending || updateEventMutation.isPending || deleteEventMutation.isPending
+    syncCalendar: (provider: 'google' | 'outlook', token: string, userId: string) =>
+      syncCalendarsMutation.mutate({ provider, token, userId }),
+    isPending: createEventMutation.isPending || updateEventMutation.isPending || deleteEventMutation.isPending || syncCalendarsMutation.isPending
   };
 };

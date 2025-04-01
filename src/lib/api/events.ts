@@ -26,6 +26,8 @@ export const eventsAPI = {
       location: event.location || undefined,
       priority: event.priority as 'high' | 'medium' | 'low',
       createdBy: event.created_by,
+      source: event.source || undefined,
+      sourceEventId: event.source_event_id || undefined,
       reminders: [], // We'll fetch reminders separately if needed
       createdAt: event.created_at,
       updatedAt: event.updated_at
@@ -102,6 +104,15 @@ export const eventsAPI = {
     }
     
     return eventId;
+  },
+
+  /**
+   * Sync with external calendar (Google or Outlook)
+   */
+  syncExternalCalendar: async (provider: 'google' | 'outlook', token: string, userId: string) => {
+    return await supabase.functions.invoke('calendar-sync/sync', {
+      body: { provider, token, userId }
+    });
   },
 
   /**
