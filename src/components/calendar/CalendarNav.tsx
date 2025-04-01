@@ -5,6 +5,7 @@ import DateDisplay from './navigation/DateDisplay';
 import NavigationButtons from './navigation/NavigationButtons';
 import DatePickerButton from './navigation/DatePickerButton';
 import ViewToggleButton from './navigation/ViewToggleButton';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CalendarNavProps {
   date: Date;
@@ -14,6 +15,8 @@ interface CalendarNavProps {
 }
 
 const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
+  const isMobile = useIsMobile();
+  
   const goToPreviousPeriod = () => {
     if (view === 'month') {
       const newDate = subMonths(date, 1);
@@ -51,11 +54,11 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
   };
   
   return (
-    <div className="flex flex-col justify-between items-start gap-4">
-      <div className="flex items-center w-full justify-between">
+    <div className="flex flex-col justify-between items-start gap-4 w-full">
+      <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center w-full justify-between'}`}>
         <DateDisplay date={date} view={view} />
         
-        <div className="flex flex-wrap items-center gap-2">
+        <div className={`flex ${isMobile ? 'flex-wrap mt-2' : ''} items-center gap-2`}>
           <NavigationButtons 
             onPrevious={goToPreviousPeriod}
             onNext={goToNextPeriod}

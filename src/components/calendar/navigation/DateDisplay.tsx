@@ -1,6 +1,7 @@
 
 import { format, endOfWeek } from 'date-fns';
 import { CalendarClock } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DateDisplayProps {
   date: Date;
@@ -8,23 +9,28 @@ interface DateDisplayProps {
 }
 
 const DateDisplay = ({ date, view }: DateDisplayProps) => {
+  const isMobile = useIsMobile();
+  
   // Calculate week range for display
   const getWeekRange = () => {
     const startOfWeek = date;
     const weekEnd = endOfWeek(date);
-    return `${format(startOfWeek, 'MMMM d')} - ${format(weekEnd, 'MMMM d')}`;
+    // On mobile use shorter month format for week view
+    return isMobile 
+      ? `${format(startOfWeek, 'MMM d')} - ${format(weekEnd, 'MMM d')}`
+      : `${format(startOfWeek, 'MMMM d')} - ${format(weekEnd, 'MMMM d')}`;
   };
   
   return (
     <div className="flex items-center">
-      <h2 className="text-xl font-semibold text-famacle-slate mr-2">
+      <h2 className="text-xl font-semibold text-famacle-slate mr-2 truncate">
         {view === 'month' 
-          ? format(date, 'MMMM yyyy')
+          ? (isMobile ? format(date, 'MMM yyyy') : format(date, 'MMMM yyyy'))
           : getWeekRange()
         }
       </h2>
       {view === 'week' && (
-        <CalendarClock className="h-5 w-5 text-famacle-blue" />
+        <CalendarClock className="h-5 w-5 text-famacle-blue flex-shrink-0" />
       )}
     </div>
   );

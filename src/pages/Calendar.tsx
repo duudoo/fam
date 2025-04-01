@@ -9,11 +9,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import EventForm from "@/components/calendar/EventForm";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import useAuth from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
+import AddEventCard from "@/components/calendar/AddEventCard";
 
 const CalendarPage = () => {
   const [openAddEvent, setOpenAddEvent] = useState(false);
   const { createEvent, isPending } = useCalendarEvents();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Set page title
@@ -83,14 +86,14 @@ const CalendarPage = () => {
       <Navbar />
       <main className="container mx-auto px-4 pt-24 pb-12 max-w-6xl">
         <div className="animate-fade-in">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
             <div>
-              <h1 className="text-3xl font-bold text-famacle-slate">Calendar</h1>
-              <p className="text-gray-500 mt-1">Manage your family's schedule and activities</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-famacle-slate">Calendar</h1>
+              <p className="text-gray-500 mt-1 text-sm sm:text-base">Manage your family's schedule and activities</p>
             </div>
             <Button 
               onClick={() => setOpenAddEvent(true)}
-              className="bg-famacle-blue hover:bg-famacle-blue/90"
+              className="bg-famacle-blue hover:bg-famacle-blue/90 w-full sm:w-auto"
             >
               <Plus className="mr-1 h-4 w-4" />
               Add Event
@@ -102,7 +105,8 @@ const CalendarPage = () => {
               <CalendarView />
             </div>
             
-            <div className="space-y-6">
+            {/* Hide tips section on mobile and show it only on larger screens */}
+            <div className={`space-y-6 ${isMobile ? 'hidden' : 'hidden lg:block'}`}>
               <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
                 <h2 className="font-medium text-lg mb-3">Calendar Tips</h2>
                 <ul className="space-y-2 text-sm">
@@ -147,6 +151,13 @@ const CalendarPage = () => {
                 </div>
               </div>
             </div>
+            
+            {/* Show Add Event Card on mobile */}
+            {isMobile && (
+              <div className="mt-6 lg:hidden">
+                <AddEventCard />
+              </div>
+            )}
           </div>
         </div>
       </main>

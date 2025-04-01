@@ -5,6 +5,7 @@ import WeekView from './WeekView';
 import { Event } from '@/utils/types';
 import { useState } from 'react';
 import AddEventDialog from './AddEventDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CalendarViewWrapperProps {
   view: 'month' | 'week';
@@ -29,6 +30,7 @@ const CalendarViewWrapper = ({
 }: CalendarViewWrapperProps) => {
   const [editEventDialogOpen, setEditEventDialogOpen] = useState(false);
   const [eventToEdit, setEventToEdit] = useState<Event | undefined>(undefined);
+  const isMobile = useIsMobile();
   
   const handleEditEvent = (event: Event) => {
     setEventToEdit(event);
@@ -57,7 +59,7 @@ const CalendarViewWrapper = ({
             date={date}
             setDate={onDayClick}
             events={events}
-            showDayEvents={showDayEvents}
+            showDayEvents={showDayEvents || isMobile}
             onAddEvent={onAddEvent}
             onResetDaySelection={onResetDaySelection}
             onEditEvent={handleEditEvent}
