@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { ChevronLeft, ChevronRight, CalendarIcon, CalendarDays, CalendarClock } from 'lucide-react';
-import { format, addDays, addMonths, subMonths } from 'date-fns';
+import { format, addDays, addMonths, subMonths, subDays } from 'date-fns';
 import {
   Popover,
   PopoverContent,
@@ -19,22 +19,36 @@ interface CalendarNavProps {
 const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
   const goToPreviousPeriod = () => {
     if (view === 'month') {
-      setDate(subMonths(date, 1));
+      // Use subMonths for month view
+      const newDate = subMonths(date, 1);
+      console.log('Previous month:', format(newDate, 'MMMM yyyy'));
+      setDate(newDate);
     } else {
-      setDate(addDays(date, -7));
+      // Use subDays for week view
+      const newDate = subDays(date, 7);
+      console.log('Previous week:', format(newDate, 'MMM d, yyyy'));
+      setDate(newDate);
     }
   };
   
   const goToNextPeriod = () => {
     if (view === 'month') {
-      setDate(addMonths(date, 1));
+      // Use addMonths for month view
+      const newDate = addMonths(date, 1);
+      console.log('Next month:', format(newDate, 'MMMM yyyy'));
+      setDate(newDate);
     } else {
-      setDate(addDays(date, 7));
+      // Use addDays for week view
+      const newDate = addDays(date, 7);
+      console.log('Next week:', format(newDate, 'MMM d, yyyy'));
+      setDate(newDate);
     }
   };
   
   const goToToday = () => {
-    setDate(new Date());
+    const today = new Date();
+    console.log('Going to today:', format(today, 'MMMM yyyy'));
+    setDate(today);
   };
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(date, i - date.getDay()));

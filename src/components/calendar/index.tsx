@@ -27,14 +27,27 @@ const CalendarView = () => {
     setDateSelected(false);
   }, [view]);
 
+  // Reset dateSelected flag when date changes
+  useEffect(() => {
+    setDateSelected(false);
+  }, [selectedDate]);
+
   const toggleView = () => {
     setView(view === 'month' ? 'week' : 'month');
   };
   
   // Handler for day clicks in week view
   const handleDayClick = (date: Date) => {
+    console.log('Day clicked:', date);
     setSelectedDate(date);
     setDateSelected(true);
+  };
+  
+  // Update the date handler
+  const handleDateChange = (date: Date) => {
+    console.log('Setting new date:', date);
+    setSelectedDate(date);
+    setDateSelected(false);
   };
   
   return (
@@ -49,10 +62,7 @@ const CalendarView = () => {
           <CalendarNav 
             date={selectedDate}
             view={view}
-            setDate={(date) => {
-              setSelectedDate(date);
-              setDateSelected(false);
-            }}
+            setDate={handleDateChange}
             toggleView={toggleView}
           />
           
@@ -70,7 +80,7 @@ const CalendarView = () => {
           </div>
         ) : (
           <motion.div
-            key={view}
+            key={`${view}-${selectedDate.toISOString()}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2 }}
