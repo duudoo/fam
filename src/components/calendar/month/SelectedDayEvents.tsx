@@ -58,7 +58,7 @@ const SelectedDayEvents = ({
   
   return (
     <div className="bg-famacle-blue-light/10 p-4 rounded-lg">
-      <div className="flex justify-between items-center mb-2">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
         <h3 className="text-lg font-medium flex items-center text-famacle-slate">
           <span className="bg-white p-1 rounded mr-2 shadow-sm">
             {format(date, 'd')}
@@ -72,7 +72,7 @@ const SelectedDayEvents = ({
           variant="ghost" 
           size="sm" 
           onClick={onBackToUpcoming}
-          className="text-famacle-blue hover:text-famacle-blue/80"
+          className="text-famacle-blue hover:text-famacle-blue/80 whitespace-nowrap flex-shrink-0"
         >
           <ArrowLeft className="mr-1 h-4 w-4" /> Back to Upcoming
         </Button>

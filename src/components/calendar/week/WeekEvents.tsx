@@ -70,8 +70,8 @@ const WeekEvents = ({
   
   return (
     <div className="space-y-2 mt-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium mb-2 text-famacle-slate">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
+        <h3 className="text-lg font-medium text-famacle-slate">
           {eventCount === 0 ? 'No events' : 
             eventCount === 1 ? '1 Event' : 
             `${eventCount} Events`} for {format(selectedDate, 'MMMM d, yyyy')}
@@ -81,7 +81,7 @@ const WeekEvents = ({
           variant="ghost" 
           size="sm" 
           onClick={onBackToUpcoming}
-          className="text-famacle-blue hover:text-famacle-blue/80"
+          className="text-famacle-blue hover:text-famacle-blue/80 whitespace-nowrap flex-shrink-0"
         >
           <ArrowLeft className="mr-1 h-4 w-4" /> Back to Upcoming
         </Button>

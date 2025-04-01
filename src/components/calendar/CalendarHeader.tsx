@@ -13,7 +13,7 @@ interface CalendarHeaderProps {
 
 const CalendarHeader = ({ date, view, handleDateChange, toggleView }: CalendarHeaderProps) => {
   return (
-    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4">
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
       <CalendarNav 
         date={date}
         view={view}
@@ -21,8 +21,8 @@ const CalendarHeader = ({ date, view, handleDateChange, toggleView }: CalendarHe
         toggleView={toggleView}
       />
       
-      <Link to="/settings?tab=calendar" className="mt-2 sm:mt-0">
-        <Button variant="outline" size="sm" className="text-famacle-slate flex items-center gap-1">
+      <Link to="/settings?tab=calendar" className="mt-4 sm:mt-0">
+        <Button variant="outline" size="sm" className="text-famacle-slate flex items-center gap-1 whitespace-nowrap">
           <LinkIcon size={14} />
           Sync Calendars
         </Button>
