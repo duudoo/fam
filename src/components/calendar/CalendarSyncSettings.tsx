@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +8,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Calendar, Check, Info, Loader2, Mail } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import useAuth from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
+import { useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 type SyncStatus = {
   google: 'connected' | 'disconnected' | 'syncing' | 'error';
@@ -21,15 +23,51 @@ type SyncStatus = {
 
 const CalendarSyncSettings = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({
     google: 'disconnected',
     outlook: 'disconnected',
     lastSynced: {},
   });
   
+  // Check for auth callback params in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const provider = params.get('provider');
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    const error = params.get('error');
+    
+    if (error) {
+      toast.error(`Failed to connect: ${error}`);
+      return;
+    }
+    
+    if (provider && accessToken) {
+      // Update UI to show connected status
+      setSyncStatus(prev => ({
+        ...prev,
+        [provider]: 'connected',
+        lastSynced: { 
+          ...prev.lastSynced,
+          [provider]: new Date() 
+        }
+      }));
+      
+      // Clean URL params
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // If we got tokens, trigger initial sync
+      if (user && accessToken) {
+        handleSync(provider as 'google' | 'outlook', accessToken);
+      }
+    }
+  }, [user]);
+  
   const connectGoogle = async () => {
     try {
-      window.location.href = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calendar-sync/google-auth`;
+      const siteUrl = window.location.origin;
+      window.location.href = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calendar-sync/google-auth?redirect_url=${encodeURIComponent(siteUrl + '/settings?tab=calendar')}`;
     } catch (error) {
       console.error('Error connecting Google Calendar:', error);
       toast.error('Failed to connect Google Calendar');
@@ -38,10 +76,40 @@ const CalendarSyncSettings = () => {
   
   const connectOutlook = async () => {
     try {
-      window.location.href = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calendar-sync/outlook-auth`;
+      const siteUrl = window.location.origin;
+      window.location.href = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calendar-sync/outlook-auth?redirect_url=${encodeURIComponent(siteUrl + '/settings?tab=calendar')}`;
     } catch (error) {
       console.error('Error connecting Outlook Calendar:', error);
       toast.error('Failed to connect Outlook Calendar');
+    }
+  };
+  
+  const handleSync = async (provider: 'google' | 'outlook', token: string) => {
+    if (!user?.id) return;
+    
+    try {
+      setSyncStatus(prev => ({ ...prev, [provider]: 'syncing' }));
+      
+      const { data, error } = await supabase.functions.invoke('calendar-sync/sync', {
+        body: { provider, token, userId: user.id }
+      });
+      
+      if (error) throw error;
+      
+      setSyncStatus(prev => ({
+        ...prev,
+        [provider]: 'connected',
+        lastSynced: { ...prev.lastSynced, [provider]: new Date() }
+      }));
+      
+      // Refresh events in the calendar
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      
+      toast.success(`Successfully synced ${data?.count || 0} events from ${provider === 'google' ? 'Google' : 'Outlook'} Calendar`);
+    } catch (error) {
+      console.error(`Error syncing ${provider} Calendar:`, error);
+      setSyncStatus(prev => ({ ...prev, [provider]: 'error' }));
+      toast.error(`Failed to sync ${provider === 'google' ? 'Google' : 'Outlook'} Calendar`);
     }
   };
   
@@ -51,23 +119,11 @@ const CalendarSyncSettings = () => {
     try {
       setSyncStatus(prev => ({ ...prev, google: 'syncing' }));
       
-      // Here we would use the stored refresh token to get a new access token
-      // For demo purposes, assume we have a valid token
+      // For a real implementation, we would retrieve the stored token
+      // For now, we'll use the mock token approach
       const mockToken = 'valid-google-token';
       
-      const { data, error } = await supabase.functions.invoke('calendar-sync/sync', {
-        body: { provider: 'google', token: mockToken, userId: user.id }
-      });
-      
-      if (error) throw error;
-      
-      setSyncStatus(prev => ({
-        ...prev,
-        google: 'connected',
-        lastSynced: { ...prev.lastSynced, google: new Date() }
-      }));
-      
-      toast.success(`Successfully synced ${data.count} events from Google Calendar`);
+      await handleSync('google', mockToken);
     } catch (error) {
       console.error('Error syncing Google Calendar:', error);
       setSyncStatus(prev => ({ ...prev, google: 'error' }));
@@ -81,23 +137,11 @@ const CalendarSyncSettings = () => {
     try {
       setSyncStatus(prev => ({ ...prev, outlook: 'syncing' }));
       
-      // Here we would use the stored refresh token to get a new access token
-      // For demo purposes, assume we have a valid token
+      // For a real implementation, we would retrieve the stored token
+      // For now, we'll use the mock token approach
       const mockToken = 'valid-outlook-token';
       
-      const { data, error } = await supabase.functions.invoke('calendar-sync/sync', {
-        body: { provider: 'outlook', token: mockToken, userId: user.id }
-      });
-      
-      if (error) throw error;
-      
-      setSyncStatus(prev => ({
-        ...prev,
-        outlook: 'connected',
-        lastSynced: { ...prev.lastSynced, outlook: new Date() }
-      }));
-      
-      toast.success(`Successfully synced ${data.count} events from Outlook Calendar`);
+      await handleSync('outlook', mockToken);
     } catch (error) {
       console.error('Error syncing Outlook Calendar:', error);
       setSyncStatus(prev => ({ ...prev, outlook: 'error' }));
@@ -107,7 +151,7 @@ const CalendarSyncSettings = () => {
   
   const disconnectGoogle = async () => {
     try {
-      // In a real app, we would revoke the access token
+      // In a real app, we would revoke the access token on the server
       setSyncStatus(prev => ({ ...prev, google: 'disconnected' }));
       toast.success('Disconnected from Google Calendar');
     } catch (error) {
@@ -118,7 +162,7 @@ const CalendarSyncSettings = () => {
   
   const disconnectOutlook = async () => {
     try {
-      // In a real app, we would revoke the access token
+      // In a real app, we would revoke the access token on the server
       setSyncStatus(prev => ({ ...prev, outlook: 'disconnected' }));
       toast.success('Disconnected from Outlook Calendar');
     } catch (error) {

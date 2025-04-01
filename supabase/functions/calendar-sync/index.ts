@@ -15,7 +15,6 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID') || '';
 const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET') || '';
-const REDIRECT_URI = `${supabaseUrl}/functions/v1/calendar-sync/callback`;
 
 // Microsoft OAuth configuration
 const MS_CLIENT_ID = Deno.env.get('MS_CLIENT_ID') || '';
@@ -33,14 +32,16 @@ serve(async (req) => {
 
     // Authorization endpoints
     if (path === 'google-auth') {
-      return handleGoogleAuth();
+      return handleGoogleAuth(url);
     } else if (path === 'outlook-auth') {
-      return handleOutlookAuth();
+      return handleOutlookAuth(url);
     }
     // Callback endpoints
     else if (path === 'callback') {
       const provider = url.searchParams.get('provider');
       const code = url.searchParams.get('code');
+      const state = url.searchParams.get('state');
+      const redirectUrl = state ? JSON.parse(decodeURIComponent(state)).redirect_url : null;
       
       if (!code) {
         return new Response(JSON.stringify({ error: 'Authorization code is missing' }), 
@@ -48,9 +49,9 @@ serve(async (req) => {
       }
 
       if (provider === 'google') {
-        return await handleGoogleCallback(code);
+        return await handleGoogleCallback(code, redirectUrl);
       } else if (provider === 'outlook') {
-        return await handleOutlookCallback(code);
+        return await handleOutlookCallback(code, redirectUrl);
       }
     }
     // Sync endpoints
@@ -79,7 +80,11 @@ serve(async (req) => {
 });
 
 // Google OAuth flow
-function handleGoogleAuth() {
+function handleGoogleAuth(url: URL) {
+  // Get the redirect URL from the request
+  const redirectUrl = url.searchParams.get('redirect_url') || '';
+  const REDIRECT_URI = `${supabaseUrl}/functions/v1/calendar-sync/callback`;
+  
   const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   googleAuthUrl.searchParams.append('client_id', GOOGLE_CLIENT_ID);
   googleAuthUrl.searchParams.append('redirect_uri', REDIRECT_URI);
@@ -87,7 +92,10 @@ function handleGoogleAuth() {
   googleAuthUrl.searchParams.append('scope', 'https://www.googleapis.com/auth/calendar.readonly');
   googleAuthUrl.searchParams.append('access_type', 'offline');
   googleAuthUrl.searchParams.append('prompt', 'consent');
-  googleAuthUrl.searchParams.append('state', 'google');
+  
+  // Store the redirect URL in the state parameter
+  const state = JSON.stringify({ provider: 'google', redirect_url: redirectUrl });
+  googleAuthUrl.searchParams.append('state', encodeURIComponent(state));
 
   return new Response(null, {
     status: 302,
@@ -99,14 +107,21 @@ function handleGoogleAuth() {
 }
 
 // Outlook OAuth flow
-function handleOutlookAuth() {
+function handleOutlookAuth(url: URL) {
+  // Get the redirect URL from the request
+  const redirectUrl = url.searchParams.get('redirect_url') || '';
+  const REDIRECT_URI = `${supabaseUrl}/functions/v1/calendar-sync/callback`;
+  
   const outlookAuthUrl = new URL('https://login.microsoftonline.com/common/oauth2/v2.0/authorize');
   outlookAuthUrl.searchParams.append('client_id', MS_CLIENT_ID);
   outlookAuthUrl.searchParams.append('redirect_uri', REDIRECT_URI);
   outlookAuthUrl.searchParams.append('response_type', 'code');
   outlookAuthUrl.searchParams.append('scope', 'Calendars.Read');
   outlookAuthUrl.searchParams.append('response_mode', 'query');
-  outlookAuthUrl.searchParams.append('state', 'outlook');
+  
+  // Store the redirect URL in the state parameter
+  const state = JSON.stringify({ provider: 'outlook', redirect_url: redirectUrl });
+  outlookAuthUrl.searchParams.append('state', encodeURIComponent(state));
 
   return new Response(null, {
     status: 302,
@@ -118,8 +133,10 @@ function handleOutlookAuth() {
 }
 
 // Handle Google OAuth callback
-async function handleGoogleCallback(code: string) {
+async function handleGoogleCallback(code: string, redirectUrl: string | null) {
   try {
+    const REDIRECT_URI = `${supabaseUrl}/functions/v1/calendar-sync/callback`;
+    
     // Exchange code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -143,39 +160,41 @@ async function handleGoogleCallback(code: string) {
     const tokenData = await tokenResponse.json();
     
     // Redirect to frontend with token data
-    const redirectUrl = new URL(Deno.env.get('SITE_URL') || '');
-    redirectUrl.pathname = '/calendar/sync-success';
-    redirectUrl.searchParams.append('provider', 'google');
-    redirectUrl.searchParams.append('access_token', tokenData.access_token);
-    redirectUrl.searchParams.append('refresh_token', tokenData.refresh_token);
-    redirectUrl.searchParams.append('expires_in', tokenData.expires_in.toString());
+    const finalRedirectUrl = new URL(redirectUrl || (Deno.env.get('SITE_URL') || ''));
+    finalRedirectUrl.searchParams.append('provider', 'google');
+    finalRedirectUrl.searchParams.append('access_token', tokenData.access_token);
+    if (tokenData.refresh_token) {
+      finalRedirectUrl.searchParams.append('refresh_token', tokenData.refresh_token);
+    }
+    finalRedirectUrl.searchParams.append('expires_in', tokenData.expires_in.toString());
 
     return new Response(null, {
       status: 302,
       headers: {
-        Location: redirectUrl.toString(),
+        Location: finalRedirectUrl.toString(),
       },
     });
   } catch (error) {
     console.error('Google callback error:', error);
     
     // Redirect to frontend with error
-    const redirectUrl = new URL(Deno.env.get('SITE_URL') || '');
-    redirectUrl.pathname = '/calendar/sync-error';
-    redirectUrl.searchParams.append('error', encodeURIComponent(error.message));
+    const errorRedirectUrl = new URL(redirectUrl || (Deno.env.get('SITE_URL') || ''));
+    errorRedirectUrl.searchParams.append('error', encodeURIComponent(error.message));
     
     return new Response(null, {
       status: 302,
       headers: {
-        Location: redirectUrl.toString(),
+        Location: errorRedirectUrl.toString(),
       },
     });
   }
 }
 
 // Handle Outlook OAuth callback
-async function handleOutlookCallback(code: string) {
+async function handleOutlookCallback(code: string, redirectUrl: string | null) {
   try {
+    const REDIRECT_URI = `${supabaseUrl}/functions/v1/calendar-sync/callback`;
+    
     // Exchange code for tokens
     const tokenResponse = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
       method: 'POST',
@@ -199,31 +218,31 @@ async function handleOutlookCallback(code: string) {
     const tokenData = await tokenResponse.json();
     
     // Redirect to frontend with token data
-    const redirectUrl = new URL(Deno.env.get('SITE_URL') || '');
-    redirectUrl.pathname = '/calendar/sync-success';
-    redirectUrl.searchParams.append('provider', 'outlook');
-    redirectUrl.searchParams.append('access_token', tokenData.access_token);
-    redirectUrl.searchParams.append('refresh_token', tokenData.refresh_token);
-    redirectUrl.searchParams.append('expires_in', tokenData.expires_in.toString());
+    const finalRedirectUrl = new URL(redirectUrl || (Deno.env.get('SITE_URL') || ''));
+    finalRedirectUrl.searchParams.append('provider', 'outlook');
+    finalRedirectUrl.searchParams.append('access_token', tokenData.access_token);
+    if (tokenData.refresh_token) {
+      finalRedirectUrl.searchParams.append('refresh_token', tokenData.refresh_token);
+    }
+    finalRedirectUrl.searchParams.append('expires_in', tokenData.expires_in.toString());
 
     return new Response(null, {
       status: 302,
       headers: {
-        Location: redirectUrl.toString(),
+        Location: finalRedirectUrl.toString(),
       },
     });
   } catch (error) {
     console.error('Outlook callback error:', error);
     
     // Redirect to frontend with error
-    const redirectUrl = new URL(Deno.env.get('SITE_URL') || '');
-    redirectUrl.pathname = '/calendar/sync-error';
-    redirectUrl.searchParams.append('error', encodeURIComponent(error.message));
+    const errorRedirectUrl = new URL(redirectUrl || (Deno.env.get('SITE_URL') || ''));
+    errorRedirectUrl.searchParams.append('error', encodeURIComponent(error.message));
     
     return new Response(null, {
       status: 302,
       headers: {
-        Location: redirectUrl.toString(),
+        Location: errorRedirectUrl.toString(),
       },
     });
   }
@@ -345,25 +364,27 @@ async function storeExternalEvents(events: any[], userId: string, provider: 'goo
   }
 
   // Then, insert the new events
-  const { error: insertError } = await supabase
-    .from('events')
-    .insert(
-      events.map(event => ({
-        title: event.title,
-        description: event.description,
-        start_date: event.startDate,
-        end_date: event.endDate,
-        all_day: event.allDay,
-        location: event.location,
-        priority: event.priority,
-        created_by: userId,
-        source: provider,
-        source_event_id: event.sourceEventId
-      }))
-    );
+  if (events.length > 0) {
+    const { error: insertError } = await supabase
+      .from('events')
+      .insert(
+        events.map(event => ({
+          title: event.title,
+          description: event.description,
+          start_date: event.startDate,
+          end_date: event.endDate,
+          all_day: event.allDay,
+          location: event.location,
+          priority: event.priority,
+          created_by: userId,
+          source: provider,
+          source_event_id: event.sourceEventId
+        }))
+      );
 
-  if (insertError) {
-    console.error('Error inserting events:', insertError);
-    throw new Error('Failed to store synced events');
+    if (insertError) {
+      console.error('Error inserting events:', insertError);
+      throw new Error('Failed to store synced events');
+    }
   }
 }
