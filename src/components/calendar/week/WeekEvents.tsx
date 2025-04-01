@@ -68,6 +68,16 @@ const WeekEvents = ({
     setEventToDelete(null);
   };
   
+  // Improved click handler with console logging
+  const handleBackToUpcoming = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Back to upcoming clicked in WeekEvents');
+    if (onBackToUpcoming) {
+      onBackToUpcoming();
+    }
+  };
+  
   return (
     <div className="space-y-2 mt-4">
       <div className="mb-4">
@@ -101,13 +111,13 @@ const WeekEvents = ({
         </div>
       )}
       
-      {/* Repositioned Back to Upcoming button */}
+      {/* Repositioned Back to Upcoming button with improved clickable area */}
       <div className="mt-6 flex justify-center">
         <Button 
           variant="ghost" 
           size="sm" 
-          onClick={onBackToUpcoming}
-          className="text-famacle-blue hover:text-famacle-blue/80 flex-shrink-0"
+          onClick={handleBackToUpcoming}
+          className="text-famacle-blue hover:text-famacle-blue/80 flex-shrink-0 py-3 px-4"
         >
           <ArrowLeft className="mr-1 h-4 w-4" /> Back to Upcoming
         </Button>
