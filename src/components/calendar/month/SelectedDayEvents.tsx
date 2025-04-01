@@ -58,7 +58,7 @@ const SelectedDayEvents = ({
   
   return (
     <div className="bg-famacle-blue-light/10 p-4 rounded-lg">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
+      <div className="flex items-center mb-4">
         <h3 className="text-lg font-medium flex items-center text-famacle-slate">
           <span className="bg-white p-1 rounded mr-2 shadow-sm">
             {format(date, 'd')}
@@ -67,15 +67,6 @@ const SelectedDayEvents = ({
             eventCount === 1 ? '1 Event' : 
             `${eventCount} Events`} for {format(date, 'MMMM d, yyyy')}
         </h3>
-        
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={onBackToUpcoming}
-          className="text-famacle-blue hover:text-famacle-blue/80 whitespace-nowrap flex-shrink-0"
-        >
-          <ArrowLeft className="mr-1 h-4 w-4" /> Back to Upcoming
-        </Button>
       </div>
       
       <div className="space-y-2 mt-4">
@@ -101,6 +92,18 @@ const SelectedDayEvents = ({
             </Button>
           </div>
         )}
+      </div>
+      
+      {/* Repositioned Back to Upcoming button */}
+      <div className="mt-6 flex justify-center">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={onBackToUpcoming}
+          className="text-famacle-blue hover:text-famacle-blue/80 flex-shrink-0"
+        >
+          <ArrowLeft className="mr-1 h-4 w-4" /> Back to Upcoming
+        </Button>
       </div>
       
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
