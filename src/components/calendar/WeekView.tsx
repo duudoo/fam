@@ -12,9 +12,10 @@ interface WeekViewProps {
   date: Date;
   events: Event[];
   onDayClick?: (date: Date) => void;
+  onAddEvent?: () => void;
 }
 
-const WeekView = ({ date, events, onDayClick }: WeekViewProps) => {
+const WeekView = ({ date, events, onDayClick, onAddEvent }: WeekViewProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   
   // Reset selected day when week view date changes
@@ -45,7 +46,7 @@ const WeekView = ({ date, events, onDayClick }: WeekViewProps) => {
           {selectedDate ? (
             <div className="bg-famacle-blue-light/10 p-4 rounded-lg">
               <SelectedDayHeader selectedDate={selectedDate} />
-              <WeekEvents events={events} selectedDate={selectedDate} />
+              <WeekEvents events={events} selectedDate={selectedDate} onAddEvent={onAddEvent} />
             </div>
           ) : (
             <UpcomingEvents events={events} limit={4} alwaysShowToggle={true} />

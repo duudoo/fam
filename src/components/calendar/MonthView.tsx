@@ -11,9 +11,10 @@ interface MonthViewProps {
   setDate: (date: Date) => void;
   events: Event[];
   showDayEvents?: boolean;
+  onAddEvent?: () => void;
 }
 
-const MonthView = ({ date, setDate, events, showDayEvents = false }: MonthViewProps) => {
+const MonthView = ({ date, setDate, events, showDayEvents = false, onAddEvent }: MonthViewProps) => {
   // Helper function to get events for a specific date
   const getEventsByDate = (day: Date) => {
     return events.filter(event => {
@@ -47,7 +48,7 @@ const MonthView = ({ date, setDate, events, showDayEvents = false }: MonthViewPr
         
         <div className="md:col-span-3">
           {showDayEvents ? (
-            <SelectedDayEvents date={date} events={todayEvents} />
+            <SelectedDayEvents date={date} events={todayEvents} onAddEvent={onAddEvent} />
           ) : (
             <UpcomingEvents events={events} limit={4} alwaysShowToggle={true} />
           )}

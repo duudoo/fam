@@ -3,13 +3,16 @@ import { Event } from '@/utils/types';
 import { format, isSameDay } from 'date-fns';
 import { motion } from 'framer-motion';
 import EventDetail from '../EventDetail';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 
 interface WeekEventsProps {
   events: Event[];
   selectedDate: Date | null;
+  onAddEvent?: () => void;
 }
 
-const WeekEvents = ({ events, selectedDate }: WeekEventsProps) => {
+const WeekEvents = ({ events, selectedDate, onAddEvent }: WeekEventsProps) => {
   if (!selectedDate) return null;
   
   const dayEvents = events.filter(event => {
@@ -39,6 +42,14 @@ const WeekEvents = ({ events, selectedDate }: WeekEventsProps) => {
       ) : (
         <div className="bg-white p-4 rounded-md text-center border border-dashed border-gray-200">
           <p className="text-gray-500 mb-2">No events scheduled for this day.</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-1 text-famacle-blue border-famacle-blue-light"
+            onClick={onAddEvent}
+          >
+            <Plus className="mr-1 h-4 w-4" /> Add Event
+          </Button>
         </div>
       )}
     </div>

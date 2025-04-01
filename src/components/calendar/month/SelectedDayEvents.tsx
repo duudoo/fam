@@ -3,14 +3,15 @@ import { format } from 'date-fns';
 import { Event } from '@/utils/types';
 import EventDetail from '../EventDetail';
 import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
+import { Check, Plus } from 'lucide-react';
 
 interface SelectedDayEventsProps {
   date: Date;
   events: Event[];
+  onAddEvent?: () => void;
 }
 
-const SelectedDayEvents = ({ date, events }: SelectedDayEventsProps) => {
+const SelectedDayEvents = ({ date, events, onAddEvent }: SelectedDayEventsProps) => {
   // Get the actual count of events
   const eventCount = events.length;
   
@@ -37,8 +38,9 @@ const SelectedDayEvents = ({ date, events }: SelectedDayEventsProps) => {
               variant="outline" 
               size="sm" 
               className="mt-1 text-famacle-blue border-famacle-blue-light"
+              onClick={onAddEvent}
             >
-              <Check className="mr-1 h-4 w-4" /> Add Event
+              <Plus className="mr-1 h-4 w-4" /> Add Event
             </Button>
           </div>
         )}
