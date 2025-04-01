@@ -33,7 +33,7 @@ const UpcomingEvents = ({ events, limit = 2, alwaysShowToggle = false }: Upcomin
     
     setFilteredEvents(filtered);
     
-    // Only limit events if showAll is false
+    // Set the displayed events based on showAll state
     const displayEvents = showAll ? filtered : filtered.slice(0, limit);
     setUpcomingEvents(displayEvents);
   }, [events, limit, showAll]);
