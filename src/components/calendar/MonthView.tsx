@@ -1,4 +1,3 @@
-
 import { isSameDay } from 'date-fns';
 import { Event } from '@/utils/types';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -18,6 +17,7 @@ interface MonthViewProps {
   showDayEvents?: boolean;
   onAddEvent?: () => void;
   onResetDaySelection?: () => void;
+  onEditEvent?: (event: Event) => void;
 }
 
 const MonthView = ({ 
@@ -26,7 +26,8 @@ const MonthView = ({
   events, 
   showDayEvents = false, 
   onAddEvent,
-  onResetDaySelection
+  onResetDaySelection,
+  onEditEvent
 }: MonthViewProps) => {
   const [editEventDialogOpen, setEditEventDialogOpen] = useState(false);
   const [currentEvent, setCurrentEvent] = useState<Event | null>(null);

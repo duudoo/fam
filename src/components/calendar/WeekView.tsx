@@ -18,6 +18,7 @@ interface WeekViewProps {
   onDayClick?: (date: Date) => void;
   onAddEvent?: () => void;
   onResetDaySelection?: () => void;
+  onEditEvent?: (event: Event) => void;
 }
 
 const WeekView = ({ date, events, onDayClick, onAddEvent, onResetDaySelection }: WeekViewProps) => {
