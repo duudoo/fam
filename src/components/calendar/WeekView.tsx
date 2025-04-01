@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useEffect, useState } from 'react';
 import UpcomingEvents from './UpcomingEvents';
+import EventDetail from './EventDetail';
 
 interface WeekViewProps {
   date: Date;
