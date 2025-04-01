@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import CalendarNav from './CalendarNav';
@@ -26,27 +25,25 @@ const CalendarView = () => {
     setDateSelected(false);
   }, [view]);
 
-  // Reset dateSelected flag when date changes
-  useEffect(() => {
-    setDateSelected(false);
-  }, [selectedDate]);
-
   const toggleView = () => {
     setView(view === 'month' ? 'week' : 'month');
+    setDateSelected(false); // Reset selection when toggling views
   };
   
-  // Handler for day clicks in week view
+  // Handler for day clicks in any view
   const handleDayClick = (date: Date) => {
     console.log('Day clicked:', date);
     setSelectedDate(date);
     setDateSelected(true);
   };
   
-  // Update the date handler
+  // Update the date handler for navigation
   const handleDateChange = (date: Date) => {
     console.log('Setting new date:', date);
     setSelectedDate(date);
-    setDateSelected(false);
+    
+    // Keep the dateSelected state if only navigating months/weeks
+    // without explicitly clicking on a new day
   };
   
   return (
