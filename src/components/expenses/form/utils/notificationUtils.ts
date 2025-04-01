@@ -130,7 +130,7 @@ const calculateSplitAmounts = async (expenseData: any, userId: string | undefine
     });
   }
   else if (splitMethod === 'custom' && expenseData.splitPercentage && coParentIds.length > 0) {
-    // If split method is 'custom', use the provided split percentages
+    // If split method is 'custom' with percentages, use the provided split percentages
     const userPercentage = expenseData.splitPercentage[userId || ''] || 0;
     const coParentPercentage = 100 - userPercentage;
     
@@ -142,6 +142,18 @@ const calculateSplitAmounts = async (expenseData: any, userId: string | undefine
       splitAmounts[coParentId] = coParentAmount;
     });
   } 
+  else if (splitMethod === 'custom' && expenseData.splitAmounts && coParentIds.length > 0) {
+    // If split method is 'custom' with explicit amounts, use those amounts
+    splitAmounts[userId || ''] = expenseData.splitAmounts[userId || ''] || 0;
+    
+    // For co-parents, use their specified amounts or calculate it as the remainder
+    const totalCoParentAmount = totalAmount - splitAmounts[userId || ''];
+    const coParentAmount = totalCoParentAmount / coParentIds.length;
+    
+    coParentIds.forEach(coParentId => {
+      splitAmounts[coParentId] = expenseData.splitAmounts[coParentId] || coParentAmount;
+    });
+  }
   else {
     // Default fallback to the user paying everything
     splitAmounts[userId || ''] = totalAmount;

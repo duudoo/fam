@@ -18,17 +18,33 @@ const PendingExpensesCard = ({ pendingExpenses }: PendingExpensesCardProps) => {
     if (!user) return 0;
     
     return pendingExpenses.reduce((total, expense) => {
+      // If the current user paid for the expense
       if (expense.paidBy === user.id) {
-        if (expense.splitAmounts) {
-          const userShare = expense.splitAmounts[user.id] || 0;
-          return total + (expense.amount - userShare);
+        // For custom split with explicit split percentages
+        if (expense.splitMethod === 'custom' && expense.splitPercentage) {
+          // Calculate co-parent percentage (everything not assigned to current user)
+          const userPercentage = expense.splitPercentage[user.id] || 0;
+          const coParentPercentage = 100 - userPercentage;
+          // Calculate amount owed based on co-parent's percentage
+          return total + (expense.amount * coParentPercentage / 100);
         } 
+        // For custom split with explicit split amounts
+        else if (expense.splitMethod === 'custom' && expense.splitAmounts) {
+          // Get user's share
+          const userShare = expense.splitAmounts[user.id] || 0;
+          // Co-parent should pay the difference
+          return total + (expense.amount - userShare);
+        }
+        // For 50/50 split
         else if (expense.splitMethod === '50/50') {
           return total + (expense.amount / 2);
         }
-        else {
-          return total + expense.amount;
+        // For no split or default case, other parent owes nothing
+        else if (expense.splitMethod === 'none') {
+          return total;
         }
+        // Default to full amount
+        return total + expense.amount;
       }
       return total;
     }, 0);

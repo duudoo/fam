@@ -71,7 +71,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Find the expense
     const { data: expense, error: expenseError } = await supabase
       .from("expenses")
-      .select("id, description, amount, status, split_method, paid_by, split_amounts")
+      .select("id, description, amount, status, split_method, paid_by, split_percentage, split_amounts")
       .eq("id", notification.expense_id)
       .single();
 
@@ -119,7 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Update the expense status based on the action
-    const newStatus = action === "approve" ? "approved" : "clarification";
+    const newStatus = action === "approve" ? "approved" : "disputed";
     const { error: updateExpenseError } = await supabase
       .from("expenses")
       .update({ status: newStatus })
@@ -151,13 +151,27 @@ const handler = async (req: Request): Promise<Response> => {
         console.error("Error finding co-parent:", coParentError);
       } else {
         // Create a payment record for the co-parent
-        const splitAmounts = expense.split_amounts || {};
         let amountToPay = 0;
         
-        if (Object.keys(splitAmounts).length > 0) {
-          amountToPay = splitAmounts[coParent.id] || 0;
-        } else if (expense.split_method === "50/50") {
+        // Calculate the amount to pay based on the split method
+        if (expense.split_method === "50/50") {
+          // For 50/50 split, co-parent pays half
           amountToPay = expense.amount / 2;
+        } 
+        else if (expense.split_method === "custom" && expense.split_percentage) {
+          // For custom percentage split, calculate based on the remaining percentage
+          // (100% minus the payer's percentage)
+          const payerPercentage = expense.split_percentage[expense.paid_by] || 0;
+          const coParentPercentage = 100 - payerPercentage;
+          amountToPay = (expense.amount * coParentPercentage) / 100;
+        }
+        else if (expense.split_method === "custom" && expense.split_amounts) {
+          // For custom amount split, use the explicitly set amount
+          amountToPay = expense.split_amounts[coParent.id] || 0;
+        }
+        else if (expense.split_method === "none") {
+          // For no split, co-parent pays nothing
+          amountToPay = 0;
         }
         
         if (amountToPay > 0) {
