@@ -10,7 +10,9 @@ import {
   Info,
   AlertCircle,
   Chrome,
-  Mail
+  Mail,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { 
   Tooltip,
@@ -20,13 +22,16 @@ import {
 } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface EventDetailProps {
   event: Event;
   compact?: boolean;
+  onEdit?: (event: Event) => void;
+  onDelete?: (event: Event) => void;
 }
 
-const EventDetail = ({ event, compact = false }: EventDetailProps) => {
+const EventDetail = ({ event, compact = false, onEdit, onDelete }: EventDetailProps) => {
   const startDate = parseISO(event.startDate);
   const endDate = event.endDate ? parseISO(event.endDate) : null;
   
@@ -133,13 +138,41 @@ const EventDetail = ({ event, compact = false }: EventDetailProps) => {
           </div>
         </div>
         
-        <Badge className={cn(
-          "ml-2",
-          priorityColors[event.priority],
-          compact ? "text-xs py-0 px-2" : ""
-        )}>
-          {event.priority}
-        </Badge>
+        <div className="flex flex-col items-end gap-2">
+          <Badge className={cn(
+            priorityColors[event.priority],
+            compact ? "text-xs py-0 px-2" : ""
+          )}>
+            {event.priority}
+          </Badge>
+          
+          {onEdit && onDelete && (
+            <div className="flex space-x-1 mt-1">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(event);
+                }}
+              >
+                <Edit className="h-3.5 w-3.5 text-famacle-slate" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6 text-famacle-coral" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(event);
+                }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

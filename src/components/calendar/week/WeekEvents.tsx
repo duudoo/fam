@@ -5,15 +5,38 @@ import { motion } from 'framer-motion';
 import EventDetail from '../EventDetail';
 import { Button } from '@/components/ui/button';
 import { Plus, ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface WeekEventsProps {
   events: Event[];
   selectedDate: Date | null;
   onAddEvent?: () => void;
   onBackToUpcoming?: () => void;
+  onEditEvent?: (event: Event) => void;
+  onDeleteEvent?: (eventId: string) => void;
 }
 
-const WeekEvents = ({ events, selectedDate, onAddEvent, onBackToUpcoming }: WeekEventsProps) => {
+const WeekEvents = ({ 
+  events, 
+  selectedDate, 
+  onAddEvent, 
+  onBackToUpcoming,
+  onEditEvent,
+  onDeleteEvent
+}: WeekEventsProps) => {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
+  
   if (!selectedDate) return null;
   
   const dayEvents = events.filter(event => {
@@ -27,6 +50,23 @@ const WeekEvents = ({ events, selectedDate, onAddEvent, onBackToUpcoming }: Week
   
   // Get the actual count of events
   const eventCount = dayEvents.length;
+  
+  const handleEditEvent = (event: Event) => {
+    onEditEvent && onEditEvent(event);
+  };
+  
+  const handleDeleteClick = (event: Event) => {
+    setEventToDelete(event);
+    setDeleteDialogOpen(true);
+  };
+  
+  const confirmDelete = () => {
+    if (eventToDelete && onDeleteEvent) {
+      onDeleteEvent(eventToDelete.id);
+    }
+    setDeleteDialogOpen(false);
+    setEventToDelete(null);
+  };
   
   return (
     <div className="space-y-2 mt-4">
@@ -49,7 +89,12 @@ const WeekEvents = ({ events, selectedDate, onAddEvent, onBackToUpcoming }: Week
       
       {dayEvents.length > 0 ? (
         dayEvents.map(event => (
-          <EventDetail key={event.id} event={event} />
+          <EventDetail 
+            key={event.id} 
+            event={event}
+            onEdit={handleEditEvent}
+            onDelete={handleDeleteClick}
+          />
         ))
       ) : (
         <div className="bg-white p-4 rounded-md text-center border border-dashed border-gray-200">
@@ -64,6 +109,24 @@ const WeekEvents = ({ events, selectedDate, onAddEvent, onBackToUpcoming }: Week
           </Button>
         </div>
       )}
+      
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete this event?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the event
+              "{eventToDelete?.title}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-famacle-coral hover:bg-famacle-coral/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

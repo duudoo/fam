@@ -7,17 +7,37 @@ import { Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface UpcomingEventsProps {
   events: Event[];
   limit?: number;
   alwaysShowToggle?: boolean;
+  onEditEvent?: (event: Event) => void;
+  onDeleteEvent?: (eventId: string) => void;
 }
 
-const UpcomingEvents = ({ events, limit = 2, alwaysShowToggle = false }: UpcomingEventsProps) => {
+const UpcomingEvents = ({ 
+  events, 
+  limit = 2, 
+  alwaysShowToggle = false,
+  onEditEvent,
+  onDeleteEvent
+}: UpcomingEventsProps) => {
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
   
   useEffect(() => {
     // Filter and sort all upcoming events
@@ -43,6 +63,23 @@ const UpcomingEvents = ({ events, limit = 2, alwaysShowToggle = false }: Upcomin
   
   const handleToggleShowAll = () => {
     setShowAll(prev => !prev);
+  };
+  
+  const handleEditEvent = (event: Event) => {
+    onEditEvent && onEditEvent(event);
+  };
+  
+  const handleDeleteClick = (event: Event) => {
+    setEventToDelete(event);
+    setDeleteDialogOpen(true);
+  };
+  
+  const confirmDelete = () => {
+    if (eventToDelete && onDeleteEvent) {
+      onDeleteEvent(eventToDelete.id);
+    }
+    setDeleteDialogOpen(false);
+    setEventToDelete(null);
   };
   
   const shouldShowToggle = alwaysShowToggle || filteredEvents.length > limit;
@@ -100,7 +137,11 @@ const UpcomingEvents = ({ events, limit = 2, alwaysShowToggle = false }: Upcomin
                     ? "Today" 
                     : format(parseISO(event.startDate), 'EEEE, MMMM d')}
                 </div>
-                <EventDetail event={event} />
+                <EventDetail 
+                  event={event} 
+                  onEdit={handleEditEvent}
+                  onDelete={handleDeleteClick}
+                />
               </motion.div>
             ))}
           </motion.div>
@@ -110,6 +151,24 @@ const UpcomingEvents = ({ events, limit = 2, alwaysShowToggle = false }: Upcomin
           </div>
         )}
       </div>
+      
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete this event?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the event
+              "{eventToDelete?.title}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-famacle-coral hover:bg-famacle-coral/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
