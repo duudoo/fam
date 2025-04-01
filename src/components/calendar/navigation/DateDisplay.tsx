@@ -1,6 +1,6 @@
 
 import { format, endOfWeek } from 'date-fns';
-import { CalendarDays, CalendarClock } from 'lucide-react';
+import { CalendarClock } from 'lucide-react';
 
 interface DateDisplayProps {
   date: Date;
@@ -23,8 +23,8 @@ const DateDisplay = ({ date, view }: DateDisplayProps) => {
           : getWeekRange()
         }
       </h2>
-      {view === 'month' && (
-        <CalendarDays className="h-5 w-5 text-famacle-blue" />
+      {view === 'week' && (
+        <CalendarClock className="h-5 w-5 text-famacle-blue" />
       )}
     </div>
   );
