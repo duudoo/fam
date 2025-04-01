@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import MonthView from './MonthView';
 import WeekView from './WeekView';
 import { Event } from '@/utils/types';
+import { useState } from 'react';
+import AddEventDialog from './AddEventDialog';
 
 interface CalendarViewWrapperProps {
   view: 'month' | 'week';
@@ -25,6 +27,14 @@ const CalendarViewWrapper = ({
   onAddEvent,
   onResetDaySelection
 }: CalendarViewWrapperProps) => {
+  const [editEventDialogOpen, setEditEventDialogOpen] = useState(false);
+  const [eventToEdit, setEventToEdit] = useState<Event | undefined>(undefined);
+  
+  const handleEditEvent = (event: Event) => {
+    setEventToEdit(event);
+    setEditEventDialogOpen(true);
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-96">
@@ -34,32 +44,43 @@ const CalendarViewWrapper = ({
   }
 
   return (
-    <motion.div
-      key={`calendar-${view}-${date.toISOString()}`}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.2 }}
-      className="mt-4"
-    >
-      {view === 'month' ? (
-        <MonthView 
-          date={date}
-          setDate={onDayClick}
-          events={events}
-          showDayEvents={showDayEvents}
-          onAddEvent={onAddEvent}
-          onResetDaySelection={onResetDaySelection}
-        />
-      ) : (
-        <WeekView 
-          date={date}
-          events={events}
-          onDayClick={onDayClick}
-          onAddEvent={onAddEvent}
-          onResetDaySelection={onResetDaySelection}
-        />
-      )}
-    </motion.div>
+    <>
+      <motion.div
+        key={`calendar-${view}-${date.toISOString()}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2 }}
+        className="mt-4"
+      >
+        {view === 'month' ? (
+          <MonthView 
+            date={date}
+            setDate={onDayClick}
+            events={events}
+            showDayEvents={showDayEvents}
+            onAddEvent={onAddEvent}
+            onResetDaySelection={onResetDaySelection}
+            onEditEvent={handleEditEvent}
+          />
+        ) : (
+          <WeekView 
+            date={date}
+            events={events}
+            onDayClick={onDayClick}
+            onAddEvent={onAddEvent}
+            onResetDaySelection={onResetDaySelection}
+            onEditEvent={handleEditEvent}
+          />
+        )}
+      </motion.div>
+      
+      {/* Edit Event Dialog */}
+      <AddEventDialog 
+        open={editEventDialogOpen} 
+        onOpenChange={setEditEventDialogOpen} 
+        eventToEdit={eventToEdit} 
+      />
+    </>
   );
 };
 
