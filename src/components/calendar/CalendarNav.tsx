@@ -189,7 +189,7 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
             onClick={toggleView}
             className="h-8 bg-famacle-blue-light text-famacle-blue hover:bg-famacle-blue hover:text-white rounded-full"
           >
-            {view === 'month' ? 'Week View' : 'Month View'}
+            Month View
           </Button>
         </div>
       )}
