@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import CalendarNav from './CalendarNav';
 import MonthView from './MonthView';
 import WeekView from './WeekView';
-import AddEventCard from './AddEventCard';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 
 const CalendarView = () => {
@@ -69,8 +68,6 @@ const CalendarView = () => {
           </motion.div>
         )}
       </div>
-      
-      <AddEventCard />
     </motion.div>
   );
 };

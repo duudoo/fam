@@ -1,25 +1,76 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import CalendarView from "@/components/calendar";
 import { Toaster } from "@/components/ui/toaster";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import EventForm from "@/components/calendar/EventForm";
+import { useCalendarEvents } from "@/hooks/useCalendarEvents";
+import useAuth from "@/hooks/useAuth";
 
 const CalendarPage = () => {
+  const [openAddEvent, setOpenAddEvent] = useState(false);
+  const { createEvent, isPending } = useCalendarEvents();
+  const { user } = useAuth();
+
   useEffect(() => {
     // Set page title
     document.title = "Calendar | Famacle";
   }, []);
+
+  const handleCreateEvent = (formData: any) => {
+    if (!user?.id) {
+      console.error("User ID not found");
+      return;
+    }
+    
+    const newEvent = {
+      title: formData.title,
+      description: formData.description,
+      startDate: new Date(
+        formData.date.getFullYear(),
+        formData.date.getMonth(),
+        formData.date.getDate(),
+        formData.allDay ? 0 : parseInt(formData.startTime.split(':')[0]),
+        formData.allDay ? 0 : parseInt(formData.startTime.split(':')[1])
+      ).toISOString(),
+      endDate: formData.allDay 
+        ? null 
+        : new Date(
+            formData.date.getFullYear(),
+            formData.date.getMonth(),
+            formData.date.getDate(),
+            parseInt(formData.endTime.split(':')[0]),
+            parseInt(formData.endTime.split(':')[1])
+          ).toISOString(),
+      allDay: formData.allDay,
+      location: formData.location,
+      priority: formData.priority
+    };
+
+    createEvent(newEvent, user.id);
+    setOpenAddEvent(false);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       <Navbar />
       <main className="container mx-auto px-4 pt-24 pb-12 max-w-6xl">
         <div className="animate-fade-in">
-          <div className="flex justify-between items-start mb-6">
+          <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold text-famacle-slate">Calendar</h1>
               <p className="text-gray-500 mt-1">Manage your family's schedule and activities</p>
             </div>
+            <Button 
+              onClick={() => setOpenAddEvent(true)}
+              className="bg-famacle-blue hover:bg-famacle-blue/90"
+            >
+              <Plus className="mr-1 h-4 w-4" />
+              Add Event
+            </Button>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -67,6 +118,24 @@ const CalendarPage = () => {
           </div>
         </div>
       </main>
+      
+      {/* Add Event Modal */}
+      <Dialog open={openAddEvent} onOpenChange={setOpenAddEvent}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Event</DialogTitle>
+            <DialogDescription>
+              Fill in the details below to add a new event to your calendar.
+            </DialogDescription>
+          </DialogHeader>
+          <EventForm 
+            onSubmit={handleCreateEvent}
+            onCancel={() => setOpenAddEvent(false)}
+            isPending={isPending}
+          />
+        </DialogContent>
+      </Dialog>
+      
       <Toaster />
     </div>
   );
