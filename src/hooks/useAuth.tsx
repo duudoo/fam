@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { authAPI } from '@/lib/api/auth';
@@ -22,7 +22,7 @@ export const useAuth = () => {
   const [profileLoading, setProfileLoading] = useState(false);
 
   // Fetch user profile data
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = useCallback(async (userId: string) => {
     try {
       setProfileLoading(true);
       const data = await authAPI.getUserProfile(userId);
@@ -34,7 +34,7 @@ export const useAuth = () => {
     } finally {
       setProfileLoading(false);
     }
-  };
+  }, []);
 
   // Update user profile data
   const updateUserProfile = async (updates: Partial<UserProfile>) => {
@@ -42,6 +42,8 @@ export const useAuth = () => {
       if (!user) throw new Error('No user logged in');
       
       const updatedProfile = await authAPI.updateUserProfile(user.id, updates);
+      
+      setProfile(prev => prev ? { ...prev, ...updates } : null);
       
       toast.success('Profile updated successfully');
       return updatedProfile;
@@ -55,47 +57,65 @@ export const useAuth = () => {
   useEffect(() => {
     console.log("Setting up auth state listener");
     
+    let mounted = true;
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = authAPI.onAuthStateChange(
       (event: string, session: Session | null) => {
         console.log("Auth state changed:", event, session);
+        
+        if (!mounted) return;
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         // If user logged in, fetch their profile
-        if (session?.user) {
+        if (session?.user && mounted) {
           // Use setTimeout to avoid potential recursive issues
           setTimeout(() => {
-            fetchUserProfile(session.user.id);
+            if (mounted) {
+              fetchUserProfile(session.user.id);
+            }
           }, 0);
-        } else {
+        } else if (!session && mounted) {
           setProfile(null);
         }
         
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     );
 
     // THEN check for existing session
     authAPI.getSession().then(({ data: { session } }) => {
       console.log("Initial session check:", session);
+      
+      if (!mounted) return;
+      
       setSession(session);
       setUser(session?.user ?? null);
       
       // If user is already logged in, fetch their profile
-      if (session?.user) {
+      if (session?.user && mounted) {
         fetchUserProfile(session.user.id);
       }
       
       setLoading(false);
+    }).catch(error => {
+      console.error("Error checking session:", error);
+      if (mounted) {
+        setLoading(false);
+      }
     });
 
     // Cleanup on unmount
     return () => {
       console.log("Cleaning up auth subscription");
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchUserProfile]);
 
   const signOut = async () => {
     try {
