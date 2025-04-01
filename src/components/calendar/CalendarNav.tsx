@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { ChevronLeft, ChevronRight, CalendarIcon, CalendarDays, CalendarClock } from 'lucide-react';
-import { format, addDays, addMonths, subMonths, subDays } from 'date-fns';
+import { format, addDays, addMonths, subMonths, subDays, endOfWeek } from 'date-fns';
 import {
   Popover,
   PopoverContent,
@@ -58,7 +58,12 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
     }
   };
 
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(date, i - date.getDay()));
+  // Calculate week range for display
+  const getWeekRange = () => {
+    const startOfWeek = date;
+    const weekEnd = endOfWeek(date);
+    return `${format(startOfWeek, 'MMMM d')} - ${format(weekEnd, 'MMMM d')}`;
+  };
   
   return (
     <div className="flex flex-col justify-between items-start gap-4">
@@ -67,7 +72,7 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
           <h2 className="text-xl font-semibold text-famacle-slate mr-2">
             {view === 'month' 
               ? format(date, 'MMMM yyyy')
-              : null
+              : getWeekRange()
             }
           </h2>
           {view === 'month' ? (
@@ -77,7 +82,7 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
           )}
         </div>
         
-        {view === 'week' ? null : (
+        {view === 'month' && (
           <div className="flex flex-wrap items-center gap-2">
             <Button 
               variant="outline" 
@@ -109,7 +114,6 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8 rounded-full">
-                  <CalendarIcon className="h-4 w-4 mr-2" />
                   Select
                 </Button>
               </PopoverTrigger>
@@ -130,7 +134,7 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
               onClick={toggleView}
               className="h-8 bg-famacle-blue-light text-famacle-blue hover:bg-famacle-blue hover:text-white rounded-full"
             >
-              {view === 'month' ? 'Week View' : 'Month View'}
+              Week View
             </Button>
           </div>
         )}
@@ -168,7 +172,6 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 rounded-full">
-                <CalendarIcon className="h-4 w-4 mr-2" />
                 Select
               </Button>
             </PopoverTrigger>
