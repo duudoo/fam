@@ -16,7 +16,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID') || '';
 const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET') || '';
 
-// Microsoft OAuth configuration
+// Microsoft OAuth configuration (for future use)
 const MS_CLIENT_ID = Deno.env.get('MS_CLIENT_ID') || '';
 const MS_CLIENT_SECRET = Deno.env.get('MS_CLIENT_SECRET') || '';
 
@@ -106,7 +106,7 @@ function handleGoogleAuth(url: URL) {
   });
 }
 
-// Outlook OAuth flow
+// Outlook OAuth flow (for future implementation)
 function handleOutlookAuth(url: URL) {
   // Get the redirect URL from the request
   const redirectUrl = url.searchParams.get('redirect_url') || '';
@@ -190,7 +190,7 @@ async function handleGoogleCallback(code: string, redirectUrl: string | null) {
   }
 }
 
-// Handle Outlook OAuth callback
+// Handle Outlook OAuth callback (for future implementation)
 async function handleOutlookCallback(code: string, redirectUrl: string | null) {
   try {
     const REDIRECT_URI = `${supabaseUrl}/functions/v1/calendar-sync/callback`;
@@ -255,6 +255,8 @@ async function syncGoogleEvents(token: string, userId: string) {
     const minTime = now.toISOString();
     const maxTime = new Date(now.setMonth(now.getMonth() + 3)).toISOString();
 
+    console.log(`Fetching Google Calendar events from ${minTime} to ${maxTime}`);
+
     const response = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${minTime}&timeMax=${maxTime}&singleEvents=true&orderBy=startTime`,
       {
@@ -269,6 +271,8 @@ async function syncGoogleEvents(token: string, userId: string) {
     }
 
     const data = await response.json();
+    console.log(`Retrieved ${data.items.length} events from Google Calendar`);
+    
     const events = data.items.map((item: any) => ({
       id: item.id,
       title: item.summary,
@@ -298,12 +302,14 @@ async function syncGoogleEvents(token: string, userId: string) {
   }
 }
 
-// Fetch events from Outlook Calendar
+// Fetch events from Outlook Calendar (for future implementation)
 async function syncOutlookEvents(token: string, userId: string) {
   try {
     const now = new Date();
     const minTime = now.toISOString();
     const maxTime = new Date(now.setMonth(now.getMonth() + 3)).toISOString();
+
+    console.log(`Fetching Outlook Calendar events from ${minTime} to ${maxTime}`);
 
     const response = await fetch(
       `https://graph.microsoft.com/v1.0/me/calendarView?startDateTime=${minTime}&endDateTime=${maxTime}`,
@@ -320,6 +326,8 @@ async function syncOutlookEvents(token: string, userId: string) {
     }
 
     const data = await response.json();
+    console.log(`Retrieved ${data.value.length} events from Outlook Calendar`);
+    
     const events = data.value.map((item: any) => ({
       id: item.id,
       title: item.subject,
@@ -351,6 +359,8 @@ async function syncOutlookEvents(token: string, userId: string) {
 
 // Store external calendar events in the database
 async function storeExternalEvents(events: any[], userId: string, provider: 'google' | 'outlook') {
+  console.log(`Storing ${events.length} events from ${provider}`);
+  
   // First, delete existing synced events from this provider
   const { error: deleteError } = await supabase
     .from('events')
@@ -387,4 +397,6 @@ async function storeExternalEvents(events: any[], userId: string, provider: 'goo
       throw new Error('Failed to store synced events');
     }
   }
+  
+  console.log(`Successfully stored ${events.length} ${provider} events for user ${userId}`);
 }

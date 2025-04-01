@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,15 +7,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Calendar, Info, Mail } from 'lucide-react';
 import { useCalendarSync } from '@/hooks/useCalendarSync';
 import ProviderCard from './sync/ProviderCard';
-
-type SyncStatus = {
-  google: 'connected' | 'disconnected' | 'syncing' | 'error';
-  outlook: 'connected' | 'disconnected' | 'syncing' | 'error';
-  lastSynced?: {
-    google?: Date;
-    outlook?: Date;
-  };
-};
 
 const CalendarSyncSettings = () => {
   const { 

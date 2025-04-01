@@ -23,7 +23,7 @@ export const useCalendarSync = () => {
     lastSynced: {},
   });
   
-  // Check for auth callback params in URL
+  // Check for auth callback params in URL when component mounts
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const provider = params.get('provider');
@@ -37,6 +37,8 @@ export const useCalendarSync = () => {
     }
     
     if (provider && accessToken) {
+      console.log('Calendar auth callback detected', { provider });
+      
       // Update UI to show connected status
       setSyncStatus(prev => ({
         ...prev,
@@ -47,7 +49,7 @@ export const useCalendarSync = () => {
         }
       }));
       
-      // Clean URL params
+      // Clean URL params without reloading the page
       window.history.replaceState({}, document.title, window.location.pathname);
       
       // If we got tokens, trigger initial sync
@@ -59,7 +61,10 @@ export const useCalendarSync = () => {
   
   const connectProvider = async (provider: 'google' | 'outlook') => {
     try {
+      // Get the current site URL to use as redirect URL
       const siteUrl = window.location.origin;
+      
+      // Redirect to Supabase Edge Function for OAuth flow
       window.location.href = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calendar-sync/${provider}-auth?redirect_url=${encodeURIComponent(siteUrl + '/settings?tab=calendar')}`;
     } catch (error) {
       console.error(`Error connecting ${provider} Calendar:`, error);
@@ -103,10 +108,10 @@ export const useCalendarSync = () => {
       setSyncStatus(prev => ({ ...prev, [provider]: 'syncing' }));
       
       // For a real implementation, we would retrieve the stored token
-      // For now, we'll use the mock token approach
-      const mockToken = `valid-${provider}-token`;
+      // For now, we'll use a simplified approach to trigger sync
+      const dummyToken = `dummy-${provider}-token`;
       
-      await handleSync(provider, mockToken);
+      await handleSync(provider, dummyToken);
     } catch (error) {
       console.error(`Error syncing ${provider} Calendar:`, error);
       setSyncStatus(prev => ({ ...prev, [provider]: 'error' }));
@@ -116,7 +121,9 @@ export const useCalendarSync = () => {
   
   const disconnectProvider = async (provider: 'google' | 'outlook') => {
     try {
-      // In a real app, we would revoke the access token on the server
+      // In a real app, we would revoke the access token and remove it from storage
+      
+      // For now, just update the UI
       setSyncStatus(prev => ({ ...prev, [provider]: 'disconnected' }));
       toast.success(`Disconnected from ${provider === 'google' ? 'Google' : 'Outlook'} Calendar`);
     } catch (error) {
