@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -62,16 +62,17 @@ interface EventFormProps {
   onSubmit: (values: FormValues) => void;
   onCancel: () => void;
   isPending?: boolean;
+  initialValues?: FormValues;
 }
 
-const EventForm = ({ onSubmit, onCancel, isPending = false }: EventFormProps) => {
-  const [isAllDay, setIsAllDay] = useState(false);
-  const [isRecurring, setIsRecurring] = useState(false);
-  const [hasReminder, setHasReminder] = useState(false);
+const EventForm = ({ onSubmit, onCancel, isPending = false, initialValues }: EventFormProps) => {
+  const [isAllDay, setIsAllDay] = useState(initialValues?.allDay || false);
+  const [isRecurring, setIsRecurring] = useState(initialValues?.isRecurring || false);
+  const [hasReminder, setHasReminder] = useState(initialValues?.reminder || false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: initialValues || {
       title: "",
       date: new Date(),
       description: "",
@@ -87,6 +88,15 @@ const EventForm = ({ onSubmit, onCancel, isPending = false }: EventFormProps) =>
       reminderType: "push" as ReminderType,
     },
   });
+
+  // Update form UI states when initialValues change
+  useEffect(() => {
+    if (initialValues) {
+      setIsAllDay(initialValues.allDay);
+      setIsRecurring(initialValues.isRecurring);
+      setHasReminder(initialValues.reminder);
+    }
+  }, [initialValues]);
 
   const handleSubmit = (values: FormValues) => {
     onSubmit(values);
