@@ -49,7 +49,7 @@ const UpcomingEvents = ({ events, limit = 2, alwaysShowToggle = false }: Upcomin
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-lg font-medium flex items-center text-famacle-slate">
           <Calendar className="h-5 w-5 mr-2 text-famacle-blue" />
-          Upcoming Events
+          Upcoming
         </h3>
         
         {shouldShowToggle && upcomingEvents.length > 0 && (
