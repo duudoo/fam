@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { ChevronLeft, ChevronRight, CalendarIcon, CalendarDays, CalendarClock } from 'lucide-react';
@@ -9,7 +8,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useState } from 'react';
-import { toast } from 'sonner';
 
 interface CalendarNavProps {
   date: Date;
@@ -23,12 +21,10 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
 
   const goToPreviousPeriod = () => {
     if (view === 'month') {
-      // Use subMonths for month view
       const newDate = subMonths(date, 1);
       console.log('Previous month:', format(newDate, 'MMMM yyyy'));
       setDate(newDate);
     } else {
-      // Use subDays for week view
       const newDate = subDays(date, 7);
       console.log('Previous week:', format(newDate, 'MMM d, yyyy'));
       setDate(newDate);
@@ -37,12 +33,10 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
   
   const goToNextPeriod = () => {
     if (view === 'month') {
-      // Use addMonths for month view
       const newDate = addMonths(date, 1);
       console.log('Next month:', format(newDate, 'MMMM yyyy'));
       setDate(newDate);
     } else {
-      // Use addDays for week view
       const newDate = addDays(date, 7);
       console.log('Next week:', format(newDate, 'MMM d, yyyy'));
       setDate(newDate);
@@ -60,7 +54,6 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
       console.log('Date selected from popup:', format(newDate, 'MMMM d, yyyy'));
       setDate(newDate);
       setOpen(false);
-      toast.success(`Calendar view updated to ${format(newDate, 'MMMM d, yyyy')}`);
     }
   };
 
