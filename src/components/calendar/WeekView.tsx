@@ -48,12 +48,6 @@ const WeekView = ({ date, events, onDayClick }: WeekViewProps) => {
     <TooltipProvider>
       <div className="grid grid-cols-1 md:grid-cols-7 gap-6">
         <div className="md:col-span-4">
-          <div className="text-center mb-4">
-            <h3 className="text-lg font-medium text-famacle-slate">
-              Week of {format(weekDays[0], 'MMMM d')} to {format(weekDays[6], 'MMMM d, yyyy')}
-            </h3>
-          </div>
-          
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-2 mt-4">
             {weekDays.map((day, index) => {
               const dayEvents = events.filter(event => {
