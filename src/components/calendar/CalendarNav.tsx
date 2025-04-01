@@ -55,29 +55,7 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
       <div className="flex items-center w-full justify-between">
         <DateDisplay date={date} view={view} />
         
-        {view === 'month' && (
-          <div className="flex flex-wrap items-center gap-2">
-            <NavigationButtons 
-              onPrevious={goToPreviousPeriod}
-              onNext={goToNextPeriod}
-              onToday={goToToday}
-            />
-            
-            <DatePickerButton 
-              date={date}
-              onDateSelect={handleDateSelect}
-            />
-            
-            <ViewToggleButton 
-              view={view}
-              toggleView={toggleView}
-            />
-          </div>
-        )}
-      </div>
-      
-      {view === 'week' && (
-        <div className="flex flex-wrap items-center gap-2 w-full justify-end">
+        <div className="flex flex-wrap items-center gap-2">
           <NavigationButtons 
             onPrevious={goToPreviousPeriod}
             onNext={goToNextPeriod}
@@ -94,7 +72,7 @@ const CalendarNav = ({ date, view, setDate, toggleView }: CalendarNavProps) => {
             toggleView={toggleView}
           />
         </div>
-      )}
+      </div>
     </div>
   );
 };
