@@ -1,6 +1,6 @@
 
 import { Event } from '@/utils/types';
-import { isSameDay } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { motion } from 'framer-motion';
 import EventDetail from '../EventDetail';
 
@@ -21,8 +21,17 @@ const WeekEvents = ({ events, selectedDate }: WeekEventsProps) => {
       : isSameDay(eventStartDate, selectedDate) || isSameDay(eventEndDate, selectedDate);
   });
   
+  // Get the actual count of events
+  const eventCount = dayEvents.length;
+  
   return (
     <div className="space-y-2 mt-4">
+      <h3 className="text-lg font-medium mb-2 text-famacle-slate">
+        {eventCount === 0 ? 'No events' : 
+          eventCount === 1 ? '1 Event' : 
+          `${eventCount} Events`} for {format(selectedDate, 'MMMM d, yyyy')}
+      </h3>
+      
       {dayEvents.length > 0 ? (
         dayEvents.map(event => (
           <EventDetail key={event.id} event={event} />

@@ -11,13 +11,18 @@ interface SelectedDayEventsProps {
 }
 
 const SelectedDayEvents = ({ date, events }: SelectedDayEventsProps) => {
+  // Get the actual count of events
+  const eventCount = events.length;
+  
   return (
     <div className="bg-famacle-blue-light/10 p-4 rounded-lg">
       <h3 className="text-lg font-medium mb-2 flex items-center text-famacle-slate">
         <span className="bg-white p-1 rounded mr-2 shadow-sm">
           {format(date, 'd')}
         </span>
-        Events for {format(date, 'MMMM d, yyyy')}
+        {eventCount === 0 ? 'No events' : 
+          eventCount === 1 ? '1 Event' : 
+          `${eventCount} Events`} for {format(date, 'MMMM d, yyyy')}
       </h3>
       
       <div className="space-y-2 mt-4">
