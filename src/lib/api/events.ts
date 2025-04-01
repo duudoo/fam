@@ -7,12 +7,10 @@ export const eventsAPI = {
    * Fetch all events
    */
   getEvents: async () => {
+    // Modify the query to avoid the join with reminders
     const { data, error } = await supabase
       .from('events')
-      .select(`
-        *,
-        reminders (*)
-      `)
+      .select('*')
       .order('start_date', { ascending: true });
     
     if (error) {
@@ -35,12 +33,7 @@ export const eventsAPI = {
         type: event.recurring_type,
         endsOn: event.recurring_ends_on || undefined
       } : undefined,
-      reminders: event.reminders?.map((reminder: any) => ({
-        id: reminder.id,
-        time: reminder.time,
-        type: reminder.type,
-        sent: reminder.sent
-      })) || [],
+      reminders: [], // Since we can't join with reminders yet, initialize as empty array
       createdAt: event.created_at,
       updatedAt: event.updated_at
     }));
@@ -65,7 +58,9 @@ export const eventsAPI = {
         priority: eventFields.priority,
         created_by: userId,
         recurring_type: recurring?.type,
-        recurring_ends_on: recurring?.endsOn
+        recurring_ends_on: recurring?.endsOn,
+        source: eventFields.source,
+        source_event_id: eventFields.sourceEventId
       })
       .select()
       .single();
@@ -74,7 +69,9 @@ export const eventsAPI = {
       throw eventError;
     }
     
-    // If we have reminders, create them
+    // Since reminders table doesn't exist yet, skip creating reminders
+    // We'll comment out this code until the reminders table is created
+    /*
     if (reminders && reminders.length > 0) {
       const reminderPromises = reminders.map(reminder => {
         return supabase
@@ -89,6 +86,7 @@ export const eventsAPI = {
       
       await Promise.all(reminderPromises);
     }
+    */
     
     return createdEvent;
   },
@@ -107,6 +105,8 @@ export const eventsAPI = {
     if (eventUpdates.allDay !== undefined) dbUpdates.all_day = eventUpdates.allDay;
     if (eventUpdates.location !== undefined) dbUpdates.location = eventUpdates.location;
     if (eventUpdates.priority !== undefined) dbUpdates.priority = eventUpdates.priority;
+    if (eventUpdates.source !== undefined) dbUpdates.source = eventUpdates.source;
+    if (eventUpdates.sourceEventId !== undefined) dbUpdates.source_event_id = eventUpdates.sourceEventId;
     
     if (recurring !== undefined) {
       dbUpdates.recurring_type = recurring?.type || null;
@@ -126,7 +126,8 @@ export const eventsAPI = {
       throw error;
     }
     
-    // Handle reminders updates if provided
+    // Skip handling reminders until the reminders table exists
+    /*
     if (reminders !== undefined) {
       // Delete existing reminders
       await supabase
@@ -150,6 +151,7 @@ export const eventsAPI = {
         await Promise.all(reminderPromises);
       }
     }
+    */
     
     return data;
   },
@@ -158,13 +160,15 @@ export const eventsAPI = {
    * Delete an event
    */
   deleteEvent: async (eventId: string) => {
-    // Delete associated reminders first
+    // Skip deleting reminders since the table doesn't exist yet
+    /*
     await supabase
       .from('reminders')
       .delete()
       .eq('event_id', eventId);
+    */
     
-    // Then delete the event
+    // Delete the event
     const { error } = await supabase
       .from('events')
       .delete()
@@ -203,6 +207,7 @@ export const eventsAPI = {
           callback(payload);
         }
       )
+      /* Comment out reminders subscription until the table exists
       .on(
         'postgres_changes',
         {
@@ -214,6 +219,7 @@ export const eventsAPI = {
           callback(payload);
         }
       )
+      */
       .subscribe();
 
     return channel;

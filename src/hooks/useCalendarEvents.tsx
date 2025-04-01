@@ -19,10 +19,12 @@ export const useCalendarEvents = () => {
         return await eventsAPI.getEvents();
       } catch (error) {
         console.error('Error fetching events:', error);
-        toast.error('Failed to load events');
-        throw error;
+        toast.error('Failed to load events. Please try again later.');
+        return [];
       }
-    }
+    },
+    retry: 1,
+    retryDelay: 1000
   });
 
   // Create event mutation
@@ -40,8 +42,9 @@ export const useCalendarEvents = () => {
       toast.success('Event created successfully');
       queryClient.invalidateQueries({ queryKey: ['events'] });
     },
-    onError: () => {
-      toast.error('Failed to create event');
+    onError: (error) => {
+      console.error('Failed to create event:', error);
+      toast.error('Failed to create event. Please try again.');
     }
   });
 
@@ -54,8 +57,9 @@ export const useCalendarEvents = () => {
       toast.success('Event updated successfully');
       queryClient.invalidateQueries({ queryKey: ['events'] });
     },
-    onError: () => {
-      toast.error('Failed to update event');
+    onError: (error) => {
+      console.error('Failed to update event:', error);
+      toast.error('Failed to update event. Please try again.');
     }
   });
 
@@ -68,8 +72,9 @@ export const useCalendarEvents = () => {
       toast.success('Event deleted successfully');
       queryClient.invalidateQueries({ queryKey: ['events'] });
     },
-    onError: () => {
-      toast.error('Failed to delete event');
+    onError: (error) => {
+      console.error('Failed to delete event:', error);
+      toast.error('Failed to delete event. Please try again.');
     }
   });
 
@@ -92,14 +97,15 @@ export const useCalendarEvents = () => {
       toast.success('Calendar synced successfully');
       queryClient.invalidateQueries({ queryKey: ['events'] });
     },
-    onError: () => {
-      toast.error('Failed to sync calendar');
+    onError: (error) => {
+      console.error('Failed to sync calendar:', error);
+      toast.error('Failed to sync calendar. Please try again.');
     }
   });
 
   // Helper functions for event filtering
   const getEventsByDate = (date: Date) => {
-    if (!events) return [];
+    if (!events || events.length === 0) return [];
     
     return events.filter(event => {
       const eventStartDate = parseISO(event.startDate);
