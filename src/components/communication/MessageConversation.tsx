@@ -2,14 +2,16 @@
 import { useRef, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCheck, Check, FileText, Image } from "lucide-react";
+import { CheckCheck, Check, FileText, Image, ExternalLink } from "lucide-react";
 import { Message, Attachment, AttachmentType } from "@/utils/types";
+import { useNavigate } from "react-router-dom";
 
 interface MessageConversationProps {
   messages: Message[];
 }
 
 export const MessageConversation = ({ messages }: MessageConversationProps) => {
+  const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
@@ -32,6 +34,21 @@ export const MessageConversation = ({ messages }: MessageConversationProps) => {
     }
   };
 
+  const handleAttachmentClick = (attachment: Attachment) => {
+    if (attachment.type === "link" && attachment.url) {
+      // If it's an expense link, extract the ID and navigate to the expense view
+      if (attachment.url.includes('/expenses/')) {
+        const expenseId = attachment.url.split('/expenses/').pop();
+        if (expenseId) {
+          navigate(`/expenses?id=${expenseId}`);
+        }
+      } else {
+        // If it's just a regular link, open in a new tab
+        window.open(attachment.url, '_blank');
+      }
+    }
+  };
+
   const renderAttachment = (attachment: Attachment) => {
     switch (attachment.type) {
       case "image":
@@ -45,6 +62,40 @@ export const MessageConversation = ({ messages }: MessageConversationProps) => {
             <div className="text-xs mt-1 text-gray-500 flex items-center">
               <Image className="h-3 w-3 mr-1" />
               {attachment.name}
+            </div>
+          </div>
+        );
+      case "link":
+        // Render expense links in a special way
+        if (attachment.url && attachment.url.includes('/expenses/')) {
+          return (
+            <div 
+              className="mb-2 p-3 bg-blue-50 rounded-md flex items-center gap-2 cursor-pointer hover:bg-blue-100 transition-colors"
+              onClick={() => handleAttachmentClick(attachment)}
+            >
+              <FileText className="h-5 w-5 text-blue-600" />
+              <div className="flex-1 overflow-hidden">
+                <div className="text-sm font-medium truncate text-blue-700">{attachment.name}</div>
+                <div className="text-xs text-blue-600 flex items-center">
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  Click to view expense
+                </div>
+              </div>
+            </div>
+          );
+        }
+        return (
+          <div 
+            className="mb-2 p-3 bg-gray-100 rounded-md flex items-center gap-2 cursor-pointer hover:bg-gray-200 transition-colors"
+            onClick={() => handleAttachmentClick(attachment)}
+          >
+            <FileText className="h-5 w-5 text-gray-600" />
+            <div className="flex-1 overflow-hidden">
+              <div className="text-sm font-medium truncate">{attachment.name}</div>
+              <div className="text-xs text-gray-500 flex items-center">
+                <ExternalLink className="h-3 w-3 mr-1" />
+                Click to open
+              </div>
             </div>
           </div>
         );

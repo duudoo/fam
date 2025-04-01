@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
+import { syncExternalCalendar } from '@/lib/api/events/syncCalendar';
 
 type SyncStatus = {
   google: 'connected' | 'disconnected' | 'syncing' | 'error';
@@ -78,9 +79,7 @@ export const useCalendarSync = () => {
     try {
       setSyncStatus(prev => ({ ...prev, [provider]: 'syncing' }));
       
-      const { data, error } = await supabase.functions.invoke('calendar-sync/sync', {
-        body: { provider, token, userId: user.id }
-      });
+      const { data, error } = await syncExternalCalendar(provider, token, user.id);
       
       if (error) throw error;
       

@@ -1,4 +1,3 @@
-
 /**
  * Messaging-related types for the Famacle application
  */
@@ -21,6 +20,7 @@ export type AttachmentType =
   | 'document'
   | 'audio'
   | 'video'
+  | 'link'
   | 'other';
 
 /**
