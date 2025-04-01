@@ -1,6 +1,7 @@
 
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import EventForm from './EventForm';
 import { FormValues } from './form/EventFormSchema';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -31,21 +32,23 @@ const EventDialogContent = ({
   
   if (inDrawer) {
     return (
-      <DrawerContent className="px-4 pb-6 pt-2">
-        <DrawerHeader className="pb-0">
+      <DrawerContent className="px-4 pb-6 pt-2 max-h-[85vh]">
+        <DrawerHeader className="pb-0 pt-4">
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>
             {description}
           </DrawerDescription>
         </DrawerHeader>
-        <div className="px-1 pt-2">
-          <EventForm 
-            onSubmit={onSubmit}
-            onCancel={onCancel}
-            isPending={isPending}
-            initialValues={initialValues}
-          />
-        </div>
+        <ScrollArea className="px-1 pt-2 pb-2 h-[calc(85vh-100px)] overflow-y-auto">
+          <div className="px-1 py-2">
+            <EventForm 
+              onSubmit={onSubmit}
+              onCancel={onCancel}
+              isPending={isPending}
+              initialValues={initialValues}
+            />
+          </div>
+        </ScrollArea>
       </DrawerContent>
     );
   }
