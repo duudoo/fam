@@ -34,8 +34,11 @@ const UpcomingEvents = ({ events, limit = 2, alwaysShowToggle = false }: Upcomin
     setFilteredEvents(filtered);
     
     // Set the displayed events based on showAll state
-    const displayEvents = showAll ? filtered : filtered.slice(0, limit);
-    setUpcomingEvents(displayEvents);
+    if (showAll) {
+      setUpcomingEvents(filtered);
+    } else {
+      setUpcomingEvents(filtered.slice(0, limit));
+    }
   }, [events, limit, showAll]);
   
   const handleToggleShowAll = () => {
@@ -52,7 +55,7 @@ const UpcomingEvents = ({ events, limit = 2, alwaysShowToggle = false }: Upcomin
           Upcoming
         </h3>
         
-        {shouldShowToggle && upcomingEvents.length > 0 && (
+        {shouldShowToggle && filteredEvents.length > 0 && (
           <Button 
             variant="ghost" 
             size="sm" 
