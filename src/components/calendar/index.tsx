@@ -21,6 +21,11 @@ const CalendarView = () => {
     setView(view === 'month' ? 'week' : 'month');
   };
   
+  // Handler for day clicks in week view
+  const handleDayClick = (date: Date) => {
+    setSelectedDate(date);
+  };
+  
   return (
     <motion.div 
       className="space-y-4 overflow-hidden"
@@ -58,6 +63,7 @@ const CalendarView = () => {
               <WeekView 
                 date={selectedDate}
                 events={events}
+                onDayClick={handleDayClick}
               />
             )}
           </motion.div>

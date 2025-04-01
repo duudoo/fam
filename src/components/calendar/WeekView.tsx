@@ -8,9 +8,10 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 interface WeekViewProps {
   date: Date;
   events: Event[];
+  onDayClick?: (date: Date) => void;
 }
 
-const WeekView = ({ date, events }: WeekViewProps) => {
+const WeekView = ({ date, events, onDayClick }: WeekViewProps) => {
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(date, i - date.getDay()));
   
   return (
@@ -44,6 +45,7 @@ const WeekView = ({ date, events }: WeekViewProps) => {
                   day={day}
                   events={dayEvents}
                   isToday={isSameDay(day, new Date())}
+                  onDayClick={onDayClick}
                 />
               </motion.div>
             );
