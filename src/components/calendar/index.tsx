@@ -45,6 +45,11 @@ const CalendarView = () => {
     setDateSelected(true);
   };
   
+  // Handler to reset day selection
+  const handleResetDaySelection = () => {
+    setDateSelected(false);
+  };
+  
   // Update the date handler for navigation
   const handleDateChange = (date: Date) => {
     console.log('Setting new date:', date);
@@ -159,6 +164,7 @@ const CalendarView = () => {
                 events={events}
                 showDayEvents={dateSelected}
                 onAddEvent={handleAddEvent}
+                onResetDaySelection={handleResetDaySelection}
               />
             ) : (
               <WeekView 
@@ -166,6 +172,7 @@ const CalendarView = () => {
                 events={events}
                 onDayClick={handleDayClick}
                 onAddEvent={handleAddEvent}
+                onResetDaySelection={handleResetDaySelection}
               />
             )}
           </motion.div>

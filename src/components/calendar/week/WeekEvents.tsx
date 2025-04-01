@@ -4,15 +4,16 @@ import { format, isSameDay } from 'date-fns';
 import { motion } from 'framer-motion';
 import EventDetail from '../EventDetail';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, ArrowLeft } from 'lucide-react';
 
 interface WeekEventsProps {
   events: Event[];
   selectedDate: Date | null;
   onAddEvent?: () => void;
+  onBackToUpcoming?: () => void;
 }
 
-const WeekEvents = ({ events, selectedDate, onAddEvent }: WeekEventsProps) => {
+const WeekEvents = ({ events, selectedDate, onAddEvent, onBackToUpcoming }: WeekEventsProps) => {
   if (!selectedDate) return null;
   
   const dayEvents = events.filter(event => {
@@ -29,11 +30,22 @@ const WeekEvents = ({ events, selectedDate, onAddEvent }: WeekEventsProps) => {
   
   return (
     <div className="space-y-2 mt-4">
-      <h3 className="text-lg font-medium mb-2 text-famacle-slate">
-        {eventCount === 0 ? 'No events' : 
-          eventCount === 1 ? '1 Event' : 
-          `${eventCount} Events`} for {format(selectedDate, 'MMMM d, yyyy')}
-      </h3>
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium mb-2 text-famacle-slate">
+          {eventCount === 0 ? 'No events' : 
+            eventCount === 1 ? '1 Event' : 
+            `${eventCount} Events`} for {format(selectedDate, 'MMMM d, yyyy')}
+        </h3>
+        
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={onBackToUpcoming}
+          className="text-famacle-blue hover:text-famacle-blue/80"
+        >
+          <ArrowLeft className="mr-1 h-4 w-4" /> Back to Upcoming
+        </Button>
+      </div>
       
       {dayEvents.length > 0 ? (
         dayEvents.map(event => (
