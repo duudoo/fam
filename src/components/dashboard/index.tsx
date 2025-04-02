@@ -14,7 +14,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const Dashboard = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const { data: expenses = [], isLoading } = useExpenses();
+  const { expenses = [], isLoading } = useExpenses();
 
   if (!user) {
     return (
