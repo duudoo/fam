@@ -57,7 +57,7 @@ export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) =
     return (
       <Card className="col-span-full md:col-span-2 min-h-60">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Recent Expenses</CardTitle>
+          <CardTitle>Expenses</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -86,7 +86,7 @@ export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) =
   return (
     <Card className="col-span-full md:col-span-2 min-h-60">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Recent Expenses</CardTitle>
+        <CardTitle>Expenses</CardTitle>
         <div className="flex gap-2">
           <Button
             variant="outline"
