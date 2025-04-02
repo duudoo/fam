@@ -1,46 +1,26 @@
 
-import { UseFormReturn } from 'react-hook-form';
-import { ExpenseCategory, SplitMethod } from '@/utils/types';
-import { FormValues } from './schema';
-import { DescriptionField } from './fields/DescriptionField';
-import { AmountField } from './fields/AmountField';
-import { DateField } from './fields/DateField';
-import { CategoryField } from './fields/CategoryField';
-import { SplitMethodField } from './fields/SplitMethodField';
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateField } from "./fields/DateField";
+import { DescriptionField } from "./fields/DescriptionField";
+import { AmountField } from "./fields/AmountField";
+import CategoryField from "./fields/CategoryField";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
-interface ExpenseDetailsSectionProps {
-  form: UseFormReturn<FormValues, any, undefined>;
-  categories: ExpenseCategory[];
-  splitMethods: SplitMethod[];
-  onSplitMethodChange?: (method: SplitMethod) => void;
-  isMobile?: boolean;
-}
-
-const ExpenseDetailsSection = ({ 
-  form, 
-  categories, 
-  splitMethods,
-  onSplitMethodChange,
-  isMobile = false
-}: ExpenseDetailsSectionProps) => {
+const ExpenseDetailsSection = ({ control }: { control: any }) => {
+  const { currency } = useCurrency();
+  
   return (
-    <div className={isMobile ? "space-y-4" : "space-y-6"}>
-      <DescriptionField form={form} />
-      
-      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-4'}`}>
-        <AmountField form={form} />
-        <DateField form={form} />
-      </div>
-      
-      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-4'}`}>
-        <CategoryField form={form} categories={categories} />
-        <SplitMethodField 
-          form={form} 
-          splitMethods={splitMethods} 
-          onSplitMethodChange={onSplitMethodChange}
-        />
-      </div>
-    </div>
+    <>
+      <CardHeader className="px-0">
+        <CardTitle>Expense Details</CardTitle>
+      </CardHeader>
+      <CardContent className="px-0 space-y-4">
+        <DescriptionField control={control} />
+        <AmountField control={control} currencySymbol={currency.symbol} />
+        <DateField control={control} />
+        <CategoryField control={control} />
+      </CardContent>
+    </>
   );
 };
 

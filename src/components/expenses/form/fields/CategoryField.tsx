@@ -1,59 +1,51 @@
 
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Control } from "react-hook-form";
 import { useExpenseCategories } from "@/hooks/useExpenseCategories";
-
-const STANDARD_CATEGORIES = [
-  { id: "education", label: "Education" },
-  { id: "medical", label: "Medical" },
-  { id: "clothing", label: "Clothing" },
-  { id: "activities", label: "Activities" },
-  { id: "food", label: "Food" },
-];
+import { ExpenseCategory } from "@/utils/types";
 
 interface CategoryFieldProps {
-  form: any;
+  control: Control<any>;
+  required?: boolean;
+  description?: string;
 }
 
-const CategoryField = ({ form }: CategoryFieldProps) => {
-  const { isLoading, categories = [] } = useExpenseCategories();
+const CategoryField = ({ control, required = true, description }: CategoryFieldProps) => {
+  const { data: categories = [], isLoading } = useExpenseCategories();
   
-  // Combine standard and custom categories
-  const allCategories = [
-    ...STANDARD_CATEGORIES,
-    ...categories
-      .filter(c => !STANDARD_CATEGORIES.some(sc => sc.id === c.category))
-      .map(c => ({ 
-        id: c.category, 
-        label: c.category.charAt(0).toUpperCase() + c.category.slice(1) 
-      }))
-  ];
-  
+  // Capitalize first letter of category
+  const capitalizeFirstLetter = (string: string) => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
+
   return (
     <FormField
-      control={form.control}
+      control={control}
       name="category"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Category</FormLabel>
-          <Select 
-            onValueChange={field.onChange} 
-            defaultValue={field.value}
-            value={field.value}
-          >
-            <FormControl>
+          <FormLabel>Category {required && <span className="text-red-500">*</span>}</FormLabel>
+          <FormControl>
+            <Select 
+              disabled={isLoading} 
+              onValueChange={field.onChange} 
+              defaultValue={field.value}
+              value={field.value}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Select category" />
+                <SelectValue placeholder="Select a category" />
               </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              {allCategories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {capitalizeFirstLetter(category)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormControl>
+          {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
         </FormItem>
       )}

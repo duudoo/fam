@@ -1,179 +1,182 @@
 
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ChevronRight, Plus } from 'lucide-react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { Expense, ExpenseStatus } from '@/utils/types';
-import ExpenseCard from '@/components/ExpenseCard';
-import { useCurrency } from '@/contexts/CurrencyContext';
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatCurrency } from "@/utils/expenseUtils";
+import { useNavigate } from "react-router-dom";
+import { Expense } from "@/utils/types";
+import { CheckCircle2, Clock, Edit3, Eye, MoreHorizontal, Plus } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { ExpenseCard } from "../expenses/ExpenseCard";
+import { useMobile } from "@/hooks/use-mobile";
 
-const ExpensesSection = () => {
-  const [expenseTab, setExpenseTab] = useState('pending');
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+const MAX_EXPENSES = 3;
+
+interface ExpensesSectionProps {
+  expenses: Expense[];
+  isLoading: boolean;
+}
+
+export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) => {
+  const navigate = useNavigate();
+  const { isMobile } = useMobile();
   const { currency } = useCurrency();
-  
+  const [displayedExpenses, setDisplayedExpenses] = useState<Expense[]>([]);
+
   useEffect(() => {
-    if (user) {
-      fetchExpenses();
+    if (expenses && expenses.length > 0) {
+      // Sort expenses by date (newest first) and take the first MAX_EXPENSES
+      const sorted = [...expenses]
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, MAX_EXPENSES);
       
-      // Set up real-time subscription
-      const channel = supabase
-        .channel('dashboard-expenses-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'expenses',
-          },
-          () => {
-            fetchExpenses();
-          }
-        )
-        .subscribe();
-        
-      return () => {
-        supabase.removeChannel(channel);
-      };
+      setDisplayedExpenses(sorted);
+    } else {
+      setDisplayedExpenses([]);
     }
-  }, [user]);
-  
-  const fetchExpenses = async () => {
-    if (!user) return;
-    
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('expenses')
-        .select('*, expense_children(child_id)')
-        .order('created_at', { ascending: false })
-        .limit(6);
-        
-      if (error) throw error;
-      
-      if (data) {
-        setExpenses(data.map(expense => ({
-          id: expense.id,
-          description: expense.description,
-          amount: parseFloat(expense.amount),
-          date: expense.date,
-          category: expense.category,
-          paidBy: expense.paid_by,
-          receiptUrl: expense.receipt_url || undefined,
-          status: expense.status as ExpenseStatus,
-          splitMethod: expense.split_method,
-          splitPercentage: expense.split_percentage,
-          splitAmounts: expense.split_amounts,
-          notes: expense.notes || undefined,
-          childIds: expense.expense_children?.map((ec: any) => ec.child_id) || [],
-          createdAt: expense.created_at,
-          updatedAt: expense.updated_at
-        })));
-      }
-    } catch (error) {
-      console.error('Error fetching expenses:', error);
-    } finally {
-      setLoading(false);
+  }, [expenses]);
+
+  const handleViewAllExpenses = () => {
+    navigate("/expenses");
+  };
+
+  const handleAddExpense = () => {
+    navigate("/expenses/new");
+  };
+
+  const handleViewExpense = (id: string) => {
+    navigate(`/expenses/${id}`);
+  };
+
+  const handleEditExpense = (id: string) => {
+    navigate(`/expenses/${id}/edit`);
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="col-span-full md:col-span-2 min-h-60">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Recent Expenses</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-20 bg-gray-100 animate-pulse rounded-md"></div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "pending":
+        return <Clock className="h-5 w-5 text-yellow-500" />;
+      case "approved":
+        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+      case "disputed":
+        return <Edit3 className="h-5 w-5 text-red-500" />;
+      default:
+        return <Clock className="h-5 w-5 text-gray-500" />;
     }
   };
-  
+
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-xl font-semibold">Expenses</CardTitle>
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/expenses" className="flex items-center text-famacle-blue">
-              View All 
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Link>
+    <Card className="col-span-full md:col-span-2 min-h-60">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Recent Expenses</CardTitle>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleViewAllExpenses}
+          >
+            View All
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleAddExpense}
+          >
+            <Plus className="h-4 w-4 mr-1" /> Add
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="pending" onValueChange={setExpenseTab}>
-          <TabsList className="grid grid-cols-3 mb-4">
-            <TabsTrigger value="pending">Pending</TabsTrigger>
-            <TabsTrigger value="approved">Approved</TabsTrigger>
-            <TabsTrigger value="recent">Recent</TabsTrigger>
-          </TabsList>
-          
-          {loading ? (
-            <div className="h-64 flex items-center justify-center">
-              <div className="animate-spin h-6 w-6 border-4 border-famacle-blue border-t-transparent rounded-full"></div>
-            </div>
-          ) : (
-            <>
-              <TabsContent value="pending" className="space-y-4">
-                {expenses.filter(e => e.status === 'pending').length > 0 ? (
-                  expenses.filter(e => e.status === 'pending').map(expense => (
-                    <ExpenseCard 
-                      key={expense.id} 
-                      expense={expense} 
-                      currency={currency}
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    No pending expenses found
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="approved" className="space-y-4">
-                {expenses.filter(e => e.status === 'approved').length > 0 ? (
-                  expenses.filter(e => e.status === 'approved').map(expense => (
-                    <ExpenseCard 
-                      key={expense.id} 
-                      expense={expense} 
-                      currency={currency}
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    No approved expenses found
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="recent" className="space-y-4">
-                {expenses.length > 0 ? (
-                  expenses
-                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                    .slice(0, 3)
-                    .map(expense => (
-                      <ExpenseCard 
-                        key={expense.id} 
-                        expense={expense} 
-                        currency={currency}
-                      />
-                    ))
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    No recent expenses found
-                  </div>
-                )}
-              </TabsContent>
-            </>
-          )}
-        </Tabs>
+        {displayedExpenses.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <p className="mb-4 text-gray-500">No expenses found</p>
+            <Button onClick={handleAddExpense} variant="default">
+              <Plus className="h-4 w-4 mr-2" /> Add Your First Expense
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {isMobile ? (
+              // Mobile view with cards
+              displayedExpenses.map((expense) => (
+                <ExpenseCard 
+                  key={expense.id} 
+                  expense={expense}
+                  onView={() => handleViewExpense(expense.id)}
+                  onEdit={() => handleEditExpense(expense.id)}
+                  currencySymbol={currency.symbol}
+                />
+              ))
+            ) : (
+              // Desktop view with table
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left pb-3 font-medium text-gray-500 text-sm">Description</th>
+                      <th className="text-left pb-3 font-medium text-gray-500 text-sm">Date</th>
+                      <th className="text-left pb-3 font-medium text-gray-500 text-sm">Amount</th>
+                      <th className="text-left pb-3 font-medium text-gray-500 text-sm">Status</th>
+                      <th className="text-right pb-3 font-medium text-gray-500 text-sm">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {displayedExpenses.map((expense) => (
+                      <tr key={expense.id} className="border-b last:border-0 hover:bg-gray-50">
+                        <td className="py-3">{expense.description}</td>
+                        <td className="py-3">{new Date(expense.date).toLocaleDateString()}</td>
+                        <td className="py-3 font-medium">{formatCurrency(expense.amount, currency.symbol)}</td>
+                        <td className="py-3">
+                          <div className="flex items-center">
+                            {getStatusIcon(expense.status)}
+                            <span className="ml-2 first-letter:uppercase">{expense.status}</span>
+                          </div>
+                        </td>
+                        <td className="py-3 text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleViewExpense(expense.id)}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEditExpense(expense.id)}>
+                                <Edit3 className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
-      <CardFooter className="border-t pt-4">
-        <Button asChild variant="outline" className="w-full">
-          <Link to="/expenses?newExpense=true">
-            <Plus className="w-4 h-4 mr-2" />
-            New Expense
-          </Link>
-        </Button>
-      </CardFooter>
     </Card>
   );
 };
-
-export default ExpensesSection;

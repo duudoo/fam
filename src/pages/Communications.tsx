@@ -5,18 +5,22 @@ import Navbar from "@/components/Navbar";
 import { MessageConversation } from "@/components/communication/MessageConversation";
 import { MessageInput } from "@/components/communication/MessageInput";
 import { ConversationHeader } from "@/components/communication/ConversationHeader";
-import { Message } from "@/utils/types";
+import { Message, Expense } from "@/utils/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useMessageSubscription } from "@/hooks/useMessageSubscription";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import ExpenseDetailDialog from "@/components/expenses/ExpenseDetailDialog";
 
 const CommunicationsPage = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [currentReceiverId, setCurrentReceiverId] = useState<string | null>("Sarah"); // Hardcoded for demo
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   
   // Use the new message subscription hook for real-time updates
   useMessageSubscription(user?.id, currentReceiverId);
@@ -60,6 +64,52 @@ const CommunicationsPage = () => {
     enabled: !!currentReceiverId && !!user
   });
 
+  // Fetch expense details when an expense is selected
+  const handleExpenseClick = async (expenseId: string) => {
+    if (!user || !expenseId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('id', expenseId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching expense:', error);
+        toast.error('Failed to load expense details');
+        return;
+      }
+      
+      if (data) {
+        // Transform the data to match the Expense type
+        const expense: Expense = {
+          id: data.id,
+          description: data.description,
+          amount: data.amount,
+          date: data.date,
+          category: data.category,
+          paidBy: data.paid_by,
+          receiptUrl: data.receipt_url || undefined,
+          status: data.status,
+          splitMethod: data.split_method,
+          splitPercentage: data.split_percentage,
+          notes: data.notes || undefined,
+          disputeNotes: data.dispute_notes || undefined,
+          childIds: [],
+          createdAt: data.created_at,
+          updatedAt: data.updated_at
+        };
+        
+        setSelectedExpense(expense);
+        setDetailDialogOpen(true);
+      }
+    } catch (error) {
+      console.error('Error handling expense click:', error);
+      toast.error('Failed to fetch expense details');
+    }
+  };
+
   // Render an expense attachment in the message
   const renderExpenseAttachment = (attachment: any) => {
     if (attachment.type === 'expense_reference' && attachment.expenseId) {
@@ -77,7 +127,10 @@ const CommunicationsPage = () => {
         'Unknown date';
       
       return (
-        <div className="mt-2 p-3 bg-gray-100 rounded-md">
+        <div 
+          className="mt-2 p-3 bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 transition-colors"
+          onClick={() => handleExpenseClick(attachment.expenseId)}
+        >
           <div className="font-semibold mb-1">Expense Reference:</div>
           <div className="text-sm">
             <div><span className="font-medium">Description:</span> {expenseInfo?.description || 'N/A'}</div>
@@ -86,12 +139,9 @@ const CommunicationsPage = () => {
             <div><span className="font-medium">Category:</span> {expenseInfo?.category || 'N/A'}</div>
           </div>
           <div className="mt-2">
-            <Link 
-              to={`/expenses/${attachment.expenseId}`}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-            >
-              View Expense Details
-            </Link>
+            <span className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+              Click to view full details
+            </span>
           </div>
         </div>
       );
@@ -155,6 +205,14 @@ const CommunicationsPage = () => {
     } catch (error) {
       console.error('Error sending message:', error);
     }
+  };
+
+  // Go to expense detail page
+  const handleViewExpenseDetail = () => {
+    if (selectedExpense) {
+      navigate(`/expenses/${selectedExpense.id}`);
+    }
+    setDetailDialogOpen(false);
   };
 
   // Update the MessageConversation component to render expense attachments
@@ -222,6 +280,16 @@ const CommunicationsPage = () => {
           </div>
         </Card>
       </main>
+      
+      {/* Expense Detail Dialog */}
+      {selectedExpense && (
+        <ExpenseDetailDialog
+          expense={selectedExpense}
+          open={detailDialogOpen}
+          onOpenChange={setDetailDialogOpen}
+          onEdit={handleViewExpenseDetail}
+        />
+      )}
     </div>
   );
 };
