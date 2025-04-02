@@ -13,7 +13,7 @@ const DashboardPage = () => {
   return (
     <CurrencyProvider>
       <div className="min-h-screen bg-gray-50">
-        <main className="container mx-auto px-4 pt-24 pb-12 max-w-6xl">
+        <main className="container mx-auto px-4 pt-8 pb-12 max-w-6xl">
           <DashboardComponent />
         </main>
         <Toaster />

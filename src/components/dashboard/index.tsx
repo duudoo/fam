@@ -25,7 +25,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 pt-24 pb-16">
+    <div className="container mx-auto p-4 pb-16">
       <DashboardHeader />
 
       <SummaryCards />
