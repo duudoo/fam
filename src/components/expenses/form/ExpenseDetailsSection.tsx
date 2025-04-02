@@ -5,7 +5,7 @@ import { DescriptionField } from "./fields/DescriptionField";
 import { AmountField } from "./fields/AmountField";
 import CategoryField from "./fields/CategoryField";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { Control, UseFormReturn } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "./schema";
 import { SplitMethod } from "@/utils/types";
 
@@ -28,16 +28,20 @@ const ExpenseDetailsSection = ({
 }: ExpenseDetailsSectionProps) => {
   const { currency } = useCurrency();
   
+  if (!form) {
+    return null;
+  }
+  
   return (
     <>
       <CardHeader className="px-0">
         <CardTitle>Expense Details</CardTitle>
       </CardHeader>
       <CardContent className="px-0 space-y-4">
-        <DescriptionField control={control} />
-        <AmountField control={control} currencySymbol={currency.symbol} />
-        <DateField control={control} />
-        <CategoryField control={control} />
+        <DescriptionField form={form} />
+        <AmountField form={form} />
+        <DateField form={form} />
+        <CategoryField control={form.control} />
       </CardContent>
     </>
   );

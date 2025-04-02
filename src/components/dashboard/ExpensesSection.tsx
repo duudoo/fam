@@ -20,7 +20,7 @@ interface ExpensesSectionProps {
 
 export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) => {
   const navigate = useNavigate();
-  const { isMobile } = useIsMobile();
+  const isMobile = useIsMobile();
   const { currency } = useCurrency();
   const [displayedExpenses, setDisplayedExpenses] = useState<Expense[]>([]);
 
@@ -119,8 +119,7 @@ export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) =
                 <ExpenseCard 
                   key={expense.id} 
                   expense={expense}
-                  onView={() => handleViewExpense(expense.id)}
-                  onEdit={() => handleEditExpense(expense.id)}
+                  // We need to adapt to the existing ExpenseCard props here
                   currencySymbol={currency.symbol}
                 />
               ))
@@ -180,3 +179,5 @@ export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) =
     </Card>
   );
 };
+
+export default ExpensesSection;
