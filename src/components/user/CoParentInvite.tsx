@@ -53,16 +53,13 @@ const CoParentInvite = ({ onSubmit, onCancel, isSubmitting = false }: CoParentIn
   const handleSubmit = async (data: FormData) => {
     if (submitting) return; // Prevent multiple submissions
 
-    setLocalSubmitting(true);
     try {
+      setLocalSubmitting(true);
       await onSubmit(data.email, data.message);
-      form.reset({
-        email: "",
-        message: "I'd like to invite you to join Famacle as a co-parent to manage our shared parenting responsibilities.",
-      });
+      // Form will be reset by parent component after successful submission
     } catch (error) {
       console.error('Error submitting form:', error);
-      // Form will retain values if submission fails
+      // Parent component will handle error display
     } finally {
       setLocalSubmitting(false);
     }

@@ -113,7 +113,10 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
     <div className="grid gap-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-famacle-slate">Co-Parents</h2>
-        <Button onClick={() => setInviting(true)}>
+        <Button 
+          onClick={() => setInviting(true)}
+          disabled={inviting}
+        >
           <Plus className="mr-2 h-4 w-4" /> Invite Co-Parent
         </Button>
       </div>
