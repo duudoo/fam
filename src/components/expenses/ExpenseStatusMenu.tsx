@@ -126,6 +126,7 @@ const ExpenseStatusMenu: FC<ExpenseStatusMenuProps> = ({
         onOpenChange={setDisputeDialogOpen}
         onDisputeSubmit={handleDisputeSubmit}
         isProcessing={isDisabled}
+        expense={expense}
       />
 
       {expense && (

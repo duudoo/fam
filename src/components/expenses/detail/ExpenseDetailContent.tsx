@@ -114,6 +114,7 @@ const ExpenseDetailContent = ({
                   isProcessing={isDeleting}
                   onStatusChange={onStatusChange}
                   onDelete={onDelete}
+                  expense={expense}
                 />
               </div>
             )}

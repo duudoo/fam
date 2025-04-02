@@ -10,21 +10,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { Expense } from "@/utils/types";
+import { useSendDisputeMessage } from "@/hooks/expenses/useSendDisputeMessage";
 
 interface DisputeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onDisputeSubmit: (note: string) => Promise<void>;
   isProcessing: boolean;
+  expense?: Expense;
 }
 
 const DisputeDialog = ({ 
   open, 
   onOpenChange, 
   onDisputeSubmit, 
-  isProcessing 
+  isProcessing,
+  expense
 }: DisputeDialogProps) => {
   const [disputeNote, setDisputeNote] = useState("");
+  const { sendDisputeMessage, isSending } = useSendDisputeMessage();
+  
+  const isProcessingAny = isProcessing || isSending;
 
   const handleSubmit = async () => {
     if (!disputeNote.trim()) {
@@ -32,9 +39,20 @@ const DisputeDialog = ({
       return;
     }
     
-    await onDisputeSubmit(disputeNote);
-    setDisputeNote("");
-    onOpenChange(false);
+    try {
+      await onDisputeSubmit(disputeNote);
+      
+      // If we have an expense, send the dispute message to communication
+      if (expense) {
+        await sendDisputeMessage(expense, disputeNote);
+      }
+      
+      setDisputeNote("");
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error submitting dispute:", error);
+      toast.error("Failed to submit clarification request");
+    }
   };
 
   return (
@@ -51,7 +69,7 @@ const DisputeDialog = ({
             placeholder="Please explain why you're requesting clarification for this expense..."
             value={disputeNote}
             onChange={(e) => setDisputeNote(e.target.value)}
-            disabled={isProcessing}
+            disabled={isProcessingAny}
           />
         </div>
         
@@ -59,16 +77,16 @@ const DisputeDialog = ({
           <Button 
             variant="outline" 
             onClick={() => onOpenChange(false)}
-            disabled={isProcessing}
+            disabled={isProcessingAny}
           >
             Cancel
           </Button>
           <Button 
             variant="destructive" 
             onClick={handleSubmit}
-            disabled={!disputeNote.trim() || isProcessing}
+            disabled={!disputeNote.trim() || isProcessingAny}
           >
-            Request Clarification
+            {isProcessingAny ? "Sending..." : "Request Clarification"}
           </Button>
         </DialogFooter>
       </DialogContent>

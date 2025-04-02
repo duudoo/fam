@@ -1,16 +1,24 @@
 
 import { Button } from "@/components/ui/button";
 import { Share, Plus, Save } from "lucide-react";
-import { useContext } from "react";
-import { ExpenseFormContext } from "./ExpenseFormContext";
 
 interface FormActionsProps {
   showCancelButton?: boolean;
+  isEditing: boolean;
+  isSubmitting: boolean;
+  onCancel: () => void;
+  showSaveAndShare?: boolean;
+  showSaveAndAddAnother?: boolean;
 }
 
-const FormActions = ({ showCancelButton = true }: FormActionsProps) => {
-  const { isEditing, isSubmitting, onCancel } = useContext(ExpenseFormContext);
-
+const FormActions = ({ 
+  showCancelButton = true, 
+  isEditing, 
+  isSubmitting, 
+  onCancel,
+  showSaveAndShare = true,
+  showSaveAndAddAnother = true,
+}: FormActionsProps) => {
   const handleSubmit = (action: 'save' | 'saveAndAdd' | 'saveAndShare') => {
     // Set the form action in the hidden input
     const input = document.getElementById('form-action') as HTMLInputElement;
@@ -40,25 +48,29 @@ const FormActions = ({ showCancelButton = true }: FormActionsProps) => {
       
       {!isEditing && (
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button
-            type="button"
-            onClick={() => handleSubmit('saveAndAdd')}
-            disabled={isSubmitting}
-            variant="outline"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Save & Add Another
-          </Button>
+          {showSaveAndAddAnother && (
+            <Button
+              type="button"
+              onClick={() => handleSubmit('saveAndAdd')}
+              disabled={isSubmitting}
+              variant="outline"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Save & Add Another
+            </Button>
+          )}
           
-          <Button
-            type="button"
-            onClick={() => handleSubmit('saveAndShare')}
-            disabled={isSubmitting}
-            variant="outline"
-          >
-            <Share className="w-4 h-4 mr-2" />
-            Save & Share
-          </Button>
+          {showSaveAndShare && (
+            <Button
+              type="button"
+              onClick={() => handleSubmit('saveAndShare')}
+              disabled={isSubmitting}
+              variant="outline"
+            >
+              <Share className="w-4 h-4 mr-2" />
+              Save & Share
+            </Button>
+          )}
         </div>
       )}
       
