@@ -78,9 +78,15 @@ export const useCalendarSync = () => {
     try {
       // Get the current site URL to use as redirect URL
       const siteUrl = window.location.origin;
+      const redirectPath = '/settings?tab=calendar'; // Ensure we redirect back to the calendar settings tab
+      const redirectUrl = `${siteUrl}${redirectPath}`;
       
       // Redirect to Supabase Edge Function for OAuth flow
-      window.location.href = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calendar-sync/${provider}-auth?redirect_url=${encodeURIComponent(siteUrl + '/settings?tab=calendar')}`;
+      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calendar-sync/${provider}-auth`;
+      const authUrl = `${functionUrl}?redirect_url=${encodeURIComponent(redirectUrl)}`;
+      
+      console.log(`Redirecting to auth URL: ${authUrl}`);
+      window.location.href = authUrl;
     } catch (error) {
       console.error(`Error connecting ${provider} Calendar:`, error);
       toast.error(`Failed to connect ${provider} Calendar`);

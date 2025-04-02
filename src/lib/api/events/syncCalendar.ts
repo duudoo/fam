@@ -8,13 +8,17 @@ export const syncExternalCalendar = async (provider: 'google' | 'outlook', token
   try {
     console.log(`Invoking calendar-sync/sync with provider: ${provider}`);
     
-    return await supabase.functions.invoke('calendar-sync/sync', {
+    const response = await supabase.functions.invoke('calendar-sync/sync', {
       body: { 
         provider, 
         token, 
         userId 
       }
     });
+    
+    console.log('Sync response:', response);
+    
+    return response;
   } catch (error) {
     console.error('Error syncing calendar:', error);
     throw error;
