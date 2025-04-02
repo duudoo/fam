@@ -8,8 +8,8 @@ import { CheckCircle2, Clock, Edit3, Eye, MoreHorizontal, Plus } from "lucide-re
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { ExpenseCard } from "../expenses/ExpenseCard";
-import { useMobile } from "@/hooks/use-mobile";
+import ExpenseCard from "../expenses/ExpenseCard";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const MAX_EXPENSES = 3;
 
@@ -20,7 +20,7 @@ interface ExpensesSectionProps {
 
 export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) => {
   const navigate = useNavigate();
-  const { isMobile } = useMobile();
+  const { isMobile } = useIsMobile();
   const { currency } = useCurrency();
   const [displayedExpenses, setDisplayedExpenses] = useState<Expense[]>([]);
 

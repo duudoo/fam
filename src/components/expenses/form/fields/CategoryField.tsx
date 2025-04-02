@@ -12,7 +12,7 @@ interface CategoryFieldProps {
 }
 
 const CategoryField = ({ control, required = true, description }: CategoryFieldProps) => {
-  const { data: categories = [], isLoading } = useExpenseCategories();
+  const { categories, isLoading } = useExpenseCategories();
   
   // Capitalize first letter of category
   const capitalizeFirstLetter = (string: string) => {

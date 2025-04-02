@@ -5,8 +5,13 @@ import { DescriptionField } from "./fields/DescriptionField";
 import { AmountField } from "./fields/AmountField";
 import CategoryField from "./fields/CategoryField";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { Control } from "react-hook-form";
 
-const ExpenseDetailsSection = ({ control }: { control: any }) => {
+interface ExpenseDetailsSectionProps {
+  control: Control<any>;
+}
+
+const ExpenseDetailsSection = ({ control }: ExpenseDetailsSectionProps) => {
   const { currency } = useCurrency();
   
   return (
