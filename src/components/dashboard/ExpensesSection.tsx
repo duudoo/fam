@@ -51,7 +51,7 @@ const ExpensesSection = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('expenses')
-        .select('*')
+        .select('*, expense_children(child_id)')
         .order('created_at', { ascending: false })
         .limit(6);
         
@@ -68,7 +68,10 @@ const ExpensesSection = () => {
           receiptUrl: expense.receipt_url || undefined,
           status: expense.status as ExpenseStatus,
           splitMethod: expense.split_method,
+          splitPercentage: expense.split_percentage,
+          splitAmounts: expense.split_amounts,
           notes: expense.notes || undefined,
+          childIds: expense.expense_children?.map((ec: any) => ec.child_id) || [],
           createdAt: expense.created_at,
           updatedAt: expense.updated_at
         })));

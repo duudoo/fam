@@ -1,9 +1,9 @@
+
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 import { Expense } from "@/utils/types";
-import { useAuth } from "@/hooks/useAuth";
 
 interface UseShareExpenseProps {
   expense: Expense | null;
@@ -11,73 +11,93 @@ interface UseShareExpenseProps {
   onSuccess?: () => void;
 }
 
-export const useShareExpense = ({ expense, expenseLink, onSuccess }: UseShareExpenseProps) => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
+export const useShareExpense = ({ 
+  expense, 
+  expenseLink,
+  onSuccess 
+}: UseShareExpenseProps) => {
   const [isSending, setIsSending] = useState(false);
+  const { user } = useAuth();
   
-  // Handle sharing the expense via the messaging system
   const shareViaMessage = async (message: string) => {
-    if (!expense || !user) {
-      toast.error("Cannot share expense: missing data");
+    if (!user || !expense) {
+      toast.error("Unable to share expense");
       return;
     }
     
-    setIsSending(true);
-    
     try {
-      // The current user is always the sender
-      const senderId = user.id;
+      setIsSending(true);
       
-      // For the demo we'll use a valid UUID as the co-parent ID
-      // In a real app, this would come from a database query of co-parent relationships
-      const coParentId = "02430ec4-1ae7-4b48-9a01-249b5839e461";
+      // Get co-parents that are associated with the expense's children
+      const { data: childParents, error: parentsError } = await supabase
+        .from('parent_children')
+        .select(`
+          parent_id,
+          child_id
+        `)
+        .in('child_id', expense.childIds || [])
+        .neq('parent_id', user.id);
+        
+      if (parentsError) throw parentsError;
       
-      // Determine if current user is the expense creator (paidBy)
-      const isCurrentUserCreator = expense.paidBy === user.id;
-      
-      // If current user created the expense, send to co-parent
-      // Otherwise, send to the expense creator
-      const receiverId = isCurrentUserCreator ? coParentId : expense.paidBy;
-      
-      console.log("Sending message from", senderId, "to", receiverId);
-      
-      // Format message text
-      const messageText = message || 
-        `I've shared an expense with you: ${expense.description} for ${expense.amount}`;
-      
-      // Add a message to the messages table with correctly formatted data
-      const { error } = await supabase.from('messages').insert({
-        sender_id: senderId,
-        receiver_id: receiverId,
-        text: messageText,
-        attachments: [
-          {
-            type: "link",
-            url: expenseLink,
-            name: `Expense: ${expense.description}`,
-            id: `${Date.now()}-expense-attachment` // Add a unique ID for the attachment
-          }
-        ],
-        status: 'sent'
-      });
-      
-      if (error) {
-        console.error("Supabase error when sharing expense:", error);
-        throw error;
+      if (childParents.length === 0) {
+        throw new Error("No co-parents found for the selected children");
       }
       
-      toast.success("Expense shared successfully via message");
+      // Get unique co-parent IDs
+      const coParentIds = Array.from(new Set(childParents.map(cp => cp.parent_id)));
       
-      if (onSuccess) {
-        onSuccess();
+      // For each co-parent, create a conversation if needed and send a message
+      for (const coParentId of coParentIds) {
+        // Check if there's an existing conversation
+        const { data: conversations, error: convError } = await supabase
+          .from('conversations')
+          .select('id')
+          .contains('participants', [user.id, coParentId])
+          .limit(1);
+          
+        if (convError) throw convError;
+        
+        let conversationId;
+        
+        if (conversations && conversations.length > 0) {
+          conversationId = conversations[0].id;
+        } else {
+          // Create a new conversation
+          const { data: newConv, error: newConvError } = await supabase
+            .from('conversations')
+            .insert({
+              participants: [user.id, coParentId]
+            })
+            .select('id')
+            .single();
+            
+          if (newConvError) throw newConvError;
+          conversationId = newConv.id;
+        }
+        
+        // Send the message
+        const messageText = `${message ? message + '\n\n' : ''}I've shared an expense: "${expense.description}" for $${expense.amount}\n${expenseLink}`;
+        
+        const { error: msgError } = await supabase
+          .from('messages')
+          .insert({
+            conversation_id: conversationId,
+            sender_id: user.id,
+            receiver_id: coParentId,
+            text: messageText,
+            status: 'sent'
+          });
+          
+        if (msgError) throw msgError;
       }
       
-      // Navigate to the communications page to see the message
-      navigate("/communications");
+      toast.success("Expense shared successfully");
+      if (onSuccess) onSuccess();
+      
     } catch (error) {
-      console.error("Error sharing expense via message:", error);
-      toast.error("Failed to share expense");
+      console.error("Error sharing expense:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to share expense");
     } finally {
       setIsSending(false);
     }

@@ -65,6 +65,7 @@ const ExpenseCard = ({ expense, showActions = true, className }: ExpenseCardProp
               isProcessing={isDeleting || isUpdating}
               onStatusChange={() => setIsUpdating(true)}
               onDelete={handleDelete}
+              expense={expense}
             />
           </div>
         </div>

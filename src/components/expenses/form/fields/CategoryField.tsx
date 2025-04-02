@@ -1,107 +1,64 @@
 
-import { useState, useEffect } from 'react';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UseFormReturn } from 'react-hook-form';
-import { ExpenseCategory } from '@/utils/types';
-import { FormValues } from '../schema';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { useExpenseCategories } from '@/hooks/useExpenseCategories';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { useExpenseCategories } from "@/hooks/useExpenseCategories";
+
+const STANDARD_CATEGORIES = [
+  { id: "education", label: "Education" },
+  { id: "medical", label: "Medical" },
+  { id: "clothing", label: "Clothing" },
+  { id: "activities", label: "Activities" },
+  { id: "food", label: "Food" },
+];
 
 interface CategoryFieldProps {
-  form: UseFormReturn<FormValues, any, undefined>;
-  categories: ExpenseCategory[];
+  form: any;
 }
 
-export const CategoryField = ({ form, categories }: CategoryFieldProps) => {
-  const [newCategory, setNewCategory] = useState('');
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const { addCategory, fetchCategories } = useExpenseCategories();
-
-  // Ensure category dropdown shows the latest categories
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
-
-  const handleAddCategory = async () => {
-    if (!newCategory.trim()) return;
-    
-    const result = await addCategory(newCategory);
-    if (result) {
-      // Set the newly added category as the selected value
-      form.setValue('category', result as ExpenseCategory);
-      setNewCategory('');
-      setIsPopoverOpen(false);
-      
-      // Refresh categories to ensure the new one is visible in other components
-      fetchCategories();
-    }
-  };
-
+const CategoryField = ({ form }: CategoryFieldProps) => {
+  const { isLoading, categories = [] } = useExpenseCategories();
+  
+  // Combine standard and custom categories
+  const allCategories = [
+    ...STANDARD_CATEGORIES,
+    ...categories
+      .filter(c => !STANDARD_CATEGORIES.some(sc => sc.id === c.category))
+      .map(c => ({ 
+        id: c.category, 
+        label: c.category.charAt(0).toUpperCase() + c.category.slice(1) 
+      }))
+  ];
+  
   return (
     <FormField
       control={form.control}
       name="category"
       render={({ field }) => (
-        <FormItem className="relative">
+        <FormItem>
           <FormLabel>Category</FormLabel>
-          <div className="flex gap-2">
-            <Select onValueChange={field.onChange} value={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category} className="capitalize">
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="icon" 
-                  className="flex-shrink-0"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span className="sr-only">Add new category</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80">
-                <div className="space-y-2">
-                  <h4 className="font-medium">Add New Category</h4>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Category name"
-                      value={newCategory}
-                      onChange={(e) => setNewCategory(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button 
-                      onClick={handleAddCategory} 
-                      disabled={!newCategory.trim()}
-                      type="button"
-                      size="sm"
-                    >
-                      Add
-                    </Button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
+          <Select 
+            onValueChange={field.onChange} 
+            defaultValue={field.value}
+            value={field.value}
+          >
+            <FormControl>
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              {allCategories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <FormMessage />
         </FormItem>
       )}
     />
   );
 };
+
+export default CategoryField;

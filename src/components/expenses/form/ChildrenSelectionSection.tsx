@@ -33,7 +33,21 @@ const ChildrenSelectionSection = ({ defaultSelectedIds = [] }: ChildrenSelection
   }
   
   if (children.length === 0) {
-    return null; // Don't show the section if there are no children
+    return (
+      <FormField
+        control={form.control}
+        name="childIds"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Related Children</FormLabel>
+            <div className="text-sm text-gray-500 py-2 border border-dashed border-gray-300 rounded-md p-4 text-center">
+              No children added yet. You can add children in the <a href="/user-management" className="text-primary hover:underline">Circle</a> page.
+            </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    );
   }
   
   // If there's only one child, auto-select it
