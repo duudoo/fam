@@ -7,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Calendar, Info, Mail } from 'lucide-react';
 import { useCalendarSync } from '@/hooks/useCalendarSync';
 import ProviderCard from './sync/ProviderCard';
+import { useSearchParams } from 'react-router-dom';
 
 const CalendarSyncSettings = () => {
   const { 
@@ -15,6 +16,17 @@ const CalendarSyncSettings = () => {
     syncCalendar, 
     disconnectProvider 
   } = useCalendarSync();
+  
+  const [searchParams] = useSearchParams();
+  const provider = searchParams.get('provider');
+  const hasError = searchParams.get('error');
+  
+  // Show toast if there's an error in URL params
+  useEffect(() => {
+    if (provider && hasError) {
+      console.error(`Error connecting to ${provider} calendar: ${hasError}`);
+    }
+  }, [provider, hasError]);
   
   return (
     <div className="space-y-6">

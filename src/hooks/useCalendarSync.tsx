@@ -24,6 +24,12 @@ export const useCalendarSync = () => {
     lastSynced: {},
   });
   
+  // Store OAuth tokens when received
+  const [tokens, setTokens] = useState<{
+    google?: string;
+    outlook?: string;
+  }>({});
+  
   // Check for auth callback params in URL when component mounts
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -39,6 +45,14 @@ export const useCalendarSync = () => {
     
     if (provider && accessToken) {
       console.log('Calendar auth callback detected', { provider });
+      
+      // Store the token for later use
+      if (provider === 'google' || provider === 'outlook') {
+        setTokens(prev => ({
+          ...prev,
+          [provider]: accessToken
+        }));
+      }
       
       // Update UI to show connected status
       setSyncStatus(prev => ({
@@ -79,6 +93,7 @@ export const useCalendarSync = () => {
     try {
       setSyncStatus(prev => ({ ...prev, [provider]: 'syncing' }));
       
+      console.log(`Syncing ${provider} calendar with token`, token.substring(0, 5) + '...');
       const { data, error } = await syncExternalCalendar(provider, token, user.id);
       
       if (error) throw error;
@@ -106,23 +121,31 @@ export const useCalendarSync = () => {
     try {
       setSyncStatus(prev => ({ ...prev, [provider]: 'syncing' }));
       
-      // For a real implementation, we would retrieve the stored token
-      // For now, we'll use a simplified approach to trigger sync
-      const dummyToken = `dummy-${provider}-token`;
+      // Use stored token if available
+      const token = tokens[provider];
       
-      await handleSync(provider, dummyToken);
+      if (!token) {
+        throw new Error(`No token available for ${provider}. Please reconnect.`);
+      }
+      
+      await handleSync(provider, token);
     } catch (error) {
       console.error(`Error syncing ${provider} Calendar:`, error);
       setSyncStatus(prev => ({ ...prev, [provider]: 'error' }));
-      toast.error(`Failed to sync ${provider} Calendar`);
+      toast.error(`Failed to sync ${provider} Calendar: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
   
   const disconnectProvider = async (provider: 'google' | 'outlook') => {
     try {
-      // In a real app, we would revoke the access token and remove it from storage
+      // Remove the stored token
+      setTokens(prev => {
+        const newTokens = { ...prev };
+        delete newTokens[provider];
+        return newTokens;
+      });
       
-      // For now, just update the UI
+      // Update UI
       setSyncStatus(prev => ({ ...prev, [provider]: 'disconnected' }));
       toast.success(`Disconnected from ${provider === 'google' ? 'Google' : 'Outlook'} Calendar`);
     } catch (error) {
