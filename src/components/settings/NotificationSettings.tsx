@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Form, 
   FormControl, 
@@ -22,6 +22,8 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const notificationFormSchema = z.object({
   emailNotifications: z.boolean().default(true),
@@ -34,7 +36,9 @@ const notificationFormSchema = z.object({
 type NotificationFormValues = z.infer<typeof notificationFormSchema>;
 
 const NotificationSettings = () => {
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
   
   const form = useForm<NotificationFormValues>({
     resolver: zodResolver(notificationFormSchema),
@@ -47,15 +51,81 @@ const NotificationSettings = () => {
     },
   });
 
+  // Fetch saved preferences when component mounts
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setIsFetching(true);
+        const { data, error } = await supabase
+          .from('notification_preferences')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (error && error.code !== 'PGSQL_ERROR') {
+          console.error('Error fetching notification preferences:', error);
+          return;
+        }
+        
+        if (data) {
+          form.reset({
+            emailNotifications: data.email_notifications,
+            expenseAlerts: data.expense_alerts,
+            eventReminders: data.event_reminders,
+            messageAlerts: data.message_alerts,
+            frequency: data.frequency
+          });
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setIsFetching(false);
+      }
+    };
+    
+    fetchPreferences();
+  }, [user?.id, form]);
+
   const onSubmit = async (data: NotificationFormValues) => {
+    if (!user?.id) {
+      toast.error("You must be signed in to update notification settings");
+      return;
+    }
+    
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const { error } = await supabase
+        .from('notification_preferences')
+        .upsert({
+          user_id: user.id,
+          email_notifications: data.emailNotifications,
+          expense_alerts: data.expenseAlerts,
+          event_reminders: data.eventReminders,
+          message_alerts: data.messageAlerts,
+          frequency: data.frequency
+        });
+      
+      if (error) throw error;
+      
       toast.success("Notification settings updated");
+    } catch (error) {
+      console.error('Error saving notification preferences:', error);
+      toast.error("Failed to update notification settings");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
+
+  if (isFetching) {
+    return (
+      <div className="flex justify-center py-8">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -158,7 +228,7 @@ const NotificationSettings = () => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Notification Frequency</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select notification frequency" />

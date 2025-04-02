@@ -4,13 +4,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import UserSettings from '@/components/settings/UserSettings';
+import FamilyCircleSettings from '@/components/settings/FamilyCircleSettings';
 import CurrencySettings from '@/components/settings/CurrencySettings';
 import ExpenseSettings from '@/components/settings/ExpenseSettings';
 import NotificationSettings from '@/components/settings/NotificationSettings';
 import CalendarSyncSettings from '@/components/calendar/CalendarSyncSettings';
 import { Spinner } from '@/components/ui/spinner';
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
-import { Circle, Calendar } from 'lucide-react';
+import { Circle, Calendar, Settings as SettingsIcon, Bell, DollarSign, Calculator } from 'lucide-react';
 
 const SettingsPage = () => {
   const { user, loading } = useAuth();
@@ -51,12 +52,36 @@ const SettingsPage = () => {
 
         <Tabs defaultValue={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
           <TabsList className="grid grid-cols-2 md:grid-cols-6 gap-2">
-            <TabsTrigger value="user">User Settings</TabsTrigger>
-            <TabsTrigger value="circle">Circle</TabsTrigger>
-            <TabsTrigger value="currency">Currency</TabsTrigger>
-            <TabsTrigger value="expenses">Expenses</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="calendar">Calendar</TabsTrigger>
+            <TabsTrigger value="user" className="flex items-center gap-2">
+              <SettingsIcon className="h-4 w-4" />
+              <span className="hidden md:inline">User</span>
+              <span className="md:hidden">User</span>
+            </TabsTrigger>
+            <TabsTrigger value="circle" className="flex items-center gap-2">
+              <Circle className="h-4 w-4" />
+              <span className="hidden md:inline">Circle</span>
+              <span className="md:hidden">Circle</span>
+            </TabsTrigger>
+            <TabsTrigger value="currency" className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              <span className="hidden md:inline">Currency</span>
+              <span className="md:hidden">Currency</span>
+            </TabsTrigger>
+            <TabsTrigger value="expenses" className="flex items-center gap-2">
+              <Calculator className="h-4 w-4" />
+              <span className="hidden md:inline">Expenses</span>
+              <span className="md:hidden">Expenses</span>
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              <span className="hidden md:inline">Notifications</span>
+              <span className="md:hidden">Notif.</span>
+            </TabsTrigger>
+            <TabsTrigger value="calendar" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              <span className="hidden md:inline">Calendar</span>
+              <span className="md:hidden">Calendar</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="user" className="space-y-4">
@@ -85,11 +110,7 @@ const SettingsPage = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <iframe 
-                  src="/user-management" 
-                  className="w-full min-h-[70vh] border-none" 
-                  title="Circle Management"
-                />
+                <FamilyCircleSettings />
               </CardContent>
             </Card>
           </TabsContent>
