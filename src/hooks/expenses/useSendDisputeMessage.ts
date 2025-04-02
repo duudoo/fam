@@ -58,9 +58,28 @@ export const useSendDisputeMessage = ({ onSuccess }: UseSendDisputeMessageProps 
         conversationId = newConv.id;
       }
       
-      // Send the dispute message
-      const messageText = `I've requested clarification on expense "${expense.description}" for ${expense.amount}:\n\n${disputeNote}`;
+      // Format currency amount for better readability
+      const formattedAmount = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(expense.amount);
       
+      // Create a detailed message with expense information
+      const messageText = `I've requested clarification on expense "${expense.description}" for ${formattedAmount} (${expense.category}) dated ${new Date(expense.date).toLocaleDateString()}:\n\n${disputeNote}`;
+      
+      // Include expense ID in a structured format for potential linking
+      const attachmentData = {
+        type: 'expense_reference',
+        expenseId: expense.id,
+        expenseInfo: {
+          description: expense.description,
+          amount: expense.amount,
+          date: expense.date,
+          category: expense.category
+        }
+      };
+      
+      // Send the dispute message
       const { error: msgError } = await supabase
         .from('messages')
         .insert({
@@ -68,7 +87,8 @@ export const useSendDisputeMessage = ({ onSuccess }: UseSendDisputeMessageProps 
           sender_id: user.id,
           receiver_id: expenseCreatorId,
           text: messageText,
-          status: 'sent'
+          status: 'sent',
+          attachments: [attachmentData]
         });
         
       if (msgError) throw msgError;

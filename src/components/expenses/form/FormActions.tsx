@@ -9,6 +9,7 @@ interface FormActionsProps {
   onCancel: () => void;
   showSaveAndShare?: boolean;
   showSaveAndAddAnother?: boolean;
+  isMobile?: boolean; // Added isMobile prop
 }
 
 const FormActions = ({ 
@@ -18,6 +19,7 @@ const FormActions = ({
   onCancel,
   showSaveAndShare = true,
   showSaveAndAddAnother = true,
+  isMobile = false, // Default to false
 }: FormActionsProps) => {
   const handleSubmit = (action: 'save' | 'saveAndAdd' | 'saveAndShare') => {
     // Set the form action in the hidden input

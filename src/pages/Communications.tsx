@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useMessageSubscription } from "@/hooks/useMessageSubscription";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 const CommunicationsPage = () => {
   const queryClient = useQueryClient();
@@ -35,17 +36,22 @@ const CommunicationsPage = () => {
 
         if (error) throw error;
         
-        return messages.map(msg => ({
-          id: msg.id,
-          senderId: msg.sender_id === user.id ? "user" : "Sarah",
-          text: msg.text,
-          timestamp: new Date(msg.timestamp).toLocaleTimeString([], { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          }),
-          status: msg.status,
-          attachments: msg.attachments
-        }));
+        return messages.map(msg => {
+          // Parse attachments if any
+          const attachments = msg.attachments || [];
+          
+          return {
+            id: msg.id,
+            senderId: msg.sender_id === user.id ? "user" : "Sarah",
+            text: msg.text,
+            timestamp: new Date(msg.timestamp).toLocaleTimeString([], { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            }),
+            status: msg.status,
+            attachments: attachments
+          };
+        });
       } catch (error) {
         console.error('Error fetching messages:', error);
         return [];
@@ -53,6 +59,45 @@ const CommunicationsPage = () => {
     },
     enabled: !!currentReceiverId && !!user
   });
+
+  // Render an expense attachment in the message
+  const renderExpenseAttachment = (attachment: any) => {
+    if (attachment.type === 'expense_reference' && attachment.expenseId) {
+      const { expenseInfo } = attachment;
+      
+      // Format the expense amount
+      const formattedAmount = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(expenseInfo?.amount || 0);
+      
+      // Format the date
+      const formattedDate = expenseInfo?.date ? 
+        new Date(expenseInfo.date).toLocaleDateString() : 
+        'Unknown date';
+      
+      return (
+        <div className="mt-2 p-3 bg-gray-100 rounded-md">
+          <div className="font-semibold mb-1">Expense Reference:</div>
+          <div className="text-sm">
+            <div><span className="font-medium">Description:</span> {expenseInfo?.description || 'N/A'}</div>
+            <div><span className="font-medium">Amount:</span> {formattedAmount}</div>
+            <div><span className="font-medium">Date:</span> {formattedDate}</div>
+            <div><span className="font-medium">Category:</span> {expenseInfo?.category || 'N/A'}</div>
+          </div>
+          <div className="mt-2">
+            <Link 
+              to={`/expenses/${attachment.expenseId}`}
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            >
+              View Expense Details
+            </Link>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
 
   // Send message mutation
   const sendMessageMutation = useMutation({
@@ -112,6 +157,41 @@ const CommunicationsPage = () => {
     }
   };
 
+  // Update the MessageConversation component to render expense attachments
+  const MessageConversationWithAttachments = ({ messages }: { messages: Message[] }) => {
+    return (
+      <div className="space-y-4">
+        {messages.map((message) => (
+          <div 
+            key={message.id} 
+            className={`flex ${message.senderId === "user" ? "justify-end" : "justify-start"}`}
+          >
+            <div 
+              className={`max-w-[70%] p-3 rounded-lg ${
+                message.senderId === "user" 
+                  ? "bg-famacle-blue text-white rounded-tr-none" 
+                  : "bg-gray-200 text-gray-800 rounded-tl-none"
+              }`}
+            >
+              <div className="mb-1">{message.text}</div>
+              
+              {/* Render expense attachments if any */}
+              {message.attachments?.map((attachment, index) => (
+                <div key={index} className={`mt-2 ${message.senderId === "user" ? "text-white" : "text-gray-800"}`}>
+                  {renderExpenseAttachment(attachment)}
+                </div>
+              ))}
+              
+              <div className={`text-xs mt-1 ${message.senderId === "user" ? "text-blue-100" : "text-gray-500"}`}>
+                {message.timestamp}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-famacle-blue-light/30">
       <Navbar />
@@ -134,7 +214,7 @@ const CommunicationsPage = () => {
                   <p>Loading messages...</p>
                 </div>
               ) : (
-                <MessageConversation messages={messages} />
+                <MessageConversationWithAttachments messages={messages} />
               )}
             </div>
             
