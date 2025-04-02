@@ -28,7 +28,10 @@ export const NotificationFormSection = ({
             <FormDescription>{description}</FormDescription>
           </div>
           <FormControl>
-            <Switch checked={field.value} onCheckedChange={field.onChange} />
+            <Switch 
+              checked={Boolean(field.value)} 
+              onCheckedChange={field.onChange} 
+            />
           </FormControl>
         </FormItem>
       )}
