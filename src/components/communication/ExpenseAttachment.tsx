@@ -1,9 +1,6 @@
 
 import { Expense } from "@/utils/types";
-import { useState } from "react";
 import { formatCurrency } from "@/utils/expenseUtils";
-import ExpenseDetailDialog from "@/components/expenses/ExpenseDetailDialog";
-import { useNavigate } from "react-router-dom";
 
 interface ExpenseAttachmentProps {
   attachment: any;

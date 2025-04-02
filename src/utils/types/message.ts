@@ -1,3 +1,4 @@
+
 /**
  * Messaging-related types for the Famacle application
  */
@@ -21,6 +22,7 @@ export type AttachmentType =
   | 'audio'
   | 'video'
   | 'link'
+  | 'expense_reference'
   | 'other';
 
 /**
@@ -28,17 +30,26 @@ export type AttachmentType =
  */
 export type Attachment = {
   /** Unique identifier */
-  id: string;
+  id?: string;
   /** Type of attachment */
   type: AttachmentType;
-  /** URL to the attachment */
-  url: string;
-  /** Filename of the attachment */
-  name: string;
+  /** URL to the attachment if applicable */
+  url?: string;
+  /** Filename of the attachment if applicable */
+  name?: string;
   /** Optional size in bytes */
   size?: number;
   /** Optional URL to a thumbnail image */
   thumbnailUrl?: string;
+  /** For expense references, the expense ID */
+  expenseId?: string;
+  /** For expense references, basic expense info */
+  expenseInfo?: {
+    description: string;
+    amount: number;
+    date: string;
+    category: string;
+  };
 };
 
 /**
