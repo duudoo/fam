@@ -10,7 +10,7 @@ import { FormValues } from "./schema";
 import { SplitMethod } from "@/utils/types";
 
 interface ExpenseDetailsSectionProps {
-  control?: Control<any>;
+  control?: any;
   form?: UseFormReturn<FormValues>;
   categories?: string[];
   splitMethods?: SplitMethod[];

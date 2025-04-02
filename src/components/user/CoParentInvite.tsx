@@ -86,6 +86,9 @@ const CoParentInvite = ({ onSubmit, onCancel, isSubmitting = false }: CoParentIn
                   disabled={submitting}
                 />
               </FormControl>
+              <FormDescription>
+                Your co-parent will receive an email invitation to join Famacle
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

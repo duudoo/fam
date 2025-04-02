@@ -11,13 +11,14 @@ import {
   FormField, 
   FormItem, 
   FormLabel, 
-  FormMessage 
+  FormMessage,
+  FormDescription
 } from "@/components/ui/form";
 import { Child } from "@/utils/types";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-// Define the form schema with zod
+// Define the form schema with zod - emphasizing initials as primary identifier
 const formSchema = z.object({
   initials: z.string()
     .min(1, "Initials are required")
@@ -100,6 +101,9 @@ const ChildForm = ({
                   disabled={submitting}
                 />
               </FormControl>
+              <FormDescription>
+                Child will be identified by these initials throughout the app
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

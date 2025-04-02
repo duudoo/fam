@@ -116,12 +116,28 @@ export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) =
             {isMobile ? (
               // Mobile view with cards
               displayedExpenses.map((expense) => (
-                <ExpenseCard 
+                <div 
                   key={expense.id} 
-                  expense={expense}
-                  // We need to adapt to the existing ExpenseCard props here
-                  currencySymbol={currency.symbol}
-                />
+                  className="p-4 border rounded-lg bg-white shadow-sm cursor-pointer hover:border-primary"
+                  onClick={() => handleViewExpense(expense.id)}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="font-medium truncate pr-2">{expense.description}</div>
+                    <div className="flex items-center">
+                      {getStatusIcon(expense.status)}
+                      <span className="ml-1 text-xs">{expense.status}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="text-lg font-semibold mb-2">
+                    {formatCurrency(expense.amount, currency.symbol)}
+                  </div>
+                  
+                  <div className="flex justify-between items-center text-sm text-gray-500">
+                    <div>{new Date(expense.date).toLocaleDateString()}</div>
+                    <div className="capitalize">{expense.category}</div>
+                  </div>
+                </div>
               ))
             ) : (
               // Desktop view with table

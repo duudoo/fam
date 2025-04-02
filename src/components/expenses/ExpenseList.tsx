@@ -16,6 +16,7 @@ import CategoryBadge from "./CategoryBadge";
 import ExpenseTableRow from "./ExpenseTableRow";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigate } from "react-router-dom";
 
 interface ExpenseListProps {
   expenses: Expense[] | undefined;
@@ -26,6 +27,7 @@ interface ExpenseListProps {
 const ExpenseList = ({ expenses = [], filteredStatus, onAddNewClick }: ExpenseListProps) => {
   const { currency } = useCurrency();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   
   // Safely handle undefined expenses by providing a default empty array
   // Filter expenses by status if provided
@@ -54,6 +56,10 @@ const ExpenseList = ({ expenses = [], filteredStatus, onAddNewClick }: ExpenseLi
       </div>
     );
   }
+
+  const handleViewExpense = (id: string) => {
+    navigate(`/expenses/${id}`);
+  };
 
   if (isMobile) {
     return (
@@ -89,9 +95,7 @@ const ExpenseList = ({ expenses = [], filteredStatus, onAddNewClick }: ExpenseLi
                 variant="outline" 
                 size="sm" 
                 className="text-xs"
-                onClick={() => {
-                  // View expense details action
-                }}
+                onClick={() => handleViewExpense(expense.id)}
               >
                 View
               </Button>
