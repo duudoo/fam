@@ -105,6 +105,7 @@ const ExpenseTableRow = ({ expense, currency }: ExpenseTableRowProps) => {
               currentStatus={expense.status}
               isProcessing={isDeleting || isUpdating}
               onStatusChange={() => setIsUpdating(true)}
+              onDelete={handleDelete}
               expense={expense}
             />
           </div>
