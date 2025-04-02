@@ -249,6 +249,42 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          email_notifications: boolean
+          event_reminders: boolean
+          expense_alerts: boolean
+          frequency: string
+          id: string
+          message_alerts: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_notifications?: boolean
+          event_reminders?: boolean
+          expense_alerts?: boolean
+          frequency?: string
+          id?: string
+          message_alerts?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_notifications?: boolean
+          event_reminders?: boolean
+          expense_alerts?: boolean
+          frequency?: string
+          id?: string
+          message_alerts?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
