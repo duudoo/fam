@@ -21,7 +21,7 @@ const CalendarHeader = ({ date, view, handleDateChange, toggleView }: CalendarHe
         toggleView={toggleView}
       />
       
-      <Link to="/settings?tab=calendar" className="mt-4 sm:mt-0">
+      <Link to="/settings?tab=calendar" className="mt-4 sm:mt-0 sm:ml-4">
         <Button variant="outline" size="sm" className="text-famacle-slate flex items-center gap-1 whitespace-nowrap">
           <LinkIcon size={14} />
           Sync Calendars
