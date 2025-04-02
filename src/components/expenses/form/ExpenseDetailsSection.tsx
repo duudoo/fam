@@ -5,13 +5,27 @@ import { DescriptionField } from "./fields/DescriptionField";
 import { AmountField } from "./fields/AmountField";
 import CategoryField from "./fields/CategoryField";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { Control } from "react-hook-form";
+import { Control, UseFormReturn } from "react-hook-form";
+import { FormValues } from "./schema";
+import { SplitMethod } from "@/utils/types";
 
 interface ExpenseDetailsSectionProps {
-  control: Control<any>;
+  control?: Control<any>;
+  form?: UseFormReturn<FormValues>;
+  categories?: string[];
+  splitMethods?: SplitMethod[];
+  onSplitMethodChange?: (method: SplitMethod) => void;
+  isMobile?: boolean;
 }
 
-const ExpenseDetailsSection = ({ control }: ExpenseDetailsSectionProps) => {
+const ExpenseDetailsSection = ({ 
+  control, 
+  form,
+  categories = [],
+  splitMethods = [],
+  onSplitMethodChange,
+  isMobile = false
+}: ExpenseDetailsSectionProps) => {
   const { currency } = useCurrency();
   
   return (

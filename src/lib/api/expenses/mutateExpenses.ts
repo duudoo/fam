@@ -49,6 +49,9 @@ export const createExpense = async (userId: string, newExpense: Omit<Expense, 'i
   // If it's a disputed expense, record the dispute in the status history
   if (newExpense.status === 'disputed' && newExpense.disputeNotes) {
     await recordStatusChange(data.id, 'disputed', userId, newExpense.disputeNotes);
+  } else {
+    // Record the initial status
+    await recordStatusChange(data.id, newExpense.status || 'pending', userId, 'Expense created');
   }
   
   return data;
@@ -59,7 +62,8 @@ export const createExpense = async (userId: string, newExpense: Omit<Expense, 'i
  */
 export const updateExpense = async (
   expenseId: string, 
-  updates: Partial<Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>>
+  updates: Partial<Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>>,
+  userId: string = "system"
 ) => {
   // Transform from our app's model to the database model
   const dbUpdates: Record<string, any> = {};
@@ -115,9 +119,18 @@ export const updateExpense = async (
     }
   }
   
-  // If it's a status change and has dispute notes, record it in history
-  if (updates.status === 'disputed' && updates.disputeNotes) {
-    await recordStatusChange(expenseId, 'disputed', "system", updates.disputeNotes);
+  // Record status change in audit trail if status is updated
+  if (updates.status) {
+    let note = updates.disputeNotes || '';
+    if (updates.status === 'disputed' && !note) {
+      note = 'Expense disputed';
+    } else if (updates.status === 'approved') {
+      note = 'Expense approved';
+    } else if (updates.status === 'paid') {
+      note = 'Expense marked as paid';
+    }
+    
+    await recordStatusChange(expenseId, updates.status, userId, note);
   }
   
   return data;
@@ -126,8 +139,16 @@ export const updateExpense = async (
 /**
  * Delete an expense
  */
-export const deleteExpense = async (expenseId: string) => {
+export const deleteExpense = async (expenseId: string, userId: string = "system") => {
   console.log("Deleting expense:", expenseId);
+
+  try {
+    // Record deletion in audit trail
+    await recordStatusChange(expenseId, 'deleted' as any, userId, 'Expense deleted');
+  } catch (error) {
+    console.error("Error recording expense deletion:", error);
+    // Continue with deletion even if recording fails
+  }
 
   // First, delete any child relationships
   const { error: childRelError } = await supabase

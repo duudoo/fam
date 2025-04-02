@@ -37,9 +37,9 @@ export const useChildManagement = (
   };
 
   const handleAddChildClick = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const isAuthenticated = await checkAuth();
     
-    if (!session) {
+    if (!isAuthenticated) {
       toast.error("You must be signed in to add children");
       navigate("/signin");
       return;
@@ -52,12 +52,16 @@ export const useChildManagement = (
     try {
       setSubmitting(true);
       
-      // Get the current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      // Verify authentication again
+      const isAuthenticated = await checkAuth();
+      if (!isAuthenticated) {
+        toast.error("Authentication failed. Please sign in again.");
+        navigate("/signin");
+        return;
+      }
       
-      if (userError || !user) {
-        console.error('Error getting user:', userError);
-        toast.error("Authentication error. Please sign in again.");
+      if (!user) {
+        toast.error("User information not available. Please sign in again.");
         navigate("/signin");
         return;
       }
@@ -117,7 +121,12 @@ export const useChildManagement = (
         }
         
         // Try to clean up the orphaned child record
-        await supabase.from('children').delete().eq('id', newChild.id);
+        try {
+          await supabase.from('children').delete().eq('id', newChild.id);
+        } catch (cleanupError) {
+          console.error('Error cleaning up orphaned child record:', cleanupError);
+        }
+        
         return;
       }
 

@@ -15,6 +15,7 @@ export const useExpenseMutations = (userId: string | undefined) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      toast.success("Expense created successfully");
     },
     onError: (error) => {
       console.error("Error creating expense:", error);
@@ -32,10 +33,16 @@ export const useExpenseMutations = (userId: string | undefined) => {
       updates: Partial<Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>> 
     }) => {
       if (!userId) throw new Error("User not authenticated");
-      return await expensesAPI.updateExpense(id, updates);
+      return await expensesAPI.updateExpense(id, updates, userId);
     },
-    onSuccess: () => {
+    onSuccess: (updatedExpense) => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      toast.success("Expense updated successfully");
+      
+      // If expense status was updated to "disputed", show a different toast
+      if (updatedExpense.status === 'disputed') {
+        toast.info("Expense marked for clarification");
+      }
     },
     onError: (error) => {
       console.error("Error updating expense:", error);
@@ -47,7 +54,7 @@ export const useExpenseMutations = (userId: string | undefined) => {
   const deleteExpense = useMutation({
     mutationFn: async (id: string) => {
       if (!userId) throw new Error("User not authenticated");
-      return await expensesAPI.deleteExpense(id);
+      return await expensesAPI.deleteExpense(id, userId);
     },
     onSuccess: (deletedId) => {
       // Make sure to update the cache to remove the deleted expense
@@ -66,11 +73,42 @@ export const useExpenseMutations = (userId: string | undefined) => {
       toast.error("Failed to delete expense");
     }
   });
+  
+  // Update expense status
+  const updateExpenseStatus = useMutation({
+    mutationFn: async ({ 
+      id, 
+      status, 
+      note 
+    }: { 
+      id: string, 
+      status: ExpenseStatus, 
+      note?: string 
+    }) => {
+      if (!userId) throw new Error("User not authenticated");
+      return await expensesAPI.updateExpenseStatus(id, status, userId, note);
+    },
+    onSuccess: ({ status }) => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      
+      let message = "Expense status updated";
+      if (status === 'approved') message = "Expense approved";
+      if (status === 'disputed') message = "Expense sent for clarification";
+      if (status === 'paid') message = "Expense marked as paid";
+      
+      toast.success(message);
+    },
+    onError: (error) => {
+      console.error("Error updating expense status:", error);
+      toast.error("Failed to update expense status");
+    }
+  });
 
   return {
     createExpense,
     updateExpense,
     deleteExpense,
-    isPending: createExpense.isPending || updateExpense.isPending || deleteExpense.isPending
+    updateExpenseStatus,
+    isPending: createExpense.isPending || updateExpense.isPending || deleteExpense.isPending || updateExpenseStatus.isPending
   };
 };

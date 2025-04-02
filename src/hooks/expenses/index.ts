@@ -5,3 +5,4 @@ export * from './useExpenseFilters';
 export * from './useExpenseSubscription';
 export * from './useExpenses';
 export * from './useShareExpense';
+export * from './useExpenseAuditTrail';
