@@ -17,7 +17,7 @@ const DashboardHeader = () => {
           </Link>
         </Button>
         <Button asChild variant="outline" className="flex-1 sm:flex-auto">
-          <Link to="/calendar">
+          <Link to="/calendar?newEvent=true">
             <Calendar className="w-4 h-4 mr-2" />
             Schedule Event
           </Link>
