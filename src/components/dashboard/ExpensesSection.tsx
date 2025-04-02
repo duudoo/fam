@@ -42,7 +42,7 @@ export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) =
   };
 
   const handleAddExpense = () => {
-    navigate("/expenses/new");
+    navigate("/expenses?newExpense=true");
   };
 
   const handleViewExpense = (id: string) => {

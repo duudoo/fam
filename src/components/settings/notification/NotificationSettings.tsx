@@ -2,7 +2,7 @@
 import { NotificationForm } from "./NotificationForm";
 
 const NotificationSettings = () => {
-  return <NotificationForm />;
+  return <NotificationForm isLoading={false} />;
 };
 
 export default NotificationSettings;
