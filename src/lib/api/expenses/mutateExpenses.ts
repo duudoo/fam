@@ -76,6 +76,8 @@ export const updateExpense = async (
   if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
   if (updates.disputeNotes !== undefined) dbUpdates.dispute_notes = updates.disputeNotes;
 
+  console.log("Updating expense with payload:", { expenseId, dbUpdates });
+
   const { data, error } = await supabase
     .from('expenses')
     .update(dbUpdates)
@@ -84,6 +86,7 @@ export const updateExpense = async (
     .single();
 
   if (error) {
+    console.error("Error updating expense in Supabase:", error);
     throw error;
   }
   
@@ -124,15 +127,30 @@ export const updateExpense = async (
  * Delete an expense
  */
 export const deleteExpense = async (expenseId: string) => {
+  console.log("Deleting expense:", expenseId);
+
+  // First, delete any child relationships
+  const { error: childRelError } = await supabase
+    .from('expense_children')
+    .delete()
+    .eq('expense_id', expenseId);
+
+  if (childRelError) {
+    console.error("Error deleting expense child relationships:", childRelError);
+  }
+  
+  // Then delete the expense
   const { error } = await supabase
     .from('expenses')
     .delete()
     .eq('id', expenseId);
 
   if (error) {
+    console.error("Error deleting expense:", error);
     throw error;
   }
   
+  // Return the ID of the deleted expense for cache updates
   return expenseId;
 };
 

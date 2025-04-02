@@ -83,19 +83,26 @@ const handleExpenseUpdate = async (
 ) => {
   console.log("Updating expense:", expenseId);
   
+  // Make sure to include the split method and percentage/amounts in updates
+  const updates = {
+    description: values.description,
+    amount: parseFloat(values.amount),
+    date: format(values.date, 'yyyy-MM-dd'),
+    category: values.category,
+    splitMethod: values.splitMethod,
+    splitPercentage: values.splitPercentage,
+    splitAmounts: values.splitAmounts,
+    notes: values.notes || undefined,
+    receiptUrl: receiptUrl || undefined,
+    childIds: values.childIds
+  };
+  
+  console.log("Update payload:", updates);
+  
+  // Call the mutateAsync method with the update payload
   return await updateExpense.mutateAsync({
     id: expenseId,
-    updates: {
-      description: values.description,
-      amount: parseFloat(values.amount),
-      date: format(values.date, 'yyyy-MM-dd'),
-      category: values.category,
-      splitMethod: values.splitMethod,
-      splitPercentage: values.splitPercentage,
-      notes: values.notes || undefined,
-      receiptUrl: receiptUrl || undefined,
-      childIds: values.childIds
-    }
+    updates: updates
   });
 };
 
@@ -109,7 +116,8 @@ const handleExpenseCreation = async (
 ) => {
   console.log("Creating new expense with values:", values);
   
-  const newExpense = await createExpense.mutateAsync({
+  // Ensure we're properly including the split information based on the splitMethod
+  const newExpenseData = {
     description: values.description,
     amount: parseFloat(values.amount),
     date: format(values.date, 'yyyy-MM-dd'),
@@ -117,11 +125,16 @@ const handleExpenseCreation = async (
     status: 'pending',
     splitMethod: values.splitMethod,
     splitPercentage: values.splitMethod === 'custom' ? values.splitPercentage : undefined,
+    splitAmounts: values.splitMethod === 'custom' ? values.splitAmounts : undefined,
     notes: values.notes || undefined,
     receiptUrl: receiptUrl || undefined,
     paidBy: user.id,
     childIds: values.childIds
-  });
+  };
+  
+  console.log("Create expense payload:", newExpenseData);
+  
+  const newExpense = await createExpense.mutateAsync(newExpenseData);
   
   if (newExpense) {
     const { data: expenseData, error: expenseError } = await supabase

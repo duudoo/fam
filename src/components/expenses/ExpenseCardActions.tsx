@@ -14,6 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface ExpenseCardActionsProps {
   expense: Expense;
@@ -22,11 +23,21 @@ interface ExpenseCardActionsProps {
 
 const ExpenseCardActions = ({ expense, onEdit }: ExpenseCardActionsProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { deleteExpense } = useExpenseMutations(expense.paidBy);
 
-  const handleDelete = () => {
-    deleteExpense.mutate(expense.id);
-    setShowDeleteDialog(false);
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await deleteExpense.mutateAsync(expense.id);
+      setShowDeleteDialog(false);
+      toast.success(`Expense "${expense.description}" deleted successfully`);
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      toast.error("Failed to delete expense");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -36,9 +47,15 @@ const ExpenseCardActions = ({ expense, onEdit }: ExpenseCardActionsProps) => {
           <Edit2 className="h-3.5 w-3.5 mr-1" />
           Edit
         </Button>
-        <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700" onClick={() => setShowDeleteDialog(true)}>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="text-red-600 hover:text-red-700" 
+          onClick={() => setShowDeleteDialog(true)}
+          disabled={isDeleting}
+        >
           <Trash2 className="h-3.5 w-3.5 mr-1" />
-          Delete
+          {isDeleting ? "Deleting..." : "Delete"}
         </Button>
       </div>
 
@@ -51,9 +68,13 @@ const ExpenseCardActions = ({ expense, onEdit }: ExpenseCardActionsProps) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
-              Delete
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete} 
+              className="bg-red-600 hover:bg-red-700"
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

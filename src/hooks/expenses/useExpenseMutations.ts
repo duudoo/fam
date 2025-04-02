@@ -14,7 +14,6 @@ export const useExpenseMutations = (userId: string | undefined) => {
       return await expensesAPI.createExpense(userId, newExpense);
     },
     onSuccess: () => {
-      // Removed toast.success("Expense created successfully") to avoid duplicate notifications
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
     },
     onError: (error) => {
@@ -36,7 +35,6 @@ export const useExpenseMutations = (userId: string | undefined) => {
       return await expensesAPI.updateExpense(id, updates);
     },
     onSuccess: () => {
-      // Removed toast.success("Expense updated successfully") to avoid duplicate notifications
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
     },
     onError: (error) => {
@@ -51,9 +49,17 @@ export const useExpenseMutations = (userId: string | undefined) => {
       if (!userId) throw new Error("User not authenticated");
       return await expensesAPI.deleteExpense(id);
     },
-    onSuccess: () => {
-      toast.success("Expense deleted successfully");
+    onSuccess: (deletedId) => {
+      // Make sure to update the cache to remove the deleted expense
+      queryClient.setQueryData(['expenses'], (oldData: Expense[] | undefined) => {
+        if (!oldData) return [];
+        return oldData.filter(expense => expense.id !== deletedId);
+      });
+      
+      // Also invalidate the expenses query to refetch fresh data
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      
+      toast.success("Expense deleted successfully");
     },
     onError: (error) => {
       console.error("Error deleting expense:", error);
