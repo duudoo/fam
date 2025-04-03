@@ -39,25 +39,25 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
       console.log("Sending invitation to:", email, "from user:", currentUser.id);
       
       // Check if invitation already exists
-      const checkResult = await supabase
+      const { data: existingInvites, error: checkError } = await supabase
         .from('co_parent_invites')
-        .select()
+        .select('*')
         .eq('email', email)
         .eq('invited_by', currentUser.id);
       
-      if (checkResult.error) {
-        console.error("Error checking existing invites:", checkResult.error);
-        toast.error(`Error checking invites: ${checkResult.error.message}`);
+      if (checkError) {
+        console.error("Error checking existing invites:", checkError);
+        toast.error(`Error checking invites: ${checkError.message}`);
         return;
       }
       
-      if (checkResult.data && checkResult.data.length > 0) {
+      if (existingInvites && existingInvites.length > 0) {
         toast.error("You have already invited this email address");
         return;
       }
 
       // Create the invitation
-      const inviteResult = await supabase
+      const { data: newInvite, error: inviteError } = await supabase
         .from('co_parent_invites')
         .insert({
           email: email,
@@ -67,19 +67,19 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
         })
         .select();
 
-      if (inviteResult.error) {
-        console.error("Error creating invitation:", inviteResult.error);
-        toast.error(`Failed to create invitation: ${inviteResult.error.message}`);
+      if (inviteError) {
+        console.error("Error creating invitation:", inviteError);
+        toast.error(`Failed to create invitation: ${inviteError.message}`);
         return;
       }
 
-      if (!inviteResult.data || inviteResult.data.length === 0) {
+      if (!newInvite || newInvite.length === 0) {
         console.error("No data returned from invitation insert");
         toast.error("Failed to create invitation record");
         return;
       }
 
-      const invite = inviteResult.data[0];
+      const invite = newInvite[0];
       console.log("Invitation created:", invite);
       
       // Close the form and show success message

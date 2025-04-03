@@ -38,6 +38,7 @@ export const useFamilyCircle = () => {
       setLoading(true);
       console.log("Fetching invites for user:", user.id);
       
+      // Query co_parent_invites where the current user is the inviter
       const { data, error } = await supabase
         .from('co_parent_invites')
         .select('*')
