@@ -10,11 +10,15 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Drawer } from "@/components/ui/drawer";
 import EventDialogContent from '@/components/calendar/EventDialogContent';
 import { FormValues } from '@/components/calendar/form/EventFormSchema';
+import { useIsMobile } from '@/hooks/use-mobile';
+import EventManager from '@/components/calendar/EventManager';
 
 const UpcomingEventsCard = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { createEvent, isPending, events = [], isLoading } = useCalendarEvents();
   
@@ -170,22 +174,34 @@ const UpcomingEventsCard = () => {
         </Button>
       </CardFooter>
 
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="sm:max-w-[550px]">
-          <DialogHeader>
-            <DialogTitle>Create New Event</DialogTitle>
-            <DialogDescription>
-              Fill in the details below to add a new event to your calendar.
-            </DialogDescription>
-          </DialogHeader>
+      {isMobile ? (
+        <Drawer open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <EventDialogContent 
             isEditing={false}
             onSubmit={handleCreateEvent}
             onCancel={() => setIsCreateDialogOpen(false)}
             isPending={isPending}
+            inDrawer={true}
           />
-        </DialogContent>
-      </Dialog>
+        </Drawer>
+      ) : (
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogContent className="sm:max-w-[550px]">
+            <DialogHeader>
+              <DialogTitle>Create New Event</DialogTitle>
+              <DialogDescription>
+                Fill in the details below to add a new event to your calendar.
+              </DialogDescription>
+            </DialogHeader>
+            <EventDialogContent 
+              isEditing={false}
+              onSubmit={handleCreateEvent}
+              onCancel={() => setIsCreateDialogOpen(false)}
+              isPending={isPending}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </Card>
   );
 };
