@@ -1,5 +1,4 @@
 
-import { Currency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/utils/expenseUtils";
 
 interface CategoryProgressBarProps {
@@ -7,7 +6,7 @@ interface CategoryProgressBarProps {
   amount: number;
   percentage: number;
   color: string;
-  currency: Currency;
+  currency: string;
   compact?: boolean;
 }
 
@@ -23,7 +22,7 @@ const CategoryProgressBar = ({
     <div>
       <div className="flex justify-between text-sm mb-1">
         <span className="capitalize">{name}</span>
-        <span className="font-medium">{formatCurrency(amount, currency.symbol)}</span>
+        <span className="font-medium">{formatCurrency(amount, currency)}</span>
       </div>
       <div className={`h-${compact ? '1.5' : '2'} bg-gray-200 rounded-full overflow-hidden`}>
         <div

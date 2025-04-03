@@ -42,7 +42,7 @@ const MonthlySummary = () => {
                     amount={category.amount}
                     percentage={category.percentage}
                     color={category.color}
-                    currency={currency}
+                    currency={currency.symbol}
                   />
                 ))}
               </div>
@@ -78,7 +78,7 @@ const MonthlySummary = () => {
                             amount={category.amount}
                             percentage={category.percentage}
                             color={category.color}
-                            currency={currency}
+                            currency={currency.symbol}
                             compact
                           />
                         ))}
@@ -119,7 +119,7 @@ const MonthlySummary = () => {
                           <span className="font-medium">{child.name || child.initials}</span>
                         </div>
                         <div className="text-sm font-medium">
-                          {currency}{childAmount.toFixed(2)} ({percentage.toFixed(1)}%)
+                          {currency.symbol}{childAmount.toFixed(2)} ({percentage.toFixed(1)}%)
                         </div>
                       </div>
                       <div className="w-full bg-gray-100 rounded-full h-2.5">
@@ -135,7 +135,7 @@ const MonthlySummary = () => {
                 <div className="mt-6 pt-4 border-t border-gray-200">
                   <div className="flex justify-between items-center">
                     <span className="font-semibold">Total Expenses</span>
-                    <span className="font-semibold">{currency}{totalExpenses.toFixed(2)}</span>
+                    <span className="font-semibold">{currency.symbol}{totalExpenses.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
