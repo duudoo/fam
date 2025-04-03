@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge";
 interface ConversationHeaderProps {
   recipient: string;
   status?: string;
+  email?: string;
 }
 
-export const ConversationHeader = ({ recipient, status }: ConversationHeaderProps) => {
+export const ConversationHeader = ({ recipient, status, email }: ConversationHeaderProps) => {
   return (
     <>
       <div className="flex items-center gap-3 mb-6">

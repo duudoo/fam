@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +12,11 @@ export const useCommunications = (initialReceiverId: string = "") => {
   const [currentReceiverId, setCurrentReceiverId] = useState<string | null>(initialReceiverId);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const [coParentInfo, setCoParentInfo] = useState<{ name: string, status: string }>({ 
+  const [coParentInfo, setCoParentInfo] = useState<{ 
+    name: string, 
+    status: string,
+    email?: string
+  }>({ 
     name: "Invited Co-Parent", 
     status: "pending" 
   });
@@ -41,9 +44,31 @@ export const useCommunications = (initialReceiverId: string = "") => {
       }
       
       if (invites && invites.length > 0) {
+        const invite = invites[0];
+        
+        if (invite.status === 'accepted') {
+          const { data: profiles, error: profileError } = await supabase
+            .from('profiles')
+            .select('first_name, full_name')
+            .eq('email', invite.email)
+            .limit(1);
+            
+          if (!profileError && profiles && profiles.length > 0) {
+            const displayName = profiles[0].first_name || profiles[0].full_name || invite.email;
+            
+            setCoParentInfo({
+              name: displayName,
+              status: invite.status,
+              email: invite.email
+            });
+            return;
+          }
+        }
+        
         setCoParentInfo({
-          name: invites[0].email,
-          status: invites[0].status
+          name: invite.email,
+          status: invite.status,
+          email: invite.email
         });
       }
     } catch (error) {
@@ -70,7 +95,6 @@ export const useCommunications = (initialReceiverId: string = "") => {
         if (error) throw error;
         
         return messages.map(msg => {
-          // Parse attachments if any
           const attachments = msg.attachments || [];
           
           return {
@@ -111,7 +135,6 @@ export const useCommunications = (initialReceiverId: string = "") => {
       }
       
       if (data) {
-        // Transform the data to match the Expense type
         const expense: Expense = {
           id: data.id,
           description: data.description,
@@ -178,7 +201,6 @@ export const useCommunications = (initialReceiverId: string = "") => {
     try {
       await sendMessageMutation.mutateAsync(newMsg);
       
-      // Optimistically add message to UI
       queryClient.setQueryData(['messages', currentReceiverId], (oldData: Message[] = []) => {
         return [
           ...oldData,

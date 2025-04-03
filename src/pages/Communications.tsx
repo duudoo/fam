@@ -46,6 +46,7 @@ const CommunicationsPage = () => {
           <ConversationHeader 
             recipient={coParentInfo.name} 
             status={coParentInfo.status}
+            email={coParentInfo.email}
           />
 
           <div className="flex flex-col h-[600px]">
