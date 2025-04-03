@@ -32,11 +32,13 @@ const LinkTab = ({ expenseLink, onClose }: LinkTabProps) => {
           value={expenseLink} 
           readOnly 
           className="flex-1"
+          onClick={(e) => (e.target as HTMLInputElement).select()}
         />
         <Button 
           variant="outline" 
           size="icon" 
           onClick={copyToClipboard}
+          aria-label="Copy link"
         >
           {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
         </Button>

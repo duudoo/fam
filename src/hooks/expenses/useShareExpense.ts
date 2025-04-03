@@ -38,7 +38,10 @@ export const useShareExpense = ({
         .in('child_id', expense.childIds || [])
         .neq('parent_id', user.id);
         
-      if (parentsError) throw parentsError;
+      if (parentsError) {
+        console.error("Error fetching child parents:", parentsError);
+        throw new Error("Failed to find co-parents");
+      }
       
       if (childParents.length === 0) {
         throw new Error("No co-parents found for the selected children");
@@ -56,7 +59,10 @@ export const useShareExpense = ({
           .contains('participants', [user.id, coParentId])
           .limit(1);
           
-        if (convError) throw convError;
+        if (convError) {
+          console.error("Error fetching conversations:", convError);
+          throw convError;
+        }
         
         let conversationId;
         
@@ -72,7 +78,11 @@ export const useShareExpense = ({
             .select('id')
             .single();
             
-          if (newConvError) throw newConvError;
+          if (newConvError) {
+            console.error("Error creating new conversation:", newConvError);
+            throw newConvError;
+          }
+          
           conversationId = newConv.id;
         }
         
@@ -89,7 +99,10 @@ export const useShareExpense = ({
             status: 'sent'
           });
           
-        if (msgError) throw msgError;
+        if (msgError) {
+          console.error("Error sending message:", msgError);
+          throw msgError;
+        }
       }
       
       toast.success("Expense shared successfully");

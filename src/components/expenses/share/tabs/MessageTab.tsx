@@ -17,11 +17,23 @@ const MessageTab = ({ expense, expenseLink, onClose }: MessageTabProps) => {
   const { isSending, shareViaMessage } = useShareExpense({
     expense,
     expenseLink,
-    onSuccess: onClose
+    onSuccess: () => {
+      setMessage("");
+      onClose();
+    }
   });
   
-  const handleShareViaMessage = () => {
-    shareViaMessage(message);
+  const handleShareViaMessage = async () => {
+    if (!expense) {
+      console.error("No expense to share");
+      return;
+    }
+    
+    try {
+      await shareViaMessage(message);
+    } catch (error) {
+      console.error("Error sharing expense via message:", error);
+    }
   };
   
   return (
