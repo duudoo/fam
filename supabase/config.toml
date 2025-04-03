@@ -61,7 +61,6 @@ backend = "postgres"
 [functions]
 enabled = true
 
-# Use pnpm as the package manager for Edge Functions
+# Specify the package manager for Edge Functions
 [functions.package_manager]
 pnpm = true
-
