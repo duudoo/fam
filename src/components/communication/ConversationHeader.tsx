@@ -4,17 +4,26 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Info } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface ConversationHeaderProps {
   recipient: string;
+  status?: string;
 }
 
-export const ConversationHeader = ({ recipient }: ConversationHeaderProps) => {
+export const ConversationHeader = ({ recipient, status }: ConversationHeaderProps) => {
   return (
     <>
       <div className="flex items-center gap-3 mb-6">
         <MessageCircle className="h-6 w-6 text-famacle-blue" />
-        <h2 className="text-2xl font-semibold">{recipient}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-semibold">{recipient}</h2>
+          {status && (
+            <Badge variant={status === "accepted" ? "success" : status === "pending" ? "outline" : "destructive"} className="text-xs">
+              {status.charAt(0).toUpperCase() + status.slice(1)}
+            </Badge>
+          )}
+        </div>
       </div>
       
       <Sheet>

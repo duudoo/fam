@@ -18,7 +18,8 @@ const CommunicationsPage = () => {
     detailDialogOpen, 
     setDetailDialogOpen, 
     handleExpenseClick, 
-    handleSendMessage 
+    handleSendMessage,
+    coParentInfo
   } = useCommunications();
 
   // Go to expense detail page
@@ -42,7 +43,10 @@ const CommunicationsPage = () => {
         </header>
         
         <Card className="p-6 shadow-lg border border-gray-100 relative">
-          <ConversationHeader recipient="Sarah Johnson" />
+          <ConversationHeader 
+            recipient={coParentInfo.name} 
+            status={coParentInfo.status}
+          />
 
           <div className="flex flex-col h-[600px]">
             <div className="flex-1 overflow-y-auto mb-4 pr-2">

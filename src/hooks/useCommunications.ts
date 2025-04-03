@@ -1,18 +1,55 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Message, Expense } from "@/utils/types";
+import { Message, Expense, CoParentInvite } from "@/utils/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useMessageSubscription } from "@/hooks/useMessageSubscription";
 import { toast } from "sonner";
 
-export const useCommunications = (initialReceiverId: string = "Sarah") => {
+export const useCommunications = (initialReceiverId: string = "") => {
   const queryClient = useQueryClient();
   const { user, loading: authLoading } = useAuth();
   const [currentReceiverId, setCurrentReceiverId] = useState<string | null>(initialReceiverId);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [coParentInfo, setCoParentInfo] = useState<{ name: string, status: string }>({ 
+    name: "Invited Co-Parent", 
+    status: "pending" 
+  });
+  
+  // Fetch co-parent invites when user changes
+  useEffect(() => {
+    if (user) {
+      fetchCoParentInfo();
+    }
+  }, [user]);
+
+  const fetchCoParentInfo = async () => {
+    try {
+      if (!user) return;
+      
+      const { data: invites, error } = await supabase
+        .from('co_parent_invites')
+        .select('email, status')
+        .eq('invited_by', user.id)
+        .limit(1);
+        
+      if (error) {
+        console.error('Error fetching co-parent invites:', error);
+        return;
+      }
+      
+      if (invites && invites.length > 0) {
+        setCoParentInfo({
+          name: invites[0].email,
+          status: invites[0].status
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching co-parent info:', error);
+    }
+  };
   
   // Use the message subscription hook for real-time updates
   useMessageSubscription(user?.id, currentReceiverId);
@@ -21,7 +58,7 @@ export const useCommunications = (initialReceiverId: string = "Sarah") => {
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ['messages', currentReceiverId],
     queryFn: async () => {
-      if (!currentReceiverId || !user) return [];
+      if (!user) return [];
       
       try {
         const { data: messages, error } = await supabase
@@ -38,7 +75,7 @@ export const useCommunications = (initialReceiverId: string = "Sarah") => {
           
           return {
             id: msg.id,
-            senderId: msg.sender_id === user.id ? "user" : "Sarah",
+            senderId: msg.sender_id === user.id ? "user" : "coparent",
             text: msg.text,
             timestamp: new Date(msg.timestamp).toLocaleTimeString([], { 
               hour: '2-digit', 
@@ -53,7 +90,7 @@ export const useCommunications = (initialReceiverId: string = "Sarah") => {
         return [];
       }
     },
-    enabled: !!currentReceiverId && !!user
+    enabled: !!user
   });
 
   // Fetch expense details when an expense is selected
@@ -170,6 +207,7 @@ export const useCommunications = (initialReceiverId: string = "Sarah") => {
     setDetailDialogOpen,
     handleExpenseClick,
     handleSendMessage,
-    setSelectedExpense
+    setSelectedExpense,
+    coParentInfo
   };
 };
