@@ -42,8 +42,6 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
         return;
       }
 
-      console.log("Sending invitation to:", email, "from user:", currentUser.id);
-      
       // Check if invitation already exists
       const { data: existingInvites, error: checkError } = await supabase
         .from('co_parent_invites')
@@ -86,7 +84,6 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
       }
 
       const invite = newInvite[0];
-      console.log("Invitation created:", invite);
       
       // Close the form and show success message
       setInviting(false);
