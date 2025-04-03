@@ -8,6 +8,7 @@ export const syncExternalCalendar = async (provider: 'google' | 'outlook', token
   try {
     console.log(`Invoking calendar-sync/sync with provider: ${provider}`);
     
+    // Make sure to include authorization headers by using the supabase client's invoke method
     const response = await supabase.functions.invoke('calendar-sync/sync', {
       body: { 
         provider, 
