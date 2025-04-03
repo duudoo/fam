@@ -60,6 +60,11 @@ backend = "postgres"
 # Configure Edge Functions
 [functions]
 enabled = true
+port = 54321
 
+# Package manager configuration
 [functions.package_manager]
+enabled = true
+npm = false
+yarn = false
 pnpm = true
