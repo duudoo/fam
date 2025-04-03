@@ -46,7 +46,9 @@ export const useFamilyCircle = () => {
         
       if (error) {
         console.error('Error fetching invites:', error);
-        throw error;
+        toast.error("Failed to load co-parent invites");
+        setLoading(false);
+        return;
       }
 
       console.log("Fetched invites:", data);

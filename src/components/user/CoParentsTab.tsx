@@ -36,12 +36,18 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
         return;
       }
 
+      // Validate the email is not the current user's email
+      if (currentUser.email === email) {
+        toast.error("You cannot invite yourself");
+        return;
+      }
+
       console.log("Sending invitation to:", email, "from user:", currentUser.id);
       
       // Check if invitation already exists
       const { data: existingInvites, error: checkError } = await supabase
         .from('co_parent_invites')
-        .select('*')
+        .select('id')
         .eq('email', email)
         .eq('invited_by', currentUser.id);
       

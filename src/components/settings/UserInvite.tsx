@@ -42,21 +42,30 @@ const UserInvite = () => {
     
     setIsLoading(true);
     try {
-      // Check if the email is already invited
+      // Validate the email is not the current user's email
+      if (user.email === data.email) {
+        toast.error("You cannot invite yourself");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Check if the email is already invited by this user
       const { data: existingInvites, error: checkError } = await supabase
         .from('co_parent_invites')
-        .select('*')
+        .select('id')
         .eq('email', data.email)
         .eq('invited_by', user.id);
       
       if (checkError) {
         console.error("Error checking existing invites:", checkError);
         toast.error("Failed to check existing invitations");
+        setIsLoading(false);
         return;
       }
       
       if (existingInvites && existingInvites.length > 0) {
         toast.error("This email has already been invited");
+        setIsLoading(false);
         return;
       }
       
@@ -72,6 +81,7 @@ const UserInvite = () => {
       if (inviteError) {
         console.error("Error sending invitation:", inviteError);
         toast.error("Failed to send invitation");
+        setIsLoading(false);
         return;
       }
       
