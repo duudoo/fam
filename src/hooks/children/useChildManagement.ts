@@ -81,10 +81,17 @@ export const useChildManagement = (
       if (childInsertResult.error) {
         console.error('Error creating child:', childInsertResult.error);
         
+        // Log detailed information for debugging
+        console.log('Child data attempted to insert:', {
+          name: child.name,
+          date_of_birth: child.dateOfBirth,
+          initials: child.initials
+        });
+        
         // Check for specific error cases
-        if (childInsertResult.error.message.includes('permission denied')) {
-          toast.error("Permission denied. Please ensure you're signed in properly.");
-          navigate("/signin");
+        if (childInsertResult.error.message.includes('permission denied') || 
+            childInsertResult.error.message.includes('violates row-level security')) {
+          toast.error("Permission denied. This is likely a database configuration issue.");
         } else {
           toast.error(`Failed to create child: ${childInsertResult.error.message}`);
         }
