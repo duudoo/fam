@@ -144,11 +144,7 @@ const UpcomingEventsCard = () => {
                             ? "bg-famacle-blue-light text-famacle-blue"
                             : "bg-gray-100 text-gray-500"
                       )}>
-                        {event.priority === 'high' ? (
-                          <Calendar className="w-4 h-4" />
-                        ) : (
-                          <Calendar className="w-4 h-4" />
-                        )}
+                        <Calendar className="w-4 h-4" />
                       </div>
                     </div>
                   </div>
