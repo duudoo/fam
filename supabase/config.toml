@@ -61,6 +61,7 @@ backend = "postgres"
 [functions]
 enabled = true
 
-# Specify npm as the package manager
-[functions.package]
-manager = "npm"
+# Use npm as the package manager for Edge Functions
+[functions.package_manager]
+npm = true
+
