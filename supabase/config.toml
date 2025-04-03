@@ -61,6 +61,5 @@ backend = "postgres"
 [functions]
 enabled = true
 
-# Define package manager using the correct format
 [functions.package_manager]
 pnpm = true
