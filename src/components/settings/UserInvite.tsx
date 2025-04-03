@@ -49,7 +49,11 @@ const UserInvite = () => {
         .eq('email', data.email)
         .eq('invited_by', user.id);
       
-      if (checkError) throw checkError;
+      if (checkError) {
+        console.error("Error checking existing invites:", checkError);
+        toast.error("Failed to check existing invitations");
+        return;
+      }
       
       if (existingInvites && existingInvites.length > 0) {
         toast.error("This email has already been invited");
@@ -65,7 +69,11 @@ const UserInvite = () => {
           status: 'pending'
         });
       
-      if (inviteError) throw inviteError;
+      if (inviteError) {
+        console.error("Error sending invitation:", inviteError);
+        toast.error("Failed to send invitation");
+        return;
+      }
       
       toast.success("Invitation sent successfully");
       form.reset();

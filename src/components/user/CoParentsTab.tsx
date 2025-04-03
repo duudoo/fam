@@ -47,7 +47,7 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
       
       if (checkError) {
         console.error("Error checking existing invites:", checkError);
-        toast.error(`Error checking invites: ${checkError.message}`);
+        toast.error("Failed to check existing invitations");
         return;
       }
       
@@ -69,7 +69,7 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
 
       if (inviteError) {
         console.error("Error creating invitation:", inviteError);
-        toast.error(`Failed to create invitation: ${inviteError.message}`);
+        toast.error("Failed to create invitation");
         return;
       }
 

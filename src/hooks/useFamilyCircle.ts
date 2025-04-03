@@ -45,7 +45,7 @@ export const useFamilyCircle = () => {
         .eq('invited_by', user.id);
         
       if (error) {
-        console.error('Error in fetchInvites query:', error);
+        console.error('Error fetching invites:', error);
         throw error;
       }
 
