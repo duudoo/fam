@@ -57,11 +57,10 @@ port = 54327
 vector_port = 54328
 backend = "postgres"
 
-[experimental]
-feature_flags_enabled = false
-# Explicitly set npm as the package manager
-npm.packageManager = "npm"
-
 # Configure Edge Functions
 [functions]
 enabled = true
+
+# Specify npm as the package manager
+[functions.package]
+manager = "npm"
