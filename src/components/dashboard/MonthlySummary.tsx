@@ -8,8 +8,11 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const MonthlySummary = () => {
-  const { categories, categoryByChild, children, loading } = useMonthlySummary();
+  const { categories, categoryByChild, children, loading, expensesByChild } = useMonthlySummary();
   const { currency } = useCurrency();
+
+  // Calculate total expenses
+  const totalExpenses = Object.values(expensesByChild).reduce((total, amount) => total + amount, 0);
 
   return (
     <Card>
@@ -19,9 +22,10 @@ const MonthlySummary = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="categories" className="w-full">
-          <TabsList className="grid grid-cols-2 mb-4">
+          <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="categories">By Category</TabsTrigger>
             <TabsTrigger value="children">By Child</TabsTrigger>
+            <TabsTrigger value="childExpenses">Child Expenses</TabsTrigger>
           </TabsList>
           
           <TabsContent value="categories">
@@ -86,6 +90,54 @@ const MonthlySummary = () => {
                     )}
                   </div>
                 ))}
+              </div>
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                No children added yet
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="childExpenses">
+            {loading ? (
+              <div className="flex justify-center py-4">
+                <div className="animate-spin h-6 w-6 border-4 border-famacle-blue border-t-transparent rounded-full"></div>
+              </div>
+            ) : children.length > 0 ? (
+              <div className="space-y-4">
+                {children.map((child) => {
+                  const childAmount = expensesByChild[child.id] || 0;
+                  const percentage = totalExpenses > 0 ? (childAmount / totalExpenses) * 100 : 0;
+                  
+                  return (
+                    <div key={child.id} className="space-y-1">
+                      <div className="flex justify-between items-center mb-1">
+                        <div className="flex items-center gap-2">
+                          <div className="h-6 w-6 rounded-full bg-famacle-blue flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">{child.initials}</span>
+                          </div>
+                          <span className="font-medium">{child.name || child.initials}</span>
+                        </div>
+                        <div className="text-sm font-medium">
+                          {currency}{childAmount.toFixed(2)} ({percentage.toFixed(1)}%)
+                        </div>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-2.5">
+                        <div 
+                          className="bg-famacle-blue h-2.5 rounded-full" 
+                          style={{ width: `${percentage}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">Total Expenses</span>
+                    <span className="font-semibold">{currency}{totalExpenses.toFixed(2)}</span>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="text-center py-4 text-gray-500">

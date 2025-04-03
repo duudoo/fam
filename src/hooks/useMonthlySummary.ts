@@ -16,9 +16,14 @@ interface ChildCategorySummary {
   [childId: string]: CategorySummary[];
 }
 
+interface ChildExpenses {
+  [childId: string]: number;
+}
+
 export const useMonthlySummary = () => {
   const [categories, setCategories] = useState<CategorySummary[]>([]);
   const [categoryByChild, setCategoryByChild] = useState<ChildCategorySummary>({});
+  const [expensesByChild, setExpensesByChild] = useState<ChildExpenses>({});
   const [children, setChildren] = useState<Child[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -60,6 +65,7 @@ export const useMonthlySummary = () => {
       const categoryTotals: Record<string, number> = {};
       const childCategoryTotals: Record<string, Record<string, number>> = {};
       const childTotalAmounts: Record<string, number> = {};
+      const childExpensesTotal: Record<string, number> = {};
       let totalAmount = 0;
       
       if (data && data.length > 0) {
@@ -87,6 +93,7 @@ export const useMonthlySummary = () => {
                 (childCategoryTotals[childId][category] || 0) + amountPerChild;
               
               childTotalAmounts[childId] = (childTotalAmounts[childId] || 0) + amountPerChild;
+              childExpensesTotal[childId] = (childExpensesTotal[childId] || 0) + amountPerChild;
             });
           }
         });
@@ -134,18 +141,21 @@ export const useMonthlySummary = () => {
         
         setCategories(categoriesArray);
         setCategoryByChild(childCategories);
+        setExpensesByChild(childExpensesTotal);
       } else {
         setCategories([]);
         setCategoryByChild({});
+        setExpensesByChild({});
       }
     } catch (error) {
       console.error('Error fetching monthly summary:', error);
       setCategories([]);
       setCategoryByChild({});
+      setExpensesByChild({});
     } finally {
       setLoading(false);
     }
   };
 
-  return { categories, categoryByChild, children, loading };
+  return { categories, categoryByChild, children, loading, expensesByChild };
 };
