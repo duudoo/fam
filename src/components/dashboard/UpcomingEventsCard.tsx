@@ -1,48 +1,31 @@
 
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Calendar, ChevronRight, Plus, Bell, Clock } from 'lucide-react';
+import { Calendar, ChevronRight, Plus } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format, parseISO, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useCalendarEvents } from '@/hooks/calendar';
+import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useState } from 'react';
 import EventDialogContent from '@/components/calendar/EventDialogContent';
 import { FormValues } from '@/components/calendar/form/EventFormSchema';
-import { Event as EventType } from '@/utils/types';
 
 const UpcomingEventsCard = () => {
   const { user } = useAuth();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const { createEvent, isPending } = useCalendarEvents();
+  const { createEvent, isPending, events = [], isLoading } = useCalendarEvents();
   
-  const { data: upcomingEvents = [], isLoading } = useQuery({
-    queryKey: ['dashboardEvents', user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      
-      const today = new Date();
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .gte('start_date', today.toISOString())
-        .order('start_date', { ascending: true })
-        .limit(3);
-      
-      if (error) {
-        console.error('Error fetching upcoming events:', error);
-        throw error;
-      }
-      
-      return data;
-    },
-    enabled: !!user
-  });
+  // Filter to show only upcoming events (starting from today)
+  const upcomingEvents = events
+    .filter(event => {
+      const eventDate = new Date(event.startDate);
+      return eventDate >= new Date();
+    })
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+    .slice(0, 3); // Limit to 3 events
 
   const handleCreateEvent = (formData: FormValues) => {
     if (!user?.id) {
@@ -122,9 +105,9 @@ const UpcomingEventsCard = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {upcomingEvents && upcomingEvents.length > 0 ? (
+            {upcomingEvents.length > 0 ? (
               upcomingEvents.map(event => {
-                const eventDate = parseISO(event.start_date);
+                const eventDate = parseISO(event.startDate);
                 const isEventToday = isToday(eventDate);
                 
                 return (
@@ -146,8 +129,8 @@ const UpcomingEventsCard = () => {
                           )}
                         </h4>
                         <p className="text-sm text-gray-500">
-                          {format(parseISO(event.start_date), 'EEE, MMM d')}
-                          {!event.all_day && ` • ${format(parseISO(event.start_date), 'h:mm a')}`}
+                          {format(parseISO(event.startDate), 'EEE, MMM d')}
+                          {!event.allDay && ` • ${format(parseISO(event.startDate), 'h:mm a')}`}
                         </p>
                         {event.location && (
                           <p className="text-sm text-gray-500 mt-1">{event.location}</p>
@@ -162,9 +145,9 @@ const UpcomingEventsCard = () => {
                             : "bg-gray-100 text-gray-500"
                       )}>
                         {event.priority === 'high' ? (
-                          <Bell className="w-4 h-4" />
+                          <Calendar className="w-4 h-4" />
                         ) : (
-                          <Clock className="w-4 h-4" />
+                          <Calendar className="w-4 h-4" />
                         )}
                       </div>
                     </div>
