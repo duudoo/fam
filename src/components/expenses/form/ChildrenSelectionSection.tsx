@@ -16,9 +16,18 @@ const ChildrenSelectionSection = ({ defaultSelectedIds = [] }: ChildrenSelection
   const [selectedIds, setSelectedIds] = useState<string[]>(defaultSelectedIds);
   const form = useFormContext();
   
+  // Effect to update form value when selectedIds changes
   useEffect(() => {
     form.setValue('childIds', selectedIds);
   }, [selectedIds, form]);
+  
+  // Effect to auto-select the only child if there's just one and none are selected
+  useEffect(() => {
+    // Only auto-select if there's exactly one child, no selections yet, and no default selections were provided
+    if (children.length === 1 && selectedIds.length === 0 && defaultSelectedIds.length === 0) {
+      setSelectedIds([children[0].id]);
+    }
+  }, [children, selectedIds, defaultSelectedIds]);
   
   const toggleChild = (childId: string) => {
     setSelectedIds(prev => 
@@ -49,13 +58,6 @@ const ChildrenSelectionSection = ({ defaultSelectedIds = [] }: ChildrenSelection
       />
     );
   }
-  
-  // If there's only one child, auto-select it
-  useEffect(() => {
-    if (children.length === 1 && selectedIds.length === 0 && defaultSelectedIds.length === 0) {
-      setSelectedIds([children[0].id]);
-    }
-  }, [children, selectedIds, defaultSelectedIds]);
   
   return (
     <FormField
