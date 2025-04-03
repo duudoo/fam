@@ -41,7 +41,7 @@ export const useFamilyCircle = () => {
       // Query co_parent_invites where the current user is the inviter
       const { data, error } = await supabase
         .from('co_parent_invites')
-        .select('*')
+        .select('id, email, status, invited_by, invited_at, message, responded_at')
         .eq('invited_by', user.id);
         
       if (error) {
