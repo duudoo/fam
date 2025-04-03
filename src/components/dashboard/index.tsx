@@ -46,8 +46,8 @@ const Dashboard = () => {
         </div>
         
         <div className="space-y-6">
-          <NotificationsCard />
           <UpcomingEventsCard />
+          <NotificationsCard />
         </div>
       </div>
     </div>
