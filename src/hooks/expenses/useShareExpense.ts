@@ -28,23 +28,30 @@ export const useShareExpense = ({
     try {
       setIsSending(true);
       
-      // Get co-parents that are associated with the expense's children
-      const { data: childParents, error: parentsError } = await supabase
-        .from('parent_children')
-        .select(`
-          parent_id,
-          child_id
-        `)
-        .in('child_id', expense.childIds || [])
-        .neq('parent_id', user.id);
-        
-      if (parentsError) {
-        console.error("Error fetching child parents:", parentsError);
-        throw new Error("Failed to find co-parents");
-      }
+      // Ensure childIds is always an array, even if empty
+      const childIds = expense.childIds || [];
       
-      // Get a list of co-parent IDs (can be empty if there are no co-parents yet)
-      const coParentIds = Array.from(new Set(childParents.map(cp => cp.parent_id)));
+      // Get co-parents that are associated with the expense's children
+      let coParentIds: string[] = [];
+      
+      if (childIds.length > 0) {
+        const { data: childParents, error: parentsError } = await supabase
+          .from('parent_children')
+          .select(`
+            parent_id,
+            child_id
+          `)
+          .in('child_id', childIds)
+          .neq('parent_id', user.id);
+          
+        if (parentsError) {
+          console.error("Error fetching child parents:", parentsError);
+          throw new Error("Failed to find co-parents");
+        }
+        
+        // Get a list of co-parent IDs (can be empty if there are no co-parents yet)
+        coParentIds = Array.from(new Set(childParents.map(cp => cp.parent_id)));
+      }
       
       // If there are co-parents, send messages to them
       if (coParentIds.length > 0) {
@@ -117,7 +124,6 @@ export const useShareExpense = ({
     const { error: msgError } = await supabase
       .from('messages')
       .insert({
-        conversation_id: conversationId,
         sender_id: userId,
         receiver_id: coParentId,
         text: messageText,
@@ -147,82 +153,51 @@ export const useShareExpense = ({
     expenseLink: string,
     userId: string
   ) => {
-    // Find the placeholder conversation for just this user
-    const { data: conversations, error: convError } = await supabase
-      .from('conversations')
-      .select('id')
-      .contains('participants', [userId])
-      .eq('participants', [userId].length)  // Only where this user is the sole participant
-      .limit(1);
+    try {
+      // Store the expense info in a message for future reference
+      const messageText = `${message ? message + '\n\n' : ''}Expense saved: "${expense.description}" for $${expense.amount}\n${expenseLink}\n\n(This expense will be shared with co-parents once they are added to your family circle)`;
       
-    if (convError) {
-      console.error("Error fetching placeholder conversation:", convError);
-      throw convError;
-    }
-    
-    let conversationId;
-    
-    if (conversations && conversations.length > 0) {
-      conversationId = conversations[0].id;
-    } else {
-      // Create a new placeholder conversation with just this user
-      const { data: newConv, error: newConvError } = await supabase
-        .from('conversations')
+      const { error: msgError } = await supabase
+        .from('messages')
         .insert({
-          participants: [userId]
-        })
-        .select('id')
-        .single();
+          sender_id: userId,
+          receiver_id: userId, // Self-message as placeholder
+          text: messageText,
+          status: 'sent',
+          attachments: [{
+            type: 'expense_reference',
+            expenseId: expense.id,
+            expenseInfo: {
+              description: expense.description,
+              amount: expense.amount,
+              date: expense.date,
+              category: expense.category
+            }
+          }]
+        });
         
-      if (newConvError) {
-        console.error("Error creating placeholder conversation:", newConvError);
-        throw newConvError;
+      if (msgError) {
+        console.error("Error saving expense message:", msgError);
+        throw msgError;
       }
       
-      conversationId = newConv.id;
-    }
-    
-    // Store the expense info in a message for future reference
-    const messageText = `${message ? message + '\n\n' : ''}Expense saved: "${expense.description}" for $${expense.amount}\n${expenseLink}\n\n(This expense will be shared with co-parents once they are added to your family circle)`;
-    
-    const { error: msgError } = await supabase
-      .from('messages')
-      .insert({
-        conversation_id: conversationId,
-        sender_id: userId,
-        receiver_id: userId, // Self-message as placeholder
-        text: messageText,
-        status: 'sent',
-        attachments: [{
-          type: 'expense_reference',
-          expenseId: expense.id,
-          expenseInfo: {
-            description: expense.description,
-            amount: expense.amount,
-            date: expense.date,
-            category: expense.category
-          }
-        }]
-      });
-      
-    if (msgError) {
-      console.error("Error saving expense message:", msgError);
-      throw msgError;
-    }
-    
-    // Also create a notification that the expense is ready to be shared
-    const { error: notifError } = await supabase
-      .from('notifications')
-      .insert({
-        user_id: userId,
-        related_id: expense.id,
-        type: 'expense_shared',
-        message: `Expense "${expense.description}" has been saved and is ready to share with co-parents once they're added.`,
-      });
-      
-    if (notifError) {
-      console.error("Error creating notification:", notifError);
-      // Don't throw here, just log error
+      // Also create a notification that the expense is ready to be shared
+      const { error: notifError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: userId,
+          related_id: expense.id,
+          type: 'expense_shared',
+          message: `Expense "${expense.description}" has been saved and is ready to share with co-parents once they're added.`,
+        });
+        
+      if (notifError) {
+        console.error("Error creating notification:", notifError);
+        // Don't throw here, just log error
+      }
+    } catch (error) {
+      console.error("Error creating placeholder message:", error);
+      throw error;
     }
   };
   

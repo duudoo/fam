@@ -1,44 +1,48 @@
 
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UseFormReturn } from 'react-hook-form';
-import { SplitMethod } from '@/utils/types';
-import { FormValues } from '../schema';
-import { useEffect } from 'react';
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { SplitMethod } from "@/utils/types";
+import { Control } from "react-hook-form";
 
 interface SplitMethodFieldProps {
-  form: UseFormReturn<FormValues, any, undefined>;
-  splitMethods: SplitMethod[];
+  control: Control<any>;
   onSplitMethodChange?: (method: SplitMethod) => void;
 }
 
-export const SplitMethodField = ({ form, splitMethods, onSplitMethodChange }: SplitMethodFieldProps) => {
-  // When split method changes, notify parent component
-  useEffect(() => {
-    const subscription = form.watch((value, { name }) => {
-      if (name === 'splitMethod' && onSplitMethodChange) {
-        onSplitMethodChange(value.splitMethod as SplitMethod);
-        console.log('Split method changed to:', value.splitMethod);
-        
-        // If the split method is not 'custom', clear any existing splitPercentage and splitAmounts
-        if (value.splitMethod !== 'custom') {
-          form.setValue('splitPercentage', undefined);
-          form.setValue('splitAmounts', undefined);
-        }
-      }
-    });
-    
-    return () => subscription.unsubscribe();
-  }, [form, onSplitMethodChange]);
+const SplitMethodField = ({ control, onSplitMethodChange }: SplitMethodFieldProps) => {
+  const splitMethods: { value: SplitMethod; label: string }[] = [
+    { value: "none", label: "None" },
+    { value: "50/50", label: "50/50" },
+    { value: "custom", label: "Custom" },
+  ];
 
   return (
     <FormField
-      control={form.control}
+      control={control}
       name="splitMethod"
       render={({ field }) => (
         <FormItem>
           <FormLabel>Split Method</FormLabel>
-          <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <Select
+            onValueChange={(value) => {
+              field.onChange(value);
+              onSplitMethodChange?.(value as SplitMethod);
+            }}
+            defaultValue={field.value}
+            value={field.value}
+          >
             <FormControl>
               <SelectTrigger>
                 <SelectValue placeholder="Select split method" />
@@ -46,10 +50,8 @@ export const SplitMethodField = ({ form, splitMethods, onSplitMethodChange }: Sp
             </FormControl>
             <SelectContent>
               {splitMethods.map((method) => (
-                <SelectItem key={method} value={method}>
-                  {method === "50/50" ? "50/50 Split" : 
-                   method === "custom" ? "Custom Split" : 
-                   "No Split"}
+                <SelectItem key={method.value} value={method.value}>
+                  {method.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -60,3 +62,5 @@ export const SplitMethodField = ({ form, splitMethods, onSplitMethodChange }: Sp
     />
   );
 };
+
+export default SplitMethodField;

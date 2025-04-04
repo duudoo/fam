@@ -29,6 +29,12 @@ const MessageTab = ({ expense, expenseLink, onClose }: MessageTabProps) => {
       return;
     }
     
+    // Ensure childIds is always an array, even if empty
+    const safeExpense = {
+      ...expense,
+      childIds: expense.childIds || []
+    };
+    
     try {
       await shareViaMessage(message);
     } catch (error) {

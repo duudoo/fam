@@ -4,6 +4,7 @@ import { DateField } from "./fields/DateField";
 import { DescriptionField } from "./fields/DescriptionField";
 import { AmountField } from "./fields/AmountField";
 import CategoryField from "./fields/CategoryField";
+import SplitMethodField from "./fields/SplitMethodField";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "./schema";
@@ -42,6 +43,10 @@ const ExpenseDetailsSection = ({
         <AmountField form={form} />
         <DateField form={form} />
         <CategoryField control={form.control} />
+        <SplitMethodField 
+          control={form.control} 
+          onSplitMethodChange={onSplitMethodChange} 
+        />
       </CardContent>
     </>
   );
