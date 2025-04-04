@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import DashboardHeader from "./DashboardHeader";
 import SummaryCards from "./SummaryCards";
@@ -9,11 +9,17 @@ import NotificationsCard from "./NotificationsCard";
 import { useAuth } from "@/hooks/useAuth";
 import { useExpenses } from "@/hooks/expenses";
 import { useIsMobile } from "@/hooks/use-mobile";
+import AddEventDialog from "../calendar/AddEventDialog";
 
 const Dashboard = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { expenses = [], isLoading } = useExpenses();
+  const [openAddEvent, setOpenAddEvent] = useState(false);
+
+  const handleScheduleEvent = () => {
+    setOpenAddEvent(true);
+  };
 
   if (!user) {
     return (
@@ -26,7 +32,7 @@ const Dashboard = () => {
 
   return (
     <div className="container mx-auto p-4 pb-16">
-      <DashboardHeader />
+      <DashboardHeader onScheduleEvent={handleScheduleEvent} />
 
       <SummaryCards />
 
@@ -45,9 +51,15 @@ const Dashboard = () => {
         </div>
         
         <div className="space-y-6">
-          <NotificationsCard />
+          <NotificationsCard onAddEvent={() => setOpenAddEvent(true)} />
         </div>
       </div>
+
+      {/* Event dialog */}
+      <AddEventDialog 
+        open={openAddEvent} 
+        onOpenChange={setOpenAddEvent} 
+      />
     </div>
   );
 };

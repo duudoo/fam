@@ -1,16 +1,14 @@
-
-import { Link } from 'react-router-dom';
-import { Bell, ChevronRight } from 'lucide-react';
+import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { getNotificationIcon } from '@/components/notifications/NotificationIcon';
-import { useAuth } from '@/hooks/useAuth';
+import { Bell, Calendar, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-const NotificationsCard = () => {
+interface NotificationsCardProps {
+  onAddEvent?: () => void;
+}
+
+const NotificationsCard = ({ onAddEvent }: NotificationsCardProps) => {
   const { user } = useAuth();
   
   // Fetch recent notifications from Supabase
@@ -40,14 +38,17 @@ const NotificationsCard = () => {
   });
     
   return (
-    <Card>
-      <CardHeader>
+    <Card className="border shadow-sm">
+      <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
-          <CardTitle className="text-xl font-semibold">Notifications</CardTitle>
-          <Button variant="ghost" size="sm" asChild>
+          <CardTitle className="text-md font-medium flex items-center">
+            <Bell className="w-4 h-4 mr-2 text-famacle-blue" />
+            Notifications
+          </CardTitle>
+          <Button variant="ghost" size="sm" asChild className="text-xs">
             <Link to="/notifications" className="flex items-center text-famacle-blue">
               View All
-              <ChevronRight className="h-4 w-4 ml-1" />
+              <ChevronRight className="h-3 w-3 ml-1" />
             </Link>
           </Button>
         </div>
@@ -95,12 +96,15 @@ const NotificationsCard = () => {
           </div>
         )}
       </CardContent>
-      <CardFooter className="border-t pt-4">
-        <Button asChild variant="outline" className="w-full">
-          <Link to="/notifications">
-            <Bell className="w-4 h-4 mr-2" />
-            All Notifications
-          </Link>
+      <CardFooter className="flex flex-col gap-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="w-full flex justify-center items-center h-9" 
+          onClick={onAddEvent}
+        >
+          <Calendar className="h-4 w-4 mr-2" />
+          Add Event
         </Button>
       </CardFooter>
     </Card>

@@ -3,7 +3,11 @@ import { Link } from 'react-router-dom';
 import { Plus, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const DashboardHeader = () => {
+interface DashboardHeaderProps {
+  onScheduleEvent?: () => void;
+}
+
+const DashboardHeader = ({ onScheduleEvent }: DashboardHeaderProps) => {
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
       <div>
@@ -16,11 +20,13 @@ const DashboardHeader = () => {
             Log Expense
           </Link>
         </Button>
-        <Button asChild variant="outline" className="flex-1 sm:flex-auto">
-          <Link to="/calendar?newEvent=true">
-            <Calendar className="w-4 h-4 mr-2" />
-            Schedule Event
-          </Link>
+        <Button 
+          variant="outline" 
+          className="flex-1 sm:flex-auto"
+          onClick={onScheduleEvent}
+        >
+          <Calendar className="w-4 h-4 mr-2" />
+          Schedule Event
         </Button>
       </div>
     </div>
