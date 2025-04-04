@@ -30,6 +30,9 @@ const CommunicationsPage = () => {
     setDetailDialogOpen(false);
   };
 
+  // Check if we should show the self-messaging mode
+  const isCoParentMode = coParentInfo.status === 'accepted';
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-famacle-blue-light/30">
       <Navbar />
@@ -55,6 +58,19 @@ const CommunicationsPage = () => {
                 <div className="flex items-center justify-center h-full">
                   <p>Loading messages...</p>
                 </div>
+              ) : messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                  {coParentInfo.status === 'none' ? (
+                    <>
+                      <p className="mb-2">No co-parent has been added yet.</p>
+                      <p>You can still record notes and messages for yourself.</p>
+                    </>
+                  ) : coParentInfo.status === 'pending' ? (
+                    <p>Your invitation to {coParentInfo.email} is pending. Messages will be available once they accept.</p>
+                  ) : (
+                    <p>No messages yet. Start the conversation!</p>
+                  )}
+                </div>
               ) : (
                 <MessageList 
                   messages={messages} 
@@ -63,7 +79,10 @@ const CommunicationsPage = () => {
               )}
             </div>
             
-            <MessageInput onSendMessage={handleSendMessage} />
+            <MessageInput 
+              onSendMessage={handleSendMessage}
+              disabled={false} // Always enable messaging
+            />
           </div>
         </Card>
       </main>

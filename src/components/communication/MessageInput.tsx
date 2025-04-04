@@ -7,9 +7,10 @@ import { Attachment, AttachmentType, Message } from "@/utils/types";
 
 interface MessageInputProps {
   onSendMessage: (message: Omit<Message, "id" | "status">) => void;
+  disabled?: boolean;
 }
 
-export const MessageInput = ({ onSendMessage }: MessageInputProps) => {
+export const MessageInput = ({ onSendMessage, disabled = false }: MessageInputProps) => {
   const [newMessage, setNewMessage] = useState("");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   
@@ -97,16 +98,17 @@ export const MessageInput = ({ onSendMessage }: MessageInputProps) => {
       <div className="flex items-end gap-2">
         <div className="flex-1">
           <Textarea 
-            placeholder="Type your message here..."
+            placeholder={disabled ? "Add co-parent to send messages" : "Type your message here..."}
             className="min-h-[80px] resize-none"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
+              if (e.key === 'Enter' && !e.shiftKey && !disabled) {
                 e.preventDefault();
                 handleSendMessage();
               }
             }}
+            disabled={disabled}
           />
         </div>
         <div className="flex flex-col gap-2">
@@ -115,6 +117,7 @@ export const MessageInput = ({ onSendMessage }: MessageInputProps) => {
             size="icon" 
             title="Attach image"
             onClick={triggerImageUpload}
+            disabled={disabled}
           >
             <ImagePlus className="h-5 w-5" />
           </Button>
@@ -123,12 +126,13 @@ export const MessageInput = ({ onSendMessage }: MessageInputProps) => {
             size="icon" 
             title="Attach file"
             onClick={triggerFileUpload}
+            disabled={disabled}
           >
             <Paperclip className="h-5 w-5" />
           </Button>
           <Button 
             onClick={handleSendMessage}
-            disabled={newMessage.trim() === "" && attachments.length === 0}
+            disabled={disabled || (newMessage.trim() === "" && attachments.length === 0)}
             className="px-4"
           >
             <Send className="h-4 w-4" />

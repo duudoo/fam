@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,6 +62,19 @@ export const useCommunications = (initialReceiverId: string = "") => {
               status: invite.status,
               email: invite.email
             });
+            // Set the current receiver ID if we have a valid co-parent
+            if (!currentReceiverId) {
+              // Find the user ID for this email
+              const { data: userData } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('email', invite.email)
+                .single();
+              
+              if (userData) {
+                setCurrentReceiverId(userData.id);
+              }
+            }
             return;
           }
         }
@@ -69,6 +83,13 @@ export const useCommunications = (initialReceiverId: string = "") => {
           name: invite.email,
           status: invite.status,
           email: invite.email
+        });
+      } else {
+        // No invites found
+        setCoParentInfo({
+          name: "No Co-Parent Added",
+          status: "none",
+          email: undefined
         });
       }
     } catch (error) {
@@ -81,11 +102,14 @@ export const useCommunications = (initialReceiverId: string = "") => {
   
   // Fetch messages for the current conversation
   const { data: messages = [], isLoading } = useQuery({
-    queryKey: ['messages', currentReceiverId],
+    queryKey: ['messages', currentReceiverId || user?.id],
     queryFn: async () => {
       if (!user) return [];
       
       try {
+        // If there's no current receiver, get self-messages (notes to self)
+        const targetReceiverId = currentReceiverId || user.id;
+        
         const { data: messages, error } = await supabase
           .from('messages')
           .select('*')
@@ -167,11 +191,14 @@ export const useCommunications = (initialReceiverId: string = "") => {
     mutationFn: async (newMsg: Omit<Message, "id" | "status">) => {
       if (!user) throw new Error("User not authenticated");
       
+      // If no receiver is set, send message to self (as notes)
+      const receiverId = currentReceiverId || user.id;
+      
       const { error } = await supabase
         .from('messages')
         .insert({
           sender_id: user.id,
-          receiver_id: currentReceiverId,
+          receiver_id: receiverId,
           text: newMsg.text,
           attachments: newMsg.attachments
         });
@@ -179,7 +206,7 @@ export const useCommunications = (initialReceiverId: string = "") => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['messages', currentReceiverId] });
+      queryClient.invalidateQueries({ queryKey: ['messages', currentReceiverId || user?.id] });
     },
     onError: (error) => {
       console.error('Error sending message:', error);
@@ -188,11 +215,6 @@ export const useCommunications = (initialReceiverId: string = "") => {
   });
 
   const handleSendMessage = async (newMsg: Omit<Message, "id" | "status">) => {
-    if (!currentReceiverId) {
-      toast.error("No recipient selected");
-      return;
-    }
-    
     if (!user) {
       toast.error("You must be logged in to send messages");
       return;
@@ -201,7 +223,7 @@ export const useCommunications = (initialReceiverId: string = "") => {
     try {
       await sendMessageMutation.mutateAsync(newMsg);
       
-      queryClient.setQueryData(['messages', currentReceiverId], (oldData: Message[] = []) => {
+      queryClient.setQueryData(['messages', currentReceiverId || user.id], (oldData: Message[] = []) => {
         return [
           ...oldData,
           {
@@ -219,6 +241,9 @@ export const useCommunications = (initialReceiverId: string = "") => {
     }
   };
 
+  // Check if messaging is enabled (has co-parent or self messaging is allowed)
+  const isMessagingEnabled = true; // Always enable messaging
+
   return {
     messages,
     isLoading,
@@ -230,6 +255,7 @@ export const useCommunications = (initialReceiverId: string = "") => {
     handleExpenseClick,
     handleSendMessage,
     setSelectedExpense,
-    coParentInfo
+    coParentInfo,
+    isMessagingEnabled
   };
 };
