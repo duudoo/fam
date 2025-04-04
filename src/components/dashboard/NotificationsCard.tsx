@@ -94,6 +94,16 @@ const NotificationsCard = () => {
                     <p className="text-xs text-gray-500 mt-1">
                       {format(new Date(notification.createdAt), 'MMM d, h:mm a')}
                     </p>
+                    {notification.type.includes('expense_shared') && (
+                      <div className="mt-1">
+                        <Link 
+                          to="/communications" 
+                          className="text-xs text-famacle-blue hover:underline"
+                        >
+                          View in Communications
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))
