@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Bell, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -11,11 +11,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { getNotificationIcon } from '@/components/notifications/NotificationIcon';
 
-interface NotificationsCardProps {
-  onAddEvent?: () => void;
-}
-
-const NotificationsCard = ({ onAddEvent }: NotificationsCardProps) => {
+const NotificationsCard = () => {
   const { user } = useAuth();
   
   // Fetch recent notifications from Supabase
@@ -86,7 +82,9 @@ const NotificationsCard = ({ onAddEvent }: NotificationsCardProps) => {
                     "flex items-center justify-center rounded-full w-8 h-8 shrink-0",
                     notification.type.includes('expense') 
                       ? "bg-famacle-blue-light text-famacle-blue" 
-                      : "bg-famacle-coral-light text-famacle-coral"
+                      : notification.type.includes('event')
+                        ? "bg-famacle-coral-light text-famacle-coral"
+                        : "bg-gray-100 text-famacle-slate"
                   )}>
                     {getNotificationIcon(notification.type)}
                   </div>
