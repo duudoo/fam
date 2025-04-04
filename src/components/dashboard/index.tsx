@@ -10,15 +10,24 @@ import { useAuth } from "@/hooks/useAuth";
 import { useExpenses } from "@/hooks/expenses";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AddEventDialog from "../calendar/AddEventDialog";
+import ExpenseDetailDialog from "../expenses/ExpenseDetailDialog";
+import { Expense } from "@/utils/types";
 
 const Dashboard = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { expenses = [], isLoading } = useExpenses();
   const [openAddEvent, setOpenAddEvent] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
   const handleScheduleEvent = () => {
     setOpenAddEvent(true);
+  };
+
+  const handleExpenseClick = (expense: Expense) => {
+    setSelectedExpense(expense);
+    setDetailDialogOpen(true);
   };
 
   if (!user) {
@@ -60,6 +69,15 @@ const Dashboard = () => {
         open={openAddEvent} 
         onOpenChange={setOpenAddEvent} 
       />
+
+      {/* Expense Detail Dialog */}
+      {selectedExpense && (
+        <ExpenseDetailDialog
+          expense={selectedExpense}
+          open={detailDialogOpen}
+          onOpenChange={setDetailDialogOpen}
+        />
+      )}
     </div>
   );
 };

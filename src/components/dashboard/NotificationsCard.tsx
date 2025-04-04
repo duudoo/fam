@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Bell, ChevronRight } from 'lucide-react';
@@ -10,9 +10,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { getNotificationIcon } from '@/components/notifications/NotificationIcon';
+import ExpenseDetailDialog from '@/components/expenses/ExpenseDetailDialog';
+import { Expense } from '@/utils/types';
 
 const NotificationsCard = () => {
   const { user } = useAuth();
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   
   // Fetch recent notifications from Supabase
   const { data: notifications = [], isLoading } = useQuery({
@@ -34,11 +38,51 @@ const NotificationsCard = () => {
         type: notification.type,
         message: notification.message,
         createdAt: notification.created_at,
-        read: notification.read
+        read: notification.read,
+        relatedId: notification.related_id
       }));
     },
     enabled: !!user
   });
+
+  // Handle click on an expense notification
+  const handleExpenseClick = async (expenseId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('id', expenseId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching expense details:', error);
+        return;
+      }
+      
+      if (data) {
+        const expense: Expense = {
+          id: data.id,
+          description: data.description,
+          amount: data.amount,
+          date: data.date,
+          category: data.category,
+          paidBy: data.paid_by,
+          receiptUrl: data.receipt_url || undefined,
+          status: data.status,
+          splitMethod: data.split_method,
+          notes: data.notes || undefined,
+          childIds: [],
+          createdAt: data.created_at,
+          updatedAt: data.updated_at
+        };
+        
+        setSelectedExpense(expense);
+        setDetailDialogOpen(true);
+      }
+    } catch (error) {
+      console.error('Error handling expense click:', error);
+    }
+  };
     
   return (
     <Card className="border shadow-sm">
@@ -94,7 +138,17 @@ const NotificationsCard = () => {
                     <p className="text-xs text-gray-500 mt-1">
                       {format(new Date(notification.createdAt), 'MMM d, h:mm a')}
                     </p>
-                    {notification.type.includes('expense_shared') && (
+                    {notification.type.includes('expense_shared') && notification.relatedId && (
+                      <div className="mt-1">
+                        <button 
+                          onClick={() => handleExpenseClick(notification.relatedId!)}
+                          className="text-xs text-famacle-blue hover:underline"
+                        >
+                          View Expense Details
+                        </button>
+                      </div>
+                    )}
+                    {notification.type.includes('expense_shared') && !notification.relatedId && (
                       <div className="mt-1">
                         <Link 
                           to="/communications" 
@@ -111,6 +165,15 @@ const NotificationsCard = () => {
           </div>
         )}
       </CardContent>
+
+      {/* Expense Detail Dialog */}
+      {selectedExpense && (
+        <ExpenseDetailDialog
+          expense={selectedExpense}
+          open={detailDialogOpen}
+          onOpenChange={setDetailDialogOpen}
+        />
+      )}
     </Card>
   );
 };

@@ -35,10 +35,16 @@ export const ExpenseAttachment = ({
   const hoverColorClass = variant === "dark" ? "hover:bg-famacle-blue-dark/50" : "hover:bg-gray-200";
   const linkColorClass = variant === "dark" ? "text-blue-200 hover:text-blue-100" : "text-blue-600 hover:text-blue-800";
   
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onExpenseClick(attachment.expenseId);
+  };
+  
   return (
     <div 
       className={`mt-2 p-3 ${bgColorClass} rounded-md cursor-pointer ${hoverColorClass} transition-colors`}
-      onClick={() => onExpenseClick(attachment.expenseId)}
+      onClick={handleClick}
     >
       <div className={`font-semibold mb-1 ${textColorClass}`}>Expense Reference:</div>
       <div className={`text-sm ${textColorClass}`}>
