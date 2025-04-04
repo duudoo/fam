@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
-import { Share, Plus, Save } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Save, Plus, Share, ChevronDown } from "lucide-react";
 
 interface FormActionsProps {
   showCancelButton?: boolean;
@@ -36,61 +37,66 @@ const FormActions = ({
   };
 
   return (
-    <div className="flex flex-col gap-3 mt-6">
-      {/* Save options */}
-      <div className="space-y-3">
-        <Button 
-          type="button"
-          onClick={() => handleSubmit('save')}
-          disabled={isSubmitting}
-          className="w-full"
-        >
-          <Save className="w-4 h-4 mr-2" />
-          {isSubmitting ? 'Saving...' : isEditing ? 'Update Expense' : 'Save Expense'}
-        </Button>
-        
-        {!isEditing && (
-          <>
-            {showSaveAndAddAnother && (
-              <Button
-                type="button"
-                onClick={() => handleSubmit('saveAndAdd')}
-                disabled={isSubmitting}
-                variant="outline"
-                className="w-full"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Save & Add Another
-              </Button>
-            )}
-            
-            {showSaveAndShare && (
-              <Button
-                type="button"
-                onClick={() => handleSubmit('saveAndShare')}
-                disabled={isSubmitting}
-                variant="outline"
-                className="w-full"
-              >
-                <Share className="w-4 h-4 mr-2" />
-                Save & Share
-              </Button>
-            )}
-          </>
-        )}
-      </div>
-      
-      {/* Cancel button displayed separately */}
+    <div className="flex justify-between items-center gap-3 mt-6">
+      {/* Cancel button on the left */}
       {showCancelButton && (
         <Button
           type="button"
           variant="outline"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="w-full"
+          className="flex-1"
         >
           Cancel
         </Button>
+      )}
+      
+      {/* Save Expense dropdown on the right */}
+      {isEditing ? (
+        // Simple button for editing mode - no dropdown
+        <Button 
+          type="button"
+          onClick={() => handleSubmit('save')}
+          disabled={isSubmitting}
+          className={showCancelButton ? "flex-1" : "w-full"}
+        >
+          <Save className="w-4 h-4 mr-2" />
+          {isSubmitting ? 'Saving...' : 'Update Expense'}
+        </Button>
+      ) : (
+        // Dropdown for new expense
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              className={showCancelButton ? "flex-1" : "w-full"}
+              disabled={isSubmitting}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {isSubmitting ? 'Saving...' : 'Save Expense'}
+              <ChevronDown className="w-4 h-4 ml-2" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => handleSubmit('save')}>
+              <Save className="w-4 h-4 mr-2" />
+              Save
+            </DropdownMenuItem>
+            
+            {showSaveAndAddAnother && (
+              <DropdownMenuItem onClick={() => handleSubmit('saveAndAdd')}>
+                <Plus className="w-4 h-4 mr-2" />
+                Save & Add Another
+              </DropdownMenuItem>
+            )}
+            
+            {showSaveAndShare && (
+              <DropdownMenuItem onClick={() => handleSubmit('saveAndShare')}>
+                <Share className="w-4 h-4 mr-2" />
+                Save & Share
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
     </div>
   );
