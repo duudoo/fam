@@ -22,10 +22,9 @@ const MonthlySummary = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="categories" className="w-full">
-          <TabsList className="grid grid-cols-3 mb-4">
+          <TabsList className="grid grid-cols-2 mb-4">
             <TabsTrigger value="categories">By Category</TabsTrigger>
-            <TabsTrigger value="children">By Child</TabsTrigger>
-            <TabsTrigger value="childExpenses">Child Expenses</TabsTrigger>
+            <TabsTrigger value="childExpenses">By Child</TabsTrigger>
           </TabsList>
           
           <TabsContent value="categories">
@@ -49,51 +48,6 @@ const MonthlySummary = () => {
             ) : (
               <div className="text-center py-4 text-gray-500">
                 No expense data available
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="children">
-            {loading ? (
-              <div className="flex justify-center py-4">
-                <div className="animate-spin h-6 w-6 border-4 border-famacle-blue border-t-transparent rounded-full"></div>
-              </div>
-            ) : children.length > 0 ? (
-              <div className="space-y-6">
-                {children.map((child) => (
-                  <div key={child.id} className="space-y-2">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="h-6 w-6 rounded-full bg-famacle-blue flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">{child.initials}</span>
-                      </div>
-                      <h4 className="font-medium">{child.name || child.initials}</h4>
-                    </div>
-                    
-                    {categoryByChild[child.id] && categoryByChild[child.id].length > 0 ? (
-                      <div className="pl-8 space-y-3">
-                        {categoryByChild[child.id].map((category) => (
-                          <CategoryProgressBar 
-                            key={`${child.id}-${category.name}`}
-                            name={category.name}
-                            amount={category.amount}
-                            percentage={category.percentage}
-                            color={category.color}
-                            currency={currency.symbol}
-                            compact
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="pl-8 text-sm text-gray-500">
-                        No expenses recorded
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-4 text-gray-500">
-                No children added yet
               </div>
             )}
           </TabsContent>
