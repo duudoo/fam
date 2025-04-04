@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { MessageSquare } from "lucide-react";
 import { Expense } from "@/utils/types";
 import { useShareExpense } from "@/hooks/expenses/useShareExpense";
+import { toast } from "sonner";
 
 interface MessageTabProps {
   expense: Expense | null;
@@ -26,19 +27,16 @@ const MessageTab = ({ expense, expenseLink, onClose }: MessageTabProps) => {
   const handleShareViaMessage = async () => {
     if (!expense) {
       console.error("No expense to share");
+      toast.error("Unable to share expense: missing expense data");
       return;
     }
     
-    // Ensure childIds is always an array, even if empty
-    const safeExpense = {
-      ...expense,
-      childIds: expense.childIds || []
-    };
-    
     try {
+      // Ensure all required fields exist before sending
       await shareViaMessage(message);
     } catch (error) {
       console.error("Error sharing expense via message:", error);
+      toast.error("Failed to send message. Please try again.");
     }
   };
   

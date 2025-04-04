@@ -94,7 +94,7 @@ const handleExpenseUpdate = async (
     splitAmounts: values.splitAmounts,
     notes: values.notes || undefined,
     receiptUrl: receiptUrl || undefined,
-    childIds: values.childIds
+    childIds: values.childIds || []
   };
   
   console.log("Update payload:", updates);
@@ -129,7 +129,7 @@ const handleExpenseCreation = async (
     notes: values.notes || undefined,
     receiptUrl: receiptUrl || undefined,
     paidBy: user.id,
-    childIds: values.childIds
+    childIds: values.childIds || []
   };
   
   console.log("Create expense payload:", newExpenseData);
@@ -155,7 +155,7 @@ const handleExpenseCreation = async (
           category: values.category,
           splitMethod: values.splitMethod,
           splitPercentage: values.splitPercentage,
-          childIds: values.childIds,
+          childIds: values.childIds || [],
           receiptUrl: receiptUrl
         }, expenseData.approval_token, user.id);
       }

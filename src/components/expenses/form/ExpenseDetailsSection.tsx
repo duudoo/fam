@@ -42,9 +42,10 @@ const ExpenseDetailsSection = ({
         <DescriptionField form={form} />
         <AmountField form={form} />
         <DateField form={form} />
-        <CategoryField control={form.control} />
+        <CategoryField control={form.control} categories={categories} />
         <SplitMethodField 
           control={form.control} 
+          splitMethods={splitMethods}
           onSplitMethodChange={onSplitMethodChange} 
         />
       </CardContent>

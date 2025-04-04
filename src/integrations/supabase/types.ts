@@ -175,6 +175,7 @@ export type Database = {
           notes: string | null
           paid_by: string
           receipt_url: string | null
+          split_amounts: Json | null
           split_method: string
           split_percentage: Json | null
           status: string
@@ -192,6 +193,7 @@ export type Database = {
           notes?: string | null
           paid_by: string
           receipt_url?: string | null
+          split_amounts?: Json | null
           split_method?: string
           split_percentage?: Json | null
           status?: string
@@ -209,6 +211,7 @@ export type Database = {
           notes?: string | null
           paid_by?: string
           receipt_url?: string | null
+          split_amounts?: Json | null
           split_method?: string
           split_percentage?: Json | null
           status?: string

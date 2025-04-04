@@ -27,6 +27,7 @@ export const createExpense = async (userId: string, newExpense: Omit<Expense, 'i
     .single();
 
   if (error) {
+    console.error("Error creating expense:", error);
     throw error;
   }
 
@@ -42,6 +43,7 @@ export const createExpense = async (userId: string, newExpense: Omit<Expense, 'i
       .insert(childRelations);
 
     if (relError) {
+      console.error("Error creating expense-child relationships:", relError);
       throw relError;
     }
   }
@@ -102,7 +104,10 @@ export const updateExpense = async (
       .delete()
       .eq('expense_id', expenseId);
     
-    if (deleteError) throw deleteError;
+    if (deleteError) {
+      console.error("Error deleting expense-child relationships:", deleteError);
+      throw deleteError;
+    }
     
     // Then add the new relationships if there are any
     if (updates.childIds.length > 0) {
@@ -115,7 +120,10 @@ export const updateExpense = async (
         .from('expense_children')
         .insert(childRelations);
       
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error("Error inserting expense-child relationships:", insertError);
+        throw insertError;
+      }
     }
   }
   

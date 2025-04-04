@@ -18,15 +18,20 @@ import { Control } from "react-hook-form";
 
 interface SplitMethodFieldProps {
   control: Control<any>;
+  splitMethods?: { value: SplitMethod; label: string }[];
   onSplitMethodChange?: (method: SplitMethod) => void;
 }
 
-const SplitMethodField = ({ control, onSplitMethodChange }: SplitMethodFieldProps) => {
-  const splitMethods: { value: SplitMethod; label: string }[] = [
+const SplitMethodField = ({ control, splitMethods, onSplitMethodChange }: SplitMethodFieldProps) => {
+  const defaultSplitMethods: { value: SplitMethod; label: string }[] = [
     { value: "none", label: "None" },
     { value: "50/50", label: "50/50" },
     { value: "custom", label: "Custom" },
   ];
+
+  const methods = splitMethods && splitMethods.length > 0 
+    ? splitMethods 
+    : defaultSplitMethods;
 
   return (
     <FormField
@@ -49,7 +54,7 @@ const SplitMethodField = ({ control, onSplitMethodChange }: SplitMethodFieldProp
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {splitMethods.map((method) => (
+              {methods.map((method) => (
                 <SelectItem key={method.value} value={method.value}>
                   {method.label}
                 </SelectItem>
