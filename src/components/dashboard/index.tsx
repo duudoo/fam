@@ -6,6 +6,7 @@ import SummaryCards from "./SummaryCards";
 import MonthlySummary from "./MonthlySummary";
 import ExpensesSection from "./ExpensesSection";
 import NotificationsCard from "./NotificationsCard";
+import UpcomingEventsCard from "./UpcomingEventsCard";
 import { useAuth } from "@/hooks/useAuth";
 import { useExpenses } from "@/hooks/expenses";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -51,6 +52,7 @@ const Dashboard = () => {
         </div>
         
         <div className="space-y-6">
+          <UpcomingEventsCard />
           <NotificationsCard />
         </div>
       </div>
