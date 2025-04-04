@@ -51,7 +51,7 @@ const Dashboard = () => {
         </div>
         
         <div className="space-y-6">
-          <NotificationsCard onAddEvent={() => setOpenAddEvent(true)} />
+          <NotificationsCard />
         </div>
       </div>
 

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bell, Calendar, ChevronRight } from 'lucide-react';
+import { Bell, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
@@ -103,17 +103,6 @@ const NotificationsCard = ({ onAddEvent }: NotificationsCardProps) => {
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex flex-col gap-2">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="w-full flex justify-center items-center h-9" 
-          onClick={onAddEvent}
-        >
-          <Calendar className="h-4 w-4 mr-2" />
-          Add Event
-        </Button>
-      </CardFooter>
     </Card>
   );
 };
