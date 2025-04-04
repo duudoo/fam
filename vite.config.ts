@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Enforce npm as the package manager
+  // Enforce pnpm as the package manager
   optimizeDeps: {
     force: true
   }

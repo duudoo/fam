@@ -19,9 +19,9 @@ Changes made via Lovable will be committed automatically to this repo.
 
 If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+The only requirement is having Node.js & pnpm installed - [install Node.js with nvm](https://github.com/nvm-sh/nvm#installing-and-updating) and [install pnpm](https://pnpm.io/installation)
 
-> **IMPORTANT**: This project uses npm exclusively. Please do not use Yarn or other package managers.
+> **IMPORTANT**: This project uses pnpm exclusively. Please do not use npm, Yarn, or other package managers.
 
 Follow these steps:
 
@@ -33,10 +33,10 @@ git clone <YOUR_GIT_URL>
 cd <YOUR_PROJECT_NAME>
 
 # Step 3: Install the necessary dependencies.
-npm i
+pnpm install
 
 # Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+pnpm run dev
 ```
 
 **Edit a file directly in GitHub**

@@ -65,7 +65,8 @@ port = 54321
 enabled = true
 
 [functions.package_manager]
-enabled = false
+enabled = true
 npm = false
 yarn = false
 pnpm = true
+
