@@ -6,6 +6,7 @@ import CategoryProgressBar from './cards/CategoryProgressBar';
 import { useMonthlySummary } from '@/hooks/useMonthlySummary';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Link } from 'react-router-dom';
 
 const MonthlySummary = () => {
   const { categories, categoryByChild, children, loading, expensesByChild } = useMonthlySummary();
@@ -102,9 +103,11 @@ const MonthlySummary = () => {
         </Tabs>
       </CardContent>
       <CardFooter className="border-t pt-4">
-        <Button variant="outline" className="w-full">
-          <PieChart className="w-4 h-4 mr-2" />
-          View Full Report
+        <Button variant="outline" className="w-full" asChild>
+          <Link to="/expenses">
+            <PieChart className="w-4 h-4 mr-2" />
+            View Full Report
+          </Link>
         </Button>
       </CardFooter>
     </Card>
