@@ -36,26 +36,27 @@ const FormActions = ({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3 justify-end mt-6">
-      {showCancelButton && (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </Button>
-      )}
+    <div className="flex flex-col gap-3 mt-6">
+      {/* Save actions are always stacked vertically */}
+      <Button 
+        type="button"
+        onClick={() => handleSubmit('save')}
+        disabled={isSubmitting}
+        className="w-full"
+      >
+        <Save className="w-4 h-4 mr-2" />
+        {isSubmitting ? 'Saving...' : isEditing ? 'Update Expense' : 'Save Expense'}
+      </Button>
       
       {!isEditing && (
-        <div className={isMobile ? "flex flex-col gap-3" : "flex gap-3"}>
+        <>
           {showSaveAndAddAnother && (
             <Button
               type="button"
               onClick={() => handleSubmit('saveAndAdd')}
               disabled={isSubmitting}
               variant="outline"
+              className="w-full"
             >
               <Plus className="w-4 h-4 mr-2" />
               Save & Add Another
@@ -68,22 +69,26 @@ const FormActions = ({
               onClick={() => handleSubmit('saveAndShare')}
               disabled={isSubmitting}
               variant="outline"
+              className="w-full"
             >
               <Share className="w-4 h-4 mr-2" />
               Save & Share
             </Button>
           )}
-        </div>
+        </>
       )}
       
-      <Button 
-        type="button"
-        onClick={() => handleSubmit('save')}
-        disabled={isSubmitting}
-      >
-        <Save className="w-4 h-4 mr-2" />
-        {isSubmitting ? 'Saving...' : isEditing ? 'Update Expense' : 'Save Expense'}
-      </Button>
+      {showCancelButton && (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isSubmitting}
+          className="w-full"
+        >
+          Cancel
+        </Button>
+      )}
     </div>
   );
 };
