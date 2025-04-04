@@ -33,6 +33,16 @@ const ExpenseFormContent = ({ form }: ExpenseFormContentProps) => {
     form.getValues().splitMethod === 'custom'
   );
   
+  // Format the split methods to have value and label properties
+  const formattedSplitMethods = splitMethods.map(method => {
+    return {
+      value: method,
+      label: method === 'none' ? 'None' : 
+             method === '50/50' ? '50/50' : 
+             method === 'custom' ? 'Custom' : method
+    };
+  });
+  
   const handleSplitMethodChange = (method: SplitMethod) => {
     console.log(`Split method changed to: ${method}, showing custom field: ${method === 'custom'}`);
     setShowCustomSplit(method === 'custom');
@@ -43,7 +53,7 @@ const ExpenseFormContent = ({ form }: ExpenseFormContentProps) => {
       <ExpenseDetailsSection 
         form={form} 
         categories={categories} 
-        splitMethods={splitMethods} 
+        splitMethods={formattedSplitMethods} 
         onSplitMethodChange={handleSplitMethodChange}
         isMobile={isMobile}
       />

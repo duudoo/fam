@@ -18,12 +18,12 @@ import { Control } from "react-hook-form";
 
 interface SplitMethodFieldProps {
   control: Control<any>;
-  splitMethods?: { value: SplitMethod; label: string }[];
+  splitMethods?: { value: string; label: string }[];
   onSplitMethodChange?: (method: SplitMethod) => void;
 }
 
 const SplitMethodField = ({ control, splitMethods, onSplitMethodChange }: SplitMethodFieldProps) => {
-  const defaultSplitMethods: { value: SplitMethod; label: string }[] = [
+  const defaultSplitMethods = [
     { value: "none", label: "None" },
     { value: "50/50", label: "50/50" },
     { value: "custom", label: "Custom" },

@@ -14,7 +14,7 @@ interface ExpenseDetailsSectionProps {
   control?: any;
   form?: UseFormReturn<FormValues>;
   categories?: string[];
-  splitMethods?: SplitMethod[];
+  splitMethods?: { value: string; label: string }[];
   onSplitMethodChange?: (method: SplitMethod) => void;
   isMobile?: boolean;
 }
@@ -33,6 +33,15 @@ const ExpenseDetailsSection = ({
     return null;
   }
   
+  // Format the split methods correctly
+  const formattedSplitMethods = splitMethods && splitMethods.length > 0 
+    ? splitMethods 
+    : [
+        { value: "none", label: "None" },
+        { value: "50/50", label: "50/50" },
+        { value: "custom", label: "Custom" },
+      ];
+  
   return (
     <>
       <CardHeader className="px-0">
@@ -45,7 +54,7 @@ const ExpenseDetailsSection = ({
         <CategoryField control={form.control} categories={categories} />
         <SplitMethodField 
           control={form.control} 
-          splitMethods={splitMethods}
+          splitMethods={formattedSplitMethods}
           onSplitMethodChange={onSplitMethodChange} 
         />
       </CardContent>
