@@ -45,7 +45,8 @@ const FormActions = ({
           variant="outline"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="flex-1"
+          className="flex-1 h-9 px-3"
+          size="sm"
         >
           Cancel
         </Button>
@@ -58,7 +59,8 @@ const FormActions = ({
           type="button"
           onClick={() => handleSubmit('save')}
           disabled={isSubmitting}
-          className={showCancelButton ? "flex-1" : "w-full"}
+          className={showCancelButton ? "flex-1 h-9 px-3" : "w-full h-9 px-3"}
+          size="sm"
         >
           <Save className="w-4 h-4 mr-2" />
           {isSubmitting ? 'Saving...' : 'Update Expense'}
@@ -68,8 +70,9 @@ const FormActions = ({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
-              className={showCancelButton ? "flex-1" : "w-full"}
+              className={showCancelButton ? "flex-1 h-9 px-3" : "w-full h-9 px-3"}
               disabled={isSubmitting}
+              size="sm"
             >
               <Save className="w-4 h-4 mr-2" />
               {isSubmitting ? 'Saving...' : 'Save Expense'}
