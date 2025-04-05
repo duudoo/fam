@@ -5,9 +5,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFamilyCircle } from "@/hooks/useFamilyCircle";
 import CoParentsPanel from "./CoParentsPanel";
 import ChildrenPanel from "./ChildrenPanel";
-import { CircleLoadingState } from "./CircleLoadingState";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
+import { CircleLoadingState } from "./CircleLoadingState";
 
 const CircleTab = () => {
   const { 
@@ -16,7 +16,7 @@ const CircleTab = () => {
     receivedInvites,
     loading, 
     error, 
-    fetchInvites 
+    fetchInvites
   } = useFamilyCircle();
 
   if (loading) {
