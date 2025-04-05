@@ -54,7 +54,7 @@ const UserInvite = () => {
       
       console.log("Creating invitation for:", data.email);
       
-      // Try to create the invitation - with duplicates handled by unique constraint on DB
+      // Try to create the invitation - duplicates will be caught by the DB constraint
       const { data: newInvite, error: inviteError } = await supabase
         .from('co_parent_invites')
         .insert({
