@@ -23,3 +23,8 @@ export type Child = {
  * Input for adding a new child
  */
 export type AddChildInput = Pick<Child, 'name' | 'initials' | 'dateOfBirth'>;
+
+/**
+ * Input for updating an existing child
+ */
+export type UpdateChildInput = AddChildInput;

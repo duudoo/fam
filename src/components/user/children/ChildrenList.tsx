@@ -3,12 +3,16 @@ import { Child } from "@/utils/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Edit, Trash2 } from "lucide-react";
 
 interface ChildrenListProps {
   children: Child[];
+  onEditChild?: (child: Child) => void;
+  onDeleteChild?: (childId: string) => void;
 }
 
-const ChildrenList = ({ children }: ChildrenListProps) => {
+const ChildrenList = ({ children, onEditChild, onDeleteChild }: ChildrenListProps) => {
   return (
     <div className="space-y-4">
       {children.map((child) => (
@@ -29,6 +33,34 @@ const ChildrenList = ({ children }: ChildrenListProps) => {
                   </p>
                 )}
               </div>
+              
+              {(onEditChild || onDeleteChild) && (
+                <div className="flex items-center gap-2">
+                  {onEditChild && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => onEditChild(child)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <span className="sr-only">Edit</span>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
+                  
+                  {onDeleteChild && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => onDeleteChild(child.id)}
+                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                    >
+                      <span className="sr-only">Delete</span>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

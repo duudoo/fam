@@ -1,174 +1,140 @@
 
 import { useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage,
-  FormDescription
-} from "@/components/ui/form";
-import { Child } from "@/utils/types";
-import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
-
-// Define the form schema with zod - emphasizing initials as primary identifier
-const formSchema = z.object({
-  initials: z.string()
-    .min(1, "Initials are required")
-    .max(3, "Initials should be at most 3 characters")
-    .refine(val => /^[A-Z]+$/.test(val), "Initials must be uppercase letters only"),
-  name: z.string().optional(),
-  dateOfBirth: z.string()
-    .optional()
-    .refine(val => !val || new Date(val) <= new Date(), "Date of birth cannot be in the future"),
-});
-
-type FormData = z.infer<typeof formSchema>;
+import { Label } from "@/components/ui/label";
+import { format } from "date-fns";
+import { AddChildInput } from "@/utils/types";
 
 interface ChildFormProps {
-  onSubmit: (data: Omit<Child, "id" | "parentIds">) => void;
+  onSubmit: (child: AddChildInput) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
-  initialData?: Partial<FormData>;
+  initialValues?: {
+    name: string;
+    initials: string;
+    dateOfBirth: string;
+  };
 }
 
 const ChildForm = ({ 
   onSubmit, 
   onCancel, 
   isSubmitting = false,
-  initialData 
+  initialValues
 }: ChildFormProps) => {
-  const [localSubmitting, setLocalSubmitting] = useState(false);
-  const submitting = isSubmitting || localSubmitting;
+  const [name, setName] = useState(initialValues?.name || "");
+  const [initials, setInitials] = useState(initialValues?.initials || "");
+  const [dateOfBirth, setDateOfBirth] = useState(initialValues?.dateOfBirth || "");
   
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      initials: initialData?.initials || "",
-      name: initialData?.name || "",
-      dateOfBirth: initialData?.dateOfBirth || "",
-    },
-  });
-
-  const handleSubmit = async (data: FormData) => {
-    if (submitting) return; // Prevent multiple submissions
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
     
-    setLocalSubmitting(true);
-    try {
-      // Convert initials to uppercase and handle optional fields
-      const childData = {
-        initials: data.initials.toUpperCase(),
-        name: data.name || undefined,
-        dateOfBirth: data.dateOfBirth || undefined,
-      };
-      
-      // Call the onSubmit prop with the prepared data
-      await onSubmit(childData);
-      
-      // Reset form on successful submission
-      form.reset();
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      toast.error('Failed to add child. Please try again.');
-    } finally {
-      setLocalSubmitting(false);
+    if (!initials) {
+      newErrors.initials = "Initials are required";
+    } else if (initials.length > 4) {
+      newErrors.initials = "Initials should be 4 characters or less";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    onSubmit({
+      name: name || null,
+      initials,
+      dateOfBirth: dateOfBirth || null
+    });
+  };
+
+  const generateInitials = (fullName: string) => {
+    if (!fullName) return "";
+    
+    const names = fullName.trim().split(" ");
+    if (names.length === 1) {
+      return names[0].substring(0, 2).toUpperCase();
+    }
+    
+    return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value;
+    setName(newName);
+    
+    // Only auto-generate initials if they haven't been manually changed
+    if (!initials || initials === generateInitials(name)) {
+      setInitials(generateInitials(newName));
     }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="initials"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Initials *</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="e.g. JD" 
-                  {...field} 
-                  onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                  autoFocus
-                  maxLength={3}
-                  disabled={submitting}
-                />
-              </FormControl>
-              <FormDescription>
-                Child will be identified by these initials throughout the app
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <form onSubmit={handleSubmit}>
+      <div className="grid gap-4">
+        <div>
+          <Label htmlFor="name">Full Name</Label>
+          <Input
+            id="name"
+            value={name}
+            onChange={handleNameChange}
+            placeholder="Child's full name"
+          />
+        </div>
         
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Full Name (Optional)</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="e.g. Jane Doe" 
-                  {...field} 
-                  disabled={submitting}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+        <div>
+          <Label htmlFor="initials">Initials</Label>
+          <Input
+            id="initials"
+            value={initials}
+            onChange={(e) => setInitials(e.target.value.toUpperCase())}
+            placeholder="Initials (e.g. AB)"
+            className="uppercase"
+            maxLength={4}
+            required
+          />
+          {errors.initials && (
+            <p className="text-sm text-red-500 mt-1">{errors.initials}</p>
           )}
-        />
+        </div>
         
-        <FormField
-          control={form.control}
-          name="dateOfBirth"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Date of Birth (Optional)</FormLabel>
-              <FormControl>
-                <Input 
-                  type="date" 
-                  {...field} 
-                  disabled={submitting}
-                  max={new Date().toISOString().split('T')[0]} // Prevent future dates
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div>
+          <Label htmlFor="dateOfBirth">Date of Birth</Label>
+          <Input
+            id="dateOfBirth"
+            type="date"
+            value={dateOfBirth}
+            onChange={(e) => setDateOfBirth(e.target.value)}
+            max={format(new Date(), "yyyy-MM-dd")}
+          />
+        </div>
         
-        <div className="flex justify-end gap-2 pt-2">
+        <div className="flex justify-end gap-2 mt-2">
           <Button 
             type="button" 
             variant="outline" 
             onClick={onCancel}
-            disabled={submitting}
+            disabled={isSubmitting}
           >
             Cancel
           </Button>
           <Button 
-            type="submit"
-            disabled={submitting}
+            type="submit" 
+            disabled={isSubmitting}
           >
-            {submitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Adding...
-              </>
-            ) : "Add Child"}
+            {isSubmitting ? "Saving..." : initialValues ? "Update" : "Add Child"}
           </Button>
         </div>
-      </form>
-    </Form>
+      </div>
+    </form>
   );
 };
 
