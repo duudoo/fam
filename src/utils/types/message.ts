@@ -30,7 +30,7 @@ export type AttachmentType =
  */
 export type Attachment = {
   /** Unique identifier */
-  id?: string;
+  id: string;
   /** Type of attachment */
   type: AttachmentType;
   /** URL to the attachment if applicable */
