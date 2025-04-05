@@ -4,3 +4,7 @@ project_id = "wcezrgcmdrheyacsyimv"
 
 [functions.calendar-sync]
 verify_jwt = false
+
+[functions.co-parent-invites]
+# Note: This function would handle co-parent invite operations
+verify_jwt = true

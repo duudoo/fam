@@ -1,9 +1,9 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { CoParentInvite, Parent } from "@/utils/types";
 import { toast } from "sonner";
+import { fetchSentInvites } from "@/lib/api/invites";
 
 export const useFamilyCircle = () => {
   const { user, profile } = useAuth();
@@ -44,37 +44,12 @@ export const useFamilyCircle = () => {
       setLoading(true);
       console.log("Fetching invites for user ID:", user.id);
       
-      // Fixed: Query co_parent_invites directly without joining to users
-      const { data, error } = await supabase
-        .from('co_parent_invites')
-        .select('*')
-        .eq('invited_by', user.id);
-        
-      if (error) {
-        console.error('Error fetching invites:', error);
-        setError("Unable to load co-parent invites");
-        toast.error("Failed to load co-parent invites");
-        setInvites([]);
-        setLoading(false);
-        return;
-      }
+      // Use the dedicated API function to fetch invites
+      const inviteData = await fetchSentInvites(user.id);
       
-      console.log("Fetched invites:", data);
-      
-      if (data) {
-        setInvites(data.map((invite) => ({
-          id: invite.id,
-          email: invite.email,
-          status: invite.status as any,
-          invitedBy: invite.invited_by,
-          invitedAt: invite.invited_at,
-          message: invite.message || undefined,
-          respondedAt: invite.responded_at || undefined
-        })));
-        setError(null);
-      } else {
-        setInvites([]);
-      }
+      console.log("Fetched invites:", inviteData);
+      setInvites(inviteData);
+      setError(null);
     } catch (error) {
       console.error('Error fetching invites:', error);
       setError("Unable to load co-parent invites");
