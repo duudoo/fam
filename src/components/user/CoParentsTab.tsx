@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import CoParentInvite from "@/components/user/CoParentInvite";
 import CoParentsList from "@/components/user/CoParentsList";
 import { CoParentInvite as CoParentInviteType, Parent } from "@/utils/types";
-import { supabase } from "@/integrations/supabase/client";
+import { useFamilyCircle } from "@/hooks/useFamilyCircle";
 import { emailAPI } from "@/lib/api/email";
 
 interface CoParentsTabProps {
@@ -20,75 +20,21 @@ interface CoParentsTabProps {
 const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoParentsTabProps) => {
   const [inviting, setInviting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const { createInvite } = useFamilyCircle();
 
   const handleSendInvite = async (email: string, message?: string) => {
     try {
       setSubmitting(true);
       
-      // Validate inputs
-      if (!email) {
-        toast.error("Email is required");
+      // Use the createInvite function from useFamilyCircle
+      const result = await createInvite(email, message);
+      
+      if (result.error) {
+        toast.error(result.error);
         return;
       }
       
-      if (!currentUser || !currentUser.id) {
-        console.error("No current user found", currentUser);
-        toast.error("You must be logged in to send invitations");
-        return;
-      }
-
-      // Validate the email is not the current user's email
-      if (currentUser.email === email) {
-        toast.error("You cannot invite yourself");
-        return;
-      }
-
-      console.log("Checking for existing invites in client-side...");
-      
-      // Check existing invites from local state first to improve UX
-      const existingInvite = invites.find(invite => invite.email.toLowerCase() === email.toLowerCase());
-      
-      if (existingInvite) {
-        toast.error("You have already invited this email address");
-        setSubmitting(false);
-        return;
-      }
-
-      console.log("Creating new invitation...");
-      
-      // Create the invitation - if duplicate, the DB constraint will catch it
-      const { data: newInvite, error: inviteError } = await supabase
-        .from('co_parent_invites')
-        .insert({
-          email: email,
-          invited_by: currentUser.id,
-          status: 'pending',
-          message: message || null
-        })
-        .select();
-
-      if (inviteError) {
-        // Handle unique constraint violation separately
-        if (inviteError.code === '23505') {
-          console.error("Duplicate detected by DB constraint:", inviteError);
-          toast.error("This email has already been invited");
-        } else {
-          console.error("Error creating invitation:", inviteError);
-          toast.error("Failed to create invitation");
-        }
-        setSubmitting(false);
-        return;
-      }
-
-      if (!newInvite || newInvite.length === 0) {
-        console.error("No data returned from invitation insert");
-        toast.error("Failed to create invitation record");
-        setSubmitting(false);
-        return;
-      }
-
-      const invite = newInvite[0];
-      console.log("Invitation created successfully:", invite);
+      const invite = result.data;
       
       // Send email invitation
       const inviteLink = `${window.location.origin}/accept-invite?id=${invite.id}`;
@@ -114,18 +60,8 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
       // Update UI
       if (onInviteSent) {
         onInviteSent();
-      } else {
-        // Update local state
-        setInvites(prevInvites => [...prevInvites, {
-          id: invite.id,
-          email: invite.email,
-          status: invite.status as any,
-          invitedBy: invite.invited_by,
-          invitedAt: invite.invited_at,
-          message: invite.message || undefined,
-          respondedAt: undefined
-        }]);
       }
+      
     } catch (error) {
       console.error("Error sending invitation:", error);
       toast.error("Failed to send invitation. Please try again.");

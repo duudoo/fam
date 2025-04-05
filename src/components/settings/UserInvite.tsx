@@ -15,8 +15,7 @@ import {
   FormLabel, 
   FormMessage 
 } from '@/components/ui/form';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { useFamilyCircle } from '@/hooks/useFamilyCircle';
 
 const inviteFormSchema = z.object({
   email: z.string().email({
@@ -26,8 +25,12 @@ const inviteFormSchema = z.object({
 
 type InviteFormValues = z.infer<typeof inviteFormSchema>;
 
-const UserInvite = () => {
-  const { user } = useAuth();
+interface UserInviteProps {
+  onInviteSent?: () => void;
+}
+
+const UserInvite = ({ onInviteSent }: UserInviteProps) => {
+  const { createInvite } = useFamilyCircle();
   const [isLoading, setIsLoading] = useState(false);
   
   const form = useForm<InviteFormValues>({
@@ -38,48 +41,21 @@ const UserInvite = () => {
   });
 
   const sendInvite = async (data: InviteFormValues) => {
-    if (!user) {
-      toast.error("You must be signed in to send invitations");
-      return;
-    }
-    
     setIsLoading(true);
     try {
-      // Validate the email is not the current user's email
-      if (user.email === data.email) {
-        toast.error("You cannot invite yourself");
-        setIsLoading(false);
+      const result = await createInvite(data.email);
+      
+      if (result.error) {
+        toast.error(result.error);
         return;
       }
       
-      console.log("Creating invitation for:", data.email);
-      
-      // Try to create the invitation - duplicates will be caught by the DB constraint
-      const { data: newInvite, error: inviteError } = await supabase
-        .from('co_parent_invites')
-        .insert({
-          email: data.email,
-          invited_by: user.id,
-          status: 'pending'
-        })
-        .select();
-      
-      if (inviteError) {
-        // Handle unique constraint violation separately
-        if (inviteError.code === '23505') {
-          console.log("Duplicate invitation detected by database constraint");
-          toast.error("This email has already been invited");
-        } else {
-          console.error("Error sending invitation:", inviteError);
-          toast.error("Failed to send invitation");
-        }
-        setIsLoading(false);
-        return;
-      }
-      
-      console.log("Invitation created successfully:", newInvite);
       toast.success("Invitation sent successfully");
       form.reset();
+      
+      if (onInviteSent) {
+        onInviteSent();
+      }
     } catch (error) {
       console.error("Error sending invitation:", error);
       toast.error("Failed to send invitation");
