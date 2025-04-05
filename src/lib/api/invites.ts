@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CoParentInvite } from "@/utils/types";
 
@@ -9,6 +8,7 @@ export const fetchSentInvites = async (userId: string): Promise<CoParentInvite[]
   try {
     console.log("Fetching sent invites for user:", userId);
     
+    // Using the co_parent_invites table directly without joining to auth.users
     const { data, error } = await supabase
       .from('co_parent_invites')
       .select('*')
@@ -16,7 +16,7 @@ export const fetchSentInvites = async (userId: string): Promise<CoParentInvite[]
       
     if (error) {
       console.error('Error fetching sent invites:', error);
-      throw new Error(`Failed to fetch sent invites: ${error.message}`);
+      return []; // Return empty array instead of throwing
     }
 
     if (!data) {
@@ -37,7 +37,7 @@ export const fetchSentInvites = async (userId: string): Promise<CoParentInvite[]
     }));
   } catch (err) {
     console.error('Failed to fetch sent invites:', err);
-    throw err;
+    return []; // Return empty array instead of throwing
   }
 };
 
@@ -56,7 +56,7 @@ export const fetchReceivedInvites = async (email: string): Promise<CoParentInvit
       
     if (error) {
       console.error('Error fetching received invites:', error);
-      throw error;
+      return []; // Return empty array instead of throwing
     }
 
     if (!data) {
@@ -77,7 +77,7 @@ export const fetchReceivedInvites = async (email: string): Promise<CoParentInvit
     }));
   } catch (err) {
     console.error('Failed to fetch received invites:', err);
-    throw err;
+    return []; // Return empty array instead of throwing
   }
 };
 
