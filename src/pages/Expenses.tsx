@@ -53,6 +53,12 @@ const ExpensesPage = () => {
     };
   }, [user, subscribeToExpenses]);
 
+  // Handle adding a new expense
+  const handleAddNewClick = () => {
+    setShowForm(true);
+    if (showReport) setShowReport(false);
+  };
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -132,7 +138,10 @@ const ExpensesPage = () => {
               </div>
             )}
 
-            <ExpenseOverview expenses={expenses} />
+            <ExpenseOverview 
+              expenses={expenses} 
+              onAddNewClick={handleAddNewClick}
+            />
             
             <div className="mb-6">
               <ExpenseFilters 
@@ -148,7 +157,7 @@ const ExpensesPage = () => {
               {filter === 'all' && (
                 <ExpenseList 
                   expenses={expenses} 
-                  onAddNewClick={() => setShowForm(true)} 
+                  onAddNewClick={handleAddNewClick} 
                 />
               )}
               
@@ -156,7 +165,7 @@ const ExpensesPage = () => {
                 <ExpenseList 
                   expenses={expenses} 
                   filteredStatus="pending"
-                  onAddNewClick={() => setShowForm(true)} 
+                  onAddNewClick={handleAddNewClick} 
                 />
               )}
               
@@ -164,7 +173,7 @@ const ExpensesPage = () => {
                 <ExpenseList 
                   expenses={expenses} 
                   filteredStatus="approved"
-                  onAddNewClick={() => setShowForm(true)} 
+                  onAddNewClick={handleAddNewClick} 
                 />
               )}
               
@@ -172,7 +181,7 @@ const ExpensesPage = () => {
                 <ExpenseList 
                   expenses={expenses} 
                   filteredStatus="paid"
-                  onAddNewClick={() => setShowForm(true)} 
+                  onAddNewClick={handleAddNewClick} 
                 />
               )}
               
@@ -180,7 +189,7 @@ const ExpensesPage = () => {
                 <ExpenseList 
                   expenses={expenses} 
                   filteredStatus="disputed"
-                  onAddNewClick={() => setShowForm(true)} 
+                  onAddNewClick={handleAddNewClick} 
                 />
               )}
             </div>

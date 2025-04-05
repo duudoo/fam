@@ -7,12 +7,15 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { useChildren } from '@/hooks/children';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 
 interface ExpenseOverviewProps {
   expenses: Expense[] | undefined;
+  onAddNewClick?: () => void;
 }
 
-const ExpenseOverview = ({ expenses = [] }: ExpenseOverviewProps) => {
+const ExpenseOverview = ({ expenses = [], onAddNewClick }: ExpenseOverviewProps) => {
   const { currency } = useCurrency();
   const { data: children = [] } = useChildren();
   const [activeTab, setActiveTab] = useState('category');
@@ -73,29 +76,42 @@ const ExpenseOverview = ({ expenses = [] }: ExpenseOverviewProps) => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
             <h3 className="text-lg font-medium mb-3">Expense Summary</h3>
-            <p className="text-3xl font-bold mb-1">
-              {formatCurrency(totalExpenses, currency.symbol)}
-            </p>
-            <p className="text-sm text-gray-500">
-              {expenses?.length || 0} total expenses
-            </p>
-            
-            <div className="mt-4 space-y-3">
-              {categoryChartData.map(({ category, amount }) => (
-                <div key={category}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="capitalize">{category}</span>
-                    <span className="font-medium">{formatCurrency(amount, currency.symbol)}</span>
-                  </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${getCategoryColorClass(category as ExpenseCategory)}`}
-                      style={{ width: `${(amount / totalExpenses) * 100}%` }}
-                    />
-                  </div>
+            {expenses.length > 0 ? (
+              <>
+                <p className="text-3xl font-bold mb-1">
+                  {formatCurrency(totalExpenses, currency.symbol)}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {expenses?.length || 0} total expenses
+                </p>
+                
+                <div className="mt-4 space-y-3">
+                  {categoryChartData.map(({ category, amount }) => (
+                    <div key={category}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="capitalize">{category}</span>
+                        <span className="font-medium">{formatCurrency(amount, currency.symbol)}</span>
+                      </div>
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${getCategoryColorClass(category as ExpenseCategory)}`}
+                          style={{ width: `${(amount / totalExpenses) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <p className="mb-4 text-gray-500">No expense data available</p>
+                {onAddNewClick && (
+                  <Button onClick={onAddNewClick} variant="default">
+                    <Plus className="h-4 w-4 mr-2" /> Add Your First Expense
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
           
           <div className="lg:col-span-2 pt-12">
@@ -133,32 +149,45 @@ const ExpenseOverview = ({ expenses = [] }: ExpenseOverviewProps) => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
             <h3 className="text-lg font-medium mb-3">Expense by Child</h3>
-            <p className="text-3xl font-bold mb-1">
-              {formatCurrency(totalExpenses, currency.symbol)}
-            </p>
-            <p className="text-sm text-gray-500">
-              {Object.keys(expensesByChild).length} children with expenses
-            </p>
-            
-            <div className="mt-4 space-y-3">
-              {childChartData.map(({ name, value, color }) => (
-                <div key={name}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>{name}</span>
-                    <span className="font-medium">{formatCurrency(value, currency.symbol)}</span>
-                  </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full"
-                      style={{ 
-                        width: `${(value / totalExpenses) * 100}%`,
-                        backgroundColor: color 
-                      }}
-                    />
-                  </div>
+            {childChartData.length > 0 ? (
+              <>
+                <p className="text-3xl font-bold mb-1">
+                  {formatCurrency(totalExpenses, currency.symbol)}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {Object.keys(expensesByChild).length} children with expenses
+                </p>
+                
+                <div className="mt-4 space-y-3">
+                  {childChartData.map(({ name, value, color }) => (
+                    <div key={name}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>{name}</span>
+                        <span className="font-medium">{formatCurrency(value, currency.symbol)}</span>
+                      </div>
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full"
+                          style={{ 
+                            width: `${(value / totalExpenses) * 100}%`,
+                            backgroundColor: color 
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <p className="mb-4 text-gray-500">No child expense data available</p>
+                {onAddNewClick && (
+                  <Button onClick={onAddNewClick} variant="default">
+                    <Plus className="h-4 w-4 mr-2" /> Add Your First Expense
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
           
           <div className="lg:col-span-2 pt-12">
