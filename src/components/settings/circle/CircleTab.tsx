@@ -15,7 +15,6 @@ const CircleTab = () => {
     receivedInvites,
     loading, 
     error,
-    receiveError,
     fetchInvites
   } = useFamilyCircle();
 
@@ -57,7 +56,6 @@ const CircleTab = () => {
               receivedInvites={receivedInvites}
               onInviteSent={fetchInvites}
               error={error}
-              receiveError={receiveError}
             />
           </TabsContent>
           
