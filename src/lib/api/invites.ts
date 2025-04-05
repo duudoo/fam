@@ -79,7 +79,7 @@ export const createInvite = async (email: string, userId: string, message?: stri
   try {
     console.log("Creating invitation:", { email, userId, message });
     
-    // Check if email already has an invite from this user
+    // Check if email already has an invite from this user by querying co_parent_invites directly
     const { data: existingInvites, error: checkError } = await supabase
       .from('co_parent_invites')
       .select('id')
