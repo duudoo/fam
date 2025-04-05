@@ -1,13 +1,13 @@
 
-import { useState, useCallback } from "react";
-import { Plus, Users } from "lucide-react";
+import { useState } from "react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
 import CoParentInvite from "@/components/user/CoParentInvite";
 import CoParentsList from "@/components/user/CoParentsList";
 import { CoParentInvite as CoParentInviteType, Parent } from "@/utils/types";
+import { supabase } from "@/integrations/supabase/client";
 import { emailAPI } from "@/lib/api/email";
 
 interface CoParentsTabProps {
@@ -56,7 +56,7 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
 
       console.log("Creating new invitation...");
       
-      // Create the invitation
+      // Create the invitation - if duplicate, the DB constraint will catch it
       const { data: newInvite, error: inviteError } = await supabase
         .from('co_parent_invites')
         .insert({
@@ -68,8 +68,14 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
         .select();
 
       if (inviteError) {
-        console.error("Error creating invitation:", inviteError);
-        toast.error("Failed to create invitation");
+        // Handle unique constraint violation separately
+        if (inviteError.code === '23505') {
+          console.error("Duplicate detected by DB constraint:", inviteError);
+          toast.error("This email has already been invited");
+        } else {
+          console.error("Error creating invitation:", inviteError);
+          toast.error("Failed to create invitation");
+        }
         setSubmitting(false);
         return;
       }
