@@ -16,7 +16,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { createInvite } from "@/lib/api/invites";
-import { User } from "@supabase/supabase-js";
+import { Parent } from "@/utils/types";
 import { toast } from "sonner";
 import { sendEmailInvite } from "@/utils/inviteUtils";
 import { Loader2 } from "lucide-react";
@@ -29,7 +29,7 @@ const inviteSchema = z.object({
 type InviteFormValues = z.infer<typeof inviteSchema>;
 
 interface InviteCoParentFormProps {
-  currentUser: User;
+  currentUser: Parent;
   onInviteSent: () => void;
   onCancel: () => void;
 }
@@ -62,6 +62,7 @@ const InviteCoParentForm = ({ currentUser, onInviteSent, onCancel }: InviteCoPar
       
       if (error) {
         toast.error(error);
+        setIsSubmitting(false);
         return;
       }
       
@@ -69,7 +70,7 @@ const InviteCoParentForm = ({ currentUser, onInviteSent, onCancel }: InviteCoPar
         // Send email invitation
         const inviteResult = await sendEmailInvite({
           email: values.email,
-          inviterName: currentUser.user_metadata?.full_name || currentUser.email || "A user",
+          inviterName: currentUser.name || currentUser.email,
           inviteMessage: values.message,
           inviteId: data.id
         });

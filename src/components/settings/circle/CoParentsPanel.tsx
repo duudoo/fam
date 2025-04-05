@@ -1,16 +1,15 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { User } from "@supabase/supabase-js";
 import { Plus } from "lucide-react";
 import InviteCoParentForm from "./InviteCoParentForm";
 import InvitesList from "./InvitesList";
-import { CoParentInvite } from "@/utils/types";
+import { CoParentInvite, Parent } from "@/utils/types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface CoParentsPanelProps {
-  currentUser: User;
+  currentUser: Parent;
   sentInvites: CoParentInvite[];
   receivedInvites: CoParentInvite[];
   onInviteSent: () => void;
