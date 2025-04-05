@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { CoParentInvite } from "@/utils/types";
 
@@ -88,7 +89,7 @@ export const createInvite = async (email: string, userId: string, message?: stri
   try {
     console.log("Creating invitation:", { email, userId, message });
     
-    // Create a new invitation without checking for existing ones
+    // Create a new invitation without checking for existing users
     const { data, error } = await supabase
       .from('co_parent_invites')
       .insert({
