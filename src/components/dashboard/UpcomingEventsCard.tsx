@@ -5,7 +5,7 @@ import { Calendar, ChevronRight, Plus } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { format, parseISO, isToday } from 'date-fns';
+import { format, parseISO, isToday, isAfter, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
@@ -20,7 +20,7 @@ const UpcomingEventsCard = () => {
   const upcomingEvents = events
     .filter(event => {
       const eventDate = new Date(event.startDate);
-      return eventDate >= new Date();
+      return isAfter(eventDate, startOfDay(new Date())) || isToday(eventDate);
     })
     .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
     .slice(0, 3); // Limit to 3 events
@@ -87,6 +87,11 @@ const UpcomingEventsCard = () => {
                         <Calendar className="w-4 h-4" />
                       </div>
                     </div>
+                    {event.source && (
+                      <Badge variant="outline" className="mt-2 text-xs">
+                        From {event.source === 'google' ? 'Google' : 'Outlook'} Calendar
+                      </Badge>
+                    )}
                   </div>
                 );
               })

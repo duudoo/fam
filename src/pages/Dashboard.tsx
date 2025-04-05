@@ -4,8 +4,12 @@ import DashboardComponent from "@/components/dashboard";
 import { Toaster } from "@/components/ui/toaster";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import Navbar from "@/components/Navbar";
+import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 
 const DashboardPage = () => {
+  // Initialize calendar events hook to catch sync callbacks
+  useCalendarEvents();
+  
   useEffect(() => {
     // Set page title
     document.title = "Dashboard | Famacle";
