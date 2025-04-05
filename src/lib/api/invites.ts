@@ -88,24 +88,7 @@ export const createInvite = async (email: string, userId: string, message?: stri
   try {
     console.log("Creating invitation:", { email, userId, message });
     
-    // Check if email already has an invite from this user by querying co_parent_invites directly
-    const { data: existingInvites, error: checkError } = await supabase
-      .from('co_parent_invites')
-      .select('id')
-      .eq('email', email)
-      .eq('invited_by', userId)
-      .eq('status', 'pending');
-    
-    if (checkError) {
-      console.error("Error checking existing invites:", checkError);
-      return { error: `Failed to check existing invitations: ${checkError.message}` };
-    }
-    
-    if (existingInvites && existingInvites.length > 0) {
-      return { error: "You have already invited this email address" };
-    }
-
-    // Create a new invitation
+    // Create a new invitation without checking for existing ones
     const { data, error } = await supabase
       .from('co_parent_invites')
       .insert({

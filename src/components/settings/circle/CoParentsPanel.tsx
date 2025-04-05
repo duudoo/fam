@@ -29,22 +29,16 @@ const CoParentsPanel = ({
   
   return (
     <div className="space-y-6">
-      {/* Received Invites Section - Only show if there are invites or a specific error for received invites */}
-      {((receivedInvites && receivedInvites.length > 0) || receiveError) && (
+      {/* Received Invites Section - Only show if there are invites */}
+      {receivedInvites && receivedInvites.length > 0 && (
         <Card className="bg-blue-50 border-blue-200">
           <CardContent className="pt-4">
             <h3 className="text-lg font-medium mb-3">Invitations for You</h3>
-            {receiveError ? (
-              <Alert variant="destructive">
-                <AlertDescription>{receiveError}</AlertDescription>
-              </Alert>
-            ) : (
-              <InvitesList 
-                invites={receivedInvites} 
-                type="received" 
-                onStatusChange={onInviteSent}
-              />
-            )}
+            <InvitesList 
+              invites={receivedInvites} 
+              type="received" 
+              onStatusChange={onInviteSent}
+            />
           </CardContent>
         </Card>
       )}

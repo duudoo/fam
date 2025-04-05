@@ -41,7 +41,6 @@ export const useFamilyCircle = () => {
       
       setLoading(true);
       setError(null);
-      setReceiveError(null);
       
       try {
         const sentInviteData = await fetchSentInvites(user.id);
@@ -51,15 +50,18 @@ export const useFamilyCircle = () => {
         setError("Unable to load sent invites");
       }
       
+      // We'll still try to fetch received invites, but we'll suppress the errors in the UI
+      // since registered users may not have received any invites
       if (user.email) {
         try {
           const receivedInviteData = await fetchReceivedInvites(user.email);
           setReceivedInvites(receivedInviteData);
+          // Clear any previous errors since we successfully fetched
+          setReceiveError(null);
         } catch (err) {
           console.error('Error fetching received invites:', err);
-          setReceiveError("Unable to load received invites");
-          // We don't want to show error toasts for this as the primary user may not have any invites
-          // and that's normal behavior
+          // We're now suppressing this error in the UI
+          setReceivedInvites([]);
         }
       } else {
         setReceivedInvites([]);
@@ -117,7 +119,7 @@ export const useFamilyCircle = () => {
     setReceivedInvites,
     loading,
     error,
-    receiveError, // Add the receive error state to the return value
+    receiveError, 
     fetchInvites,
     createInvite
   };

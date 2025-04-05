@@ -68,21 +68,26 @@ const InviteCoParentForm = ({ currentUser, onInviteSent, onCancel }: InviteCoPar
       
       if (data) {
         // Send email invitation
-        const inviteResult = await sendEmailInvite({
-          email: values.email,
-          inviterName: currentUser.name || currentUser.email,
-          inviteMessage: values.message,
-          inviteId: data.id
-        });
-        
-        if (inviteResult.success) {
-          toast.success(`Invitation sent to ${values.email}`);
-          onInviteSent();
-        } else {
-          toast.error("Invitation created but email could not be sent");
-          // Still call onInviteSent because the invitation was created in the database
-          onInviteSent();
+        try {
+          const inviteResult = await sendEmailInvite({
+            email: values.email,
+            inviterName: currentUser.name || currentUser.email,
+            inviteMessage: values.message,
+            inviteId: data.id
+          });
+          
+          if (inviteResult.success) {
+            toast.success(`Invitation sent to ${values.email}`);
+          } else {
+            toast.warning("Invitation created but email could not be sent");
+          }
+        } catch (emailErr) {
+          console.error("Error sending email:", emailErr);
+          toast.warning("Invitation created but email notification could not be sent");
         }
+        
+        // Always call onInviteSent because the invitation was created in the database
+        onInviteSent();
       }
     } catch (err) {
       console.error("Error sending invitation:", err);
