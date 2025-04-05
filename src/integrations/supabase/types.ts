@@ -167,6 +167,7 @@ export type Database = {
           amount: number
           approval_token: string | null
           category: string
+          child_split_amounts: Json | null
           created_at: string
           date: string
           description: string
@@ -185,6 +186,7 @@ export type Database = {
           amount: number
           approval_token?: string | null
           category: string
+          child_split_amounts?: Json | null
           created_at?: string
           date: string
           description: string
@@ -203,6 +205,7 @@ export type Database = {
           amount?: number
           approval_token?: string | null
           category?: string
+          child_split_amounts?: Json | null
           created_at?: string
           date?: string
           description?: string
