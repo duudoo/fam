@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import './App.css';
@@ -22,7 +21,7 @@ import ExpenseSuccess from './pages/ExpenseSuccess';
 import ExpenseError from './pages/ExpenseError';
 import AcceptInvite from './pages/AcceptInvite';
 
-function App() {
+const App = () => {
   return (
     <Router>
       <Routes>
@@ -92,6 +91,6 @@ function App() {
       <Toaster position="top-right" richColors />
     </Router>
   );
-}
+};
 
 export default App;

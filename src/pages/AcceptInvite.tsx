@@ -1,233 +1,205 @@
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle, CheckCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
-
-type InviteStatus = "loading" | "invalid" | "valid" | "accepted" | "error";
 
 const AcceptInvite = () => {
   const [searchParams] = useSearchParams();
-  const inviteId = searchParams.get("id");
-  const [status, setStatus] = useState<InviteStatus>("loading");
-  const [inviteData, setInviteData] = useState<any>(null);
-  const [inviterName, setInviterName] = useState<string>("");
-  const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [inviteData, setInviteData] = useState<any>(null);
 
-  // Fetch invite data
+  const inviteId = searchParams.get("id");
+
+  // Fetch invitation data
   useEffect(() => {
-    const fetchInvite = async () => {
+    const fetchInviteData = async () => {
       if (!inviteId) {
-        setStatus("invalid");
+        setError("Invalid invitation link. No invitation ID provided.");
+        setLoading(false);
         return;
       }
 
       try {
-        const { data: invite, error } = await supabase
+        const { data, error } = await supabase
           .from("co_parent_invites")
-          .select("*, invited_by")
+          .select("*")
           .eq("id", inviteId)
           .single();
 
-        if (error || !invite) {
-          console.error("Error fetching invite:", error);
-          setStatus("invalid");
+        if (error) {
+          throw error;
+        }
+
+        if (!data) {
+          setError("Invitation not found.");
+          setLoading(false);
           return;
         }
 
-        // Check if invite is still pending
-        if (invite.status !== "pending") {
-          setStatus(invite.status === "accepted" ? "accepted" : "invalid");
+        // Check if invitation has expired (for example, after 7 days)
+        const invitedDate = new Date(data.invited_at);
+        const expiryDate = new Date(invitedDate);
+        expiryDate.setDate(expiryDate.getDate() + 7); // 7 days expiry
+        
+        if (new Date() > expiryDate) {
+          setError("This invitation has expired.");
+          setLoading(false);
           return;
         }
 
-        setInviteData(invite);
-
-        // Fetch inviter's name
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("full_name, first_name")
-          .eq("id", invite.invited_by)
-          .single();
-
-        if (profile) {
-          setInviterName(profile.full_name || profile.first_name || "A parent");
+        // Check if invitation was already accepted or declined
+        if (data.status === "accepted") {
+          setError("This invitation has already been accepted.");
+          setLoading(false);
+          return;
         }
 
-        setStatus("valid");
-      } catch (error) {
-        console.error("Error in fetchInvite:", error);
-        setStatus("error");
+        if (data.status === "declined") {
+          setError("This invitation has already been declined.");
+          setLoading(false);
+          return;
+        }
+
+        setInviteData(data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching invitation:", err);
+        setError("Failed to fetch invitation data. Please try again later.");
+        setLoading(false);
       }
     };
 
-    fetchInvite();
+    fetchInviteData();
   }, [inviteId]);
 
-  const handleAccept = async () => {
-    if (!user || !inviteData) return;
-    
+  // Handle accepting invitation
+  const handleAcceptInvite = async () => {
+    if (!inviteData || !user) return;
+
+    setLoading(true);
     try {
-      // Update the invite status
-      const { error: updateError } = await supabase
+      // Update invitation status
+      const { error } = await supabase
         .from("co_parent_invites")
-        .update({ 
+        .update({
           status: "accepted",
           responded_at: new Date().toISOString()
         })
-        .eq("id", inviteId);
+        .eq("id", inviteData.id);
 
-      if (updateError) {
-        console.error("Error updating invite:", updateError);
-        toast.error("Failed to accept invitation");
-        return;
+      if (error) {
+        throw error;
       }
 
-      toast.success("Invitation accepted successfully!");
-      navigate("/dashboard");
-    } catch (error) {
-      console.error("Error accepting invite:", error);
-      toast.error("An error occurred while accepting the invitation");
+      setSuccess(true);
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 3000);
+    } catch (err) {
+      console.error("Error accepting invitation:", err);
+      setError("Failed to accept invitation. Please try again later.");
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleDecline = async () => {
-    if (!inviteData) return;
-    
-    try {
-      // Update the invite status
-      const { error: updateError } = await supabase
-        .from("co_parent_invites")
-        .update({ 
-          status: "declined",
-          responded_at: new Date().toISOString()
-        })
-        .eq("id", inviteId);
-
-      if (updateError) {
-        console.error("Error declining invite:", updateError);
-        toast.error("Failed to decline invitation");
-        return;
-      }
-
-      toast.success("Invitation declined");
-      navigate("/");
-    } catch (error) {
-      console.error("Error declining invite:", error);
-      toast.error("An error occurred while declining the invitation");
-    }
-  };
-
-  const renderContent = () => {
-    if (loading || status === "loading") {
-      return (
-        <div className="flex justify-center items-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      );
-    }
-
-    if (status === "invalid") {
-      return (
-        <Card>
-          <CardHeader>
-            <CardTitle>Invalid Invitation</CardTitle>
-            <CardDescription>This invitation link is invalid or has expired.</CardDescription>
-          </CardHeader>
-          <CardFooter>
-            <Button onClick={() => navigate("/")}>Return Home</Button>
-          </CardFooter>
-        </Card>
-      );
-    }
-
-    if (status === "accepted") {
-      return (
-        <Card>
-          <CardHeader>
-            <CardTitle>Invitation Already Accepted</CardTitle>
-            <CardDescription>This invitation has already been accepted.</CardDescription>
-          </CardHeader>
-          <CardFooter>
-            <Button onClick={() => navigate("/dashboard")}>Go to Dashboard</Button>
-          </CardFooter>
-        </Card>
-      );
-    }
-
-    if (status === "error") {
-      return (
-        <Card>
-          <CardHeader>
-            <CardTitle>Error</CardTitle>
-            <CardDescription>An error occurred while processing this invitation.</CardDescription>
-          </CardHeader>
-          <CardFooter>
-            <Button onClick={() => navigate("/")}>Return Home</Button>
-          </CardFooter>
-        </Card>
-      );
-    }
-
-    // Valid invite
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Co-Parent Invitation</CardTitle>
-          <CardDescription>
-            {inviterName} has invited you to be a co-parent on Famacle.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {inviteData?.message && (
-            <div className="bg-muted p-4 rounded-md mb-4 italic">
-              "{inviteData.message}"
-            </div>
-          )}
-          <p>
-            By accepting this invitation, you'll be able to manage shared expenses, 
-            calendar events, and other co-parenting responsibilities.
-          </p>
-        </CardContent>
-        <CardFooter className="flex gap-2 justify-end">
-          <Button variant="outline" onClick={handleDecline}>
-            Decline
-          </Button>
-          <Button onClick={handleAccept} disabled={!user}>
-            {!user ? "Sign In to Accept" : "Accept Invitation"}
-          </Button>
-        </CardFooter>
-      </Card>
-    );
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <main className="container mx-auto py-6 pt-24 max-w-md">
-        {!user && status === "valid" ? (
-          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-            <p className="text-yellow-800">
-              Please sign in or create an account to accept this invitation.
-            </p>
-            <div className="mt-2 flex gap-2">
-              <Button size="sm" onClick={() => navigate("/signin")}>
-                Sign In
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => navigate("/signup")}>
-                Sign Up
-              </Button>
-            </div>
-          </div>
-        ) : null}
-        {renderContent()}
-      </main>
+      <div className="container mx-auto py-12 px-4">
+        <div className="max-w-md mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle>Co-Parent Invitation</CardTitle>
+              <CardDescription>
+                Accept invitation to join as a co-parent
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="flex justify-center py-8">
+                  <Spinner size="lg" />
+                </div>
+              ) : error ? (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              ) : success ? (
+                <Alert variant="default" className="bg-green-50 border-green-200">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <AlertTitle>Success</AlertTitle>
+                  <AlertDescription>
+                    You've successfully accepted the invitation.
+                    Redirecting you to the dashboard...
+                  </AlertDescription>
+                </Alert>
+              ) : inviteData ? (
+                <div className="space-y-4">
+                  <p>
+                    You've been invited to join as a co-parent by{" "}
+                    <strong>{inviteData.invited_by}</strong>.
+                  </p>
+                  
+                  {inviteData.message && (
+                    <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
+                      <p className="text-sm italic">{inviteData.message}</p>
+                    </div>
+                  )}
+                  
+                  <div className="pt-4">
+                    {!user ? (
+                      <div className="space-y-4">
+                        <Alert className="bg-blue-50 border-blue-200">
+                          <AlertDescription>
+                            You need to sign in or create an account to accept this invitation.
+                          </AlertDescription>
+                        </Alert>
+                        <div className="flex gap-2">
+                          <Button onClick={() => navigate(`/signin?redirect=${encodeURIComponent(`/accept-invite?id=${inviteId}`)}`)}>
+                            Sign In
+                          </Button>
+                          <Button variant="outline" onClick={() => navigate(`/signup?redirect=${encodeURIComponent(`/accept-invite?id=${inviteId}`)}`)}>
+                            Create Account
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <p>
+                          You are logged in as <strong>{user.email}</strong>.
+                          Click the button below to accept the invitation.
+                        </p>
+                        <div className="flex gap-2">
+                          <Button onClick={handleAcceptInvite} disabled={loading}>
+                            {loading ? <Spinner size="sm" className="mr-2" /> : null}
+                            Accept Invitation
+                          </Button>
+                          <Button variant="outline" onClick={() => navigate("/dashboard")}>
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };
