@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { useExpenseFormContext } from './ExpenseFormContext';
 import ExpenseDetailsSection from './ExpenseDetailsSection';
-import ChildrenSelectionSection from './ChildrenSelectionSection';
 import ReceiptUploadSection from './ReceiptUploadSection';
 import NotesSection from './NotesSection';
 import FormActions from './FormActions';
@@ -38,10 +37,6 @@ const ExpenseFormContent = ({ form }: ExpenseFormContentProps) => {
   return (
     <>
       <ExpenseDetailsSection control={form.control} />
-      
-      <ChildrenSelectionSection 
-        defaultSelectedIds={expense?.childIds}
-      />
       
       <ReceiptUploadSection 
         onFileUpload={setReceiptUrl}
