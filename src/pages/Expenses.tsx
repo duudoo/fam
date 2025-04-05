@@ -6,7 +6,6 @@ import { useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import ExpenseForm from "@/components/expenses/form/ExpenseForm";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
@@ -136,55 +135,55 @@ const ExpensesPage = () => {
             <ExpenseOverview expenses={expenses} />
             
             <div className="mb-6">
-              <Tabs defaultValue={filter}>
-                <ExpenseFilters 
-                  filter={filter}
-                  setFilter={setFilter}
-                  categoryFilter={categoryFilter}
-                  setCategoryFilter={setCategoryFilter}
-                  searchQuery={searchQuery}
-                  setSearchQuery={setSearchQuery}
+              {/* Fix: Ensure Tabs component wraps all TabsContent */}
+              <ExpenseFilters 
+                filter={filter}
+                setFilter={setFilter}
+                categoryFilter={categoryFilter}
+                setCategoryFilter={setCategoryFilter}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+              />
+              
+              {/* Render the expense lists based on filter */}
+              {filter === 'all' && (
+                <ExpenseList 
+                  expenses={expenses} 
+                  onAddNewClick={() => setShowForm(true)} 
                 />
-                
-                <TabsContent value="all" className="mt-0">
-                  <ExpenseList 
-                    expenses={expenses} 
-                    onAddNewClick={() => setShowForm(true)} 
-                  />
-                </TabsContent>
-                
-                <TabsContent value="pending" className="mt-0">
-                  <ExpenseList 
-                    expenses={expenses} 
-                    filteredStatus="pending"
-                    onAddNewClick={() => setShowForm(true)} 
-                  />
-                </TabsContent>
-                
-                <TabsContent value="approved" className="mt-0">
-                  <ExpenseList 
-                    expenses={expenses} 
-                    filteredStatus="approved"
-                    onAddNewClick={() => setShowForm(true)} 
-                  />
-                </TabsContent>
-                
-                <TabsContent value="paid" className="mt-0">
-                  <ExpenseList 
-                    expenses={expenses} 
-                    filteredStatus="paid"
-                    onAddNewClick={() => setShowForm(true)} 
-                  />
-                </TabsContent>
-                
-                <TabsContent value="disputed" className="mt-0">
-                  <ExpenseList 
-                    expenses={expenses} 
-                    filteredStatus="disputed"
-                    onAddNewClick={() => setShowForm(true)} 
-                  />
-                </TabsContent>
-              </Tabs>
+              )}
+              
+              {filter === 'pending' && (
+                <ExpenseList 
+                  expenses={expenses} 
+                  filteredStatus="pending"
+                  onAddNewClick={() => setShowForm(true)} 
+                />
+              )}
+              
+              {filter === 'approved' && (
+                <ExpenseList 
+                  expenses={expenses} 
+                  filteredStatus="approved"
+                  onAddNewClick={() => setShowForm(true)} 
+                />
+              )}
+              
+              {filter === 'paid' && (
+                <ExpenseList 
+                  expenses={expenses} 
+                  filteredStatus="paid"
+                  onAddNewClick={() => setShowForm(true)} 
+                />
+              )}
+              
+              {filter === 'disputed' && (
+                <ExpenseList 
+                  expenses={expenses} 
+                  filteredStatus="disputed"
+                  onAddNewClick={() => setShowForm(true)} 
+                />
+              )}
             </div>
           </div>
         </main>
