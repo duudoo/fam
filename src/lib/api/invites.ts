@@ -3,63 +3,111 @@ import { supabase } from "@/integrations/supabase/client";
 import { CoParentInvite } from "@/utils/types";
 
 /**
- * Fetch co-parent invites sent by a specific user
+ * Fetch invitations sent by the current user
  */
-export async function fetchSentInvites(userId: string): Promise<CoParentInvite[]> {
+export const fetchSentInvites = async (userId: string): Promise<CoParentInvite[]> => {
   try {
     const { data, error } = await supabase
       .from('co_parent_invites')
       .select('*')
       .eq('invited_by', userId);
-
+      
     if (error) {
-      console.error('Error fetching sent co-parent invites:', error);
-      throw new Error('Failed to load sent co-parent invites');
+      console.error('Error fetching sent invites:', error);
+      throw error;
     }
 
-    // Transform the data to match the CoParentInvite type
-    return data.map((invite) => ({
+    // Transform DB results to match our CoParentInvite type
+    return data.map(invite => ({
       id: invite.id,
       email: invite.email,
-      status: invite.status,
+      status: invite.status as any,
       invitedBy: invite.invited_by,
       invitedAt: invite.invited_at,
-      message: invite.message || undefined,
-      respondedAt: invite.responded_at || undefined
+      respondedAt: invite.responded_at,
+      message: invite.message || undefined
     }));
   } catch (err) {
-    console.error('Error in fetchSentInvites:', err);
+    console.error('Failed to fetch sent invites:', err);
     throw err;
   }
-}
+};
 
 /**
- * Fetch co-parent invites received by a specific email
+ * Fetch invitations received by the user with the given email
  */
-export async function fetchReceivedInvites(email: string): Promise<CoParentInvite[]> {
+export const fetchReceivedInvites = async (email: string): Promise<CoParentInvite[]> => {
   try {
     const { data, error } = await supabase
       .from('co_parent_invites')
       .select('*')
       .eq('email', email);
-
+      
     if (error) {
-      console.error('Error fetching received co-parent invites:', error);
-      throw new Error('Failed to load received co-parent invites');
+      console.error('Error fetching received invites:', error);
+      throw error;
     }
 
-    // Transform the data to match the CoParentInvite type
-    return data.map((invite) => ({
+    // Transform DB results to match our CoParentInvite type
+    return data.map(invite => ({
       id: invite.id,
       email: invite.email,
-      status: invite.status,
+      status: invite.status as any,
       invitedBy: invite.invited_by,
       invitedAt: invite.invited_at,
-      message: invite.message || undefined,
-      respondedAt: invite.responded_at || undefined
+      respondedAt: invite.responded_at,
+      message: invite.message || undefined
     }));
   } catch (err) {
-    console.error('Error in fetchReceivedInvites:', err);
+    console.error('Failed to fetch received invites:', err);
     throw err;
   }
-}
+};
+
+/**
+ * Accept an invitation
+ */
+export const acceptInvite = async (inviteId: string) => {
+  try {
+    const { error } = await supabase
+      .from('co_parent_invites')
+      .update({
+        status: 'accepted',
+        responded_at: new Date().toISOString()
+      })
+      .eq('id', inviteId);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error accepting invitation:", error);
+    throw error;
+  }
+};
+
+/**
+ * Decline an invitation
+ */
+export const declineInvite = async (inviteId: string) => {
+  try {
+    const { error } = await supabase
+      .from('co_parent_invites')
+      .update({
+        status: 'declined',
+        responded_at: new Date().toISOString()
+      })
+      .eq('id', inviteId);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error declining invitation:", error);
+    throw error;
+  }
+};

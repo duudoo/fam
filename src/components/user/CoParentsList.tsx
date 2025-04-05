@@ -1,12 +1,11 @@
-
 import React from "react";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Parent, CoParentInvite } from "@/utils/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Check, Clock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { acceptInvite, declineInvite } from "@/lib/api/invites";
 
 interface CoParentsListProps {
   currentUser: Parent;
@@ -41,18 +40,7 @@ const CoParentsList = ({ currentUser, sentInvites, receivedInvites = [] }: CoPar
 
   const handleAcceptInvite = async (inviteId: string) => {
     try {
-      const { error } = await supabase
-        .from('co_parent_invites')
-        .update({
-          status: 'accepted',
-          responded_at: new Date().toISOString()
-        })
-        .eq('id', inviteId);
-      
-      if (error) {
-        throw error;
-      }
-      
+      await acceptInvite(inviteId);
       toast.success("Invitation accepted");
       // You would normally refresh the invites here
     } catch (error) {
@@ -63,18 +51,7 @@ const CoParentsList = ({ currentUser, sentInvites, receivedInvites = [] }: CoPar
 
   const handleDeclineInvite = async (inviteId: string) => {
     try {
-      const { error } = await supabase
-        .from('co_parent_invites')
-        .update({
-          status: 'declined',
-          responded_at: new Date().toISOString()
-        })
-        .eq('id', inviteId);
-      
-      if (error) {
-        throw error;
-      }
-      
+      await declineInvite(inviteId);
       toast.success("Invitation declined");
       // You would normally refresh the invites here
     } catch (error) {

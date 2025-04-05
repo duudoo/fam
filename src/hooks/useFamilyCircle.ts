@@ -28,12 +28,6 @@ export const useFamilyCircle = () => {
   }, [user, profile]);
 
   // Fetch co-parent invites when user changes
-  useEffect(() => {
-    if (user) {
-      fetchInvites();
-    }
-  }, [user]);
-
   const fetchInvites = useCallback(async () => {
     try {
       if (!user) {
@@ -72,6 +66,13 @@ export const useFamilyCircle = () => {
       setLoading(false);
     }
   }, [user]);
+
+  // Fetch invites when user changes
+  useEffect(() => {
+    if (user) {
+      fetchInvites();
+    }
+  }, [user, fetchInvites]);
 
   const createInvite = useCallback(async (email: string, message?: string) => {
     try {

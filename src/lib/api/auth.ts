@@ -28,7 +28,8 @@ export const authAPI = {
       .single();
     
     if (error) {
-      throw error;
+      console.error('Error fetching user profile:', error);
+      throw new Error('Authentication Error: Unable to load your user profile');
     }
     
     return data;
