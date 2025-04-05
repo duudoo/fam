@@ -13,11 +13,20 @@ import { emailAPI } from "@/lib/api/email";
 interface CoParentsTabProps {
   currentUser: Parent;
   invites: CoParentInviteType[];
+  receivedInvites?: CoParentInviteType[];
   setInvites: React.Dispatch<React.SetStateAction<CoParentInviteType[]>>;
+  setReceivedInvites?: React.Dispatch<React.SetStateAction<CoParentInviteType[]>>;
   onInviteSent?: () => void;
 }
 
-const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoParentsTabProps) => {
+const CoParentsTab = ({
+  currentUser,
+  invites,
+  receivedInvites = [],
+  setInvites,
+  setReceivedInvites,
+  onInviteSent
+}: CoParentsTabProps) => {
   const [inviting, setInviting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { createInvite } = useFamilyCircle();
@@ -100,7 +109,11 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
         </Card>
       ) : null}
       
-      <CoParentsList currentUser={currentUser} invites={invites} />
+      <CoParentsList 
+        currentUser={currentUser} 
+        sentInvites={invites} 
+        receivedInvites={receivedInvites}
+      />
     </div>
   );
 };

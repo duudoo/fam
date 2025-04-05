@@ -1,13 +1,15 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { CoParentInvite, Parent } from "@/utils/types";
 import { toast } from "sonner";
-import { fetchSentInvites } from "@/lib/api/invites";
+import { fetchSentInvites, fetchReceivedInvites } from "@/lib/api/invites";
 
 export const useFamilyCircle = () => {
   const { user, profile } = useAuth();
   const [invites, setInvites] = useState<CoParentInvite[]>([]);
+  const [receivedInvites, setReceivedInvites] = useState<CoParentInvite[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<Parent | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +39,7 @@ export const useFamilyCircle = () => {
       if (!user) {
         console.log("Cannot fetch invites: No user logged in");
         setInvites([]);
+        setReceivedInvites([]);
         setLoading(false);
         return;
       }
@@ -44,17 +47,27 @@ export const useFamilyCircle = () => {
       setLoading(true);
       console.log("Fetching invites for user ID:", user.id);
       
-      // Use the dedicated API function to fetch invites
-      const inviteData = await fetchSentInvites(user.id);
+      // Use the dedicated API function to fetch sent invites
+      const sentInviteData = await fetchSentInvites(user.id);
       
-      console.log("Fetched invites:", inviteData);
-      setInvites(inviteData);
+      // Also fetch received invites if user has an email
+      let receivedInviteData: CoParentInvite[] = [];
+      if (user.email) {
+        receivedInviteData = await fetchReceivedInvites(user.email);
+      }
+      
+      console.log("Fetched sent invites:", sentInviteData);
+      console.log("Fetched received invites:", receivedInviteData);
+      
+      setInvites(sentInviteData);
+      setReceivedInvites(receivedInviteData);
       setError(null);
     } catch (error) {
       console.error('Error fetching invites:', error);
       setError("Unable to load co-parent invites");
       toast.error("Failed to load co-parent invites");
       setInvites([]);
+      setReceivedInvites([]);
     } finally {
       setLoading(false);
     }
@@ -125,7 +138,9 @@ export const useFamilyCircle = () => {
   return {
     currentUser,
     invites,
+    receivedInvites,
     setInvites,
+    setReceivedInvites,
     loading,
     error,
     fetchInvites,

@@ -4,13 +4,17 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/ca
 import { Parent, CoParentInvite } from "@/utils/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Check, Clock, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface CoParentsListProps {
   currentUser: Parent;
-  invites: CoParentInvite[];
+  sentInvites: CoParentInvite[];
+  receivedInvites?: CoParentInvite[];
 }
 
-const CoParentsList = ({ currentUser, invites }: CoParentsListProps) => {
+const CoParentsList = ({ currentUser, sentInvites, receivedInvites = [] }: CoParentsListProps) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'accepted':
@@ -35,8 +39,52 @@ const CoParentsList = ({ currentUser, invites }: CoParentsListProps) => {
     }).format(date);
   };
 
+  const handleAcceptInvite = async (inviteId: string) => {
+    try {
+      const { error } = await supabase
+        .from('co_parent_invites')
+        .update({
+          status: 'accepted',
+          responded_at: new Date().toISOString()
+        })
+        .eq('id', inviteId);
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast.success("Invitation accepted");
+      // You would normally refresh the invites here
+    } catch (error) {
+      console.error("Error accepting invitation:", error);
+      toast.error("Failed to accept invitation");
+    }
+  };
+
+  const handleDeclineInvite = async (inviteId: string) => {
+    try {
+      const { error } = await supabase
+        .from('co_parent_invites')
+        .update({
+          status: 'declined',
+          responded_at: new Date().toISOString()
+        })
+        .eq('id', inviteId);
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast.success("Invitation declined");
+      // You would normally refresh the invites here
+    } catch (error) {
+      console.error("Error declining invitation:", error);
+      toast.error("Failed to decline invitation");
+    }
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Primary Account (You)</CardTitle>
@@ -60,9 +108,67 @@ const CoParentsList = ({ currentUser, invites }: CoParentsListProps) => {
         </div>
       </Card>
 
-      {invites.length > 0 && (
+      {receivedInvites && receivedInvites.length > 0 && (
         <div>
-          <h3 className="text-lg font-medium mb-3">Co-Parent Invitations</h3>
+          <h3 className="text-lg font-medium mb-3">Invitations Received</h3>
+          <Card>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>From</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Received On</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {receivedInvites.map((invite) => (
+                  <TableRow key={invite.id}>
+                    <TableCell>{invite.invitedBy}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(invite.status)}
+                        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                          invite.status === "pending" ? "bg-yellow-100 text-yellow-800" : 
+                          invite.status === "accepted" ? "bg-green-100 text-green-800" : 
+                          "bg-red-100 text-red-800"
+                        }`}>
+                          {invite.status.charAt(0).toUpperCase() + invite.status.slice(1)}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{formatDate(invite.invitedAt)}</TableCell>
+                    <TableCell>
+                      {invite.status === 'pending' && (
+                        <div className="flex space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleAcceptInvite(invite.id)}
+                          >
+                            Accept
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleDeclineInvite(invite.id)}
+                          >
+                            Decline
+                          </Button>
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
+        </div>
+      )}
+
+      {sentInvites.length > 0 && (
+        <div>
+          <h3 className="text-lg font-medium mb-3">Invitations Sent</h3>
           <Card>
             <Table>
               <TableHeader>
@@ -73,7 +179,7 @@ const CoParentsList = ({ currentUser, invites }: CoParentsListProps) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invites.map((invite) => (
+                {sentInvites.map((invite) => (
                   <TableRow key={invite.id}>
                     <TableCell>{invite.email}</TableCell>
                     <TableCell>

@@ -8,7 +8,16 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 
 const FamilyCircleSettings = () => {
-  const { currentUser, invites, setInvites, loading, error, fetchInvites } = useFamilyCircle();
+  const { 
+    currentUser, 
+    invites, 
+    receivedInvites,
+    setInvites, 
+    setReceivedInvites,
+    loading, 
+    error, 
+    fetchInvites 
+  } = useFamilyCircle();
   
   // Refresh invites when component mounts
   useEffect(() => {
@@ -52,8 +61,10 @@ const FamilyCircleSettings = () => {
     
       <CircleTabs 
         currentUser={currentUser} 
-        invites={invites} 
+        invites={invites}
+        receivedInvites={receivedInvites}
         setInvites={setInvites}
+        setReceivedInvites={setReceivedInvites}
         onInviteSent={fetchInvites}
       />
     </div>
