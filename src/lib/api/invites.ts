@@ -16,7 +16,11 @@ export const fetchSentInvites = async (userId: string): Promise<CoParentInvite[]
       
     if (error) {
       console.error('Error fetching sent invites:', error);
-      throw error;
+      throw new Error(`Failed to fetch sent invites: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error('No data returned from sent invites query');
     }
 
     console.log("Received sent invites:", data);
