@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from '@/components/ui/card';
 import { Expense, ExpenseCategory } from '@/utils/types';
 import { formatCurrency } from '@/utils/expenseUtils';
@@ -65,140 +66,150 @@ const ExpenseOverview = ({ expenses = [] }: ExpenseOverviewProps) => {
     };
   });
 
+  // Render the appropriate content based on the active tab
+  const renderTabContent = () => {
+    if (activeTab === 'category') {
+      return (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1">
+            <h3 className="text-lg font-medium mb-3">Expense Summary</h3>
+            <p className="text-3xl font-bold mb-1">
+              {formatCurrency(totalExpenses, currency.symbol)}
+            </p>
+            <p className="text-sm text-gray-500">
+              {expenses?.length || 0} total expenses
+            </p>
+            
+            <div className="mt-4 space-y-3">
+              {categoryChartData.map(({ category, amount }) => (
+                <div key={category}>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="capitalize">{category}</span>
+                    <span className="font-medium">{formatCurrency(amount, currency.symbol)}</span>
+                  </div>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full ${getCategoryColorClass(category as ExpenseCategory)}`}
+                      style={{ width: `${(amount / totalExpenses) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="lg:col-span-2 pt-12">
+            {categoryChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={categoryChartData} margin={{ top: 0, right: 20, left: 10, bottom: 5 }}>
+                  <XAxis dataKey="category" />
+                  <YAxis />
+                  <Tooltip
+                    formatter={(value) => formatCurrency(value as number, currency.symbol)}
+                    labelFormatter={(label) => label.charAt(0).toUpperCase() + label.slice(1)}
+                  />
+                  <Bar
+                    dataKey="amount"
+                    name="Amount"
+                    radius={[4, 4, 0, 0]}
+                    isAnimationActive={true}
+                  >
+                    {categoryChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                No expense data to display
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1">
+            <h3 className="text-lg font-medium mb-3">Expense by Child</h3>
+            <p className="text-3xl font-bold mb-1">
+              {formatCurrency(totalExpenses, currency.symbol)}
+            </p>
+            <p className="text-sm text-gray-500">
+              {Object.keys(expensesByChild).length} children with expenses
+            </p>
+            
+            <div className="mt-4 space-y-3">
+              {childChartData.map(({ name, value, color }) => (
+                <div key={name}>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>{name}</span>
+                    <span className="font-medium">{formatCurrency(value, currency.symbol)}</span>
+                  </div>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full"
+                      style={{ 
+                        width: `${(value / totalExpenses) * 100}%`,
+                        backgroundColor: color 
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="lg:col-span-2 pt-12">
+            {childChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={350}>
+                <PieChart>
+                  <Pie
+                    data={childChartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={120}
+                    fill="#8884d8"
+                    dataKey="value"
+                    nameKey="name"
+                  >
+                    {childChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value) => formatCurrency(value as number, currency.symbol)}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                No child expense data to display
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+  };
+
   return (
     <Card className="w-full mb-6">
       <CardContent className="pt-6">
-        <Tabs defaultValue="category" value={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="category">By Category</TabsTrigger>
             <TabsTrigger value="child">By Child</TabsTrigger>
           </TabsList>
+          
+          {/* Replaced individual TabsContent with a content wrapper inside the Tabs component */}
+          <div className="mt-6">
+            {renderTabContent()}
+          </div>
         </Tabs>
-      
-        <TabsContent value="category" className="mt-0">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1">
-              <h3 className="text-lg font-medium mb-3">Expense Summary</h3>
-              <p className="text-3xl font-bold mb-1">
-                {formatCurrency(totalExpenses, currency.symbol)}
-              </p>
-              <p className="text-sm text-gray-500">
-                {expenses?.length || 0} total expenses
-              </p>
-              
-              <div className="mt-4 space-y-3">
-                {categoryChartData.map(({ category, amount }) => (
-                  <div key={category}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="capitalize">{category}</span>
-                      <span className="font-medium">{formatCurrency(amount, currency.symbol)}</span>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${getCategoryColorClass(category as ExpenseCategory)}`}
-                        style={{ width: `${(amount / totalExpenses) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="lg:col-span-2 pt-12">
-              {categoryChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={categoryChartData} margin={{ top: 0, right: 20, left: 10, bottom: 5 }}>
-                    <XAxis dataKey="category" />
-                    <YAxis />
-                    <Tooltip
-                      formatter={(value) => formatCurrency(value as number, currency.symbol)}
-                      labelFormatter={(label) => label.charAt(0).toUpperCase() + label.slice(1)}
-                    />
-                    <Bar
-                      dataKey="amount"
-                      name="Amount"
-                      radius={[4, 4, 0, 0]}
-                      isAnimationActive={true}
-                    >
-                      {categoryChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                  No expense data to display
-                </div>
-              )}
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="child" className="mt-0">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1">
-              <h3 className="text-lg font-medium mb-3">Expense by Child</h3>
-              <p className="text-3xl font-bold mb-1">
-                {formatCurrency(totalExpenses, currency.symbol)}
-              </p>
-              <p className="text-sm text-gray-500">
-                {Object.keys(expensesByChild).length} children with expenses
-              </p>
-              
-              <div className="mt-4 space-y-3">
-                {childChartData.map(({ name, value, color }) => (
-                  <div key={name}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>{name}</span>
-                      <span className="font-medium">{formatCurrency(value, currency.symbol)}</span>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full"
-                        style={{ 
-                          width: `${(value / totalExpenses) * 100}%`,
-                          backgroundColor: color 
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="lg:col-span-2 pt-12">
-              {childChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350}>
-                  <PieChart>
-                    <Pie
-                      data={childChartData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={120}
-                      fill="#8884d8"
-                      dataKey="value"
-                      nameKey="name"
-                    >
-                      {childChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value) => formatCurrency(value as number, currency.symbol)}
-                    />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                  No child expense data to display
-                </div>
-              )}
-            </div>
-          </div>
-        </TabsContent>
       </CardContent>
     </Card>
   );
