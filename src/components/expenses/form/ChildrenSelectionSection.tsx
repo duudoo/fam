@@ -40,11 +40,13 @@ const ChildrenSelectionSection = ({ defaultSelectedIds = [] }: ChildrenSelection
     }
   }, [selectedIds, form]);
   
-  // Effect to auto-select the only child if there's just one and none are selected
+  // Effect to auto-select all children if no defaults were provided
   useEffect(() => {
-    // Only auto-select if there's exactly one child, no selections yet, and no default selections were provided
-    if (children.length === 1 && selectedIds.length === 0 && defaultSelectedIds.length === 0) {
-      setSelectedIds([children[0].id]);
+    // Only auto-select if there are children available and no selections have been made yet
+    if (children.length > 0 && selectedIds.length === 0 && defaultSelectedIds.length === 0) {
+      // Select all children by default
+      const allChildIds = children.map(child => child.id);
+      setSelectedIds(allChildIds);
     }
   }, [children, selectedIds, defaultSelectedIds]);
   
