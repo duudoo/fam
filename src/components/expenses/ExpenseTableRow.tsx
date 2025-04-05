@@ -14,6 +14,7 @@ import ExpenseForm from "./form/ExpenseForm";
 import ExpenseDetailDialog from "./ExpenseDetailDialog";
 import { useExpenseMutations } from "@/hooks/expenses";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +32,7 @@ interface ExpenseTableRowProps {
 }
 
 const ExpenseTableRow = ({ expense, currency }: ExpenseTableRowProps) => {
+  const navigate = useNavigate();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -50,6 +52,14 @@ const ExpenseTableRow = ({ expense, currency }: ExpenseTableRowProps) => {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const handleViewDetails = () => {
+    navigate(`/expense/${expense.id}`);
+  };
+
+  const handleEdit = () => {
+    navigate(`/expense/${expense.id}`);
   };
 
   const canEdit = expense.status !== 'paid';
@@ -81,11 +91,11 @@ const ExpenseTableRow = ({ expense, currency }: ExpenseTableRowProps) => {
         <TableCell>{expense.splitMethod}</TableCell>
         <TableCell className="text-right">
           <div className="flex items-center justify-end space-x-2">
-            <Button variant="ghost" size="sm" onClick={() => setShowDetails(true)}>
+            <Button variant="ghost" size="sm" onClick={handleViewDetails}>
               <Eye className="h-4 w-4" />
             </Button>
             {canEdit && (
-              <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
+              <Button variant="ghost" size="sm" onClick={handleEdit}>
                 <Edit2 className="h-4 w-4" />
               </Button>
             )}

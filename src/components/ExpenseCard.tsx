@@ -16,7 +16,7 @@ const ExpenseCard = ({ expense, currency = "$" }: ExpenseCardProps) => {
   const formattedDate = format(new Date(expense.date), "MMM d, yyyy");
   
   return (
-    <Link to={`/expenses/${expense.id}`} className="block">
+    <Link to={`/expense/${expense.id}`} className="block">
       <Card className="cursor-pointer hover:shadow-md transition-shadow">
         <CardContent className="p-4">
           <div className="flex justify-between items-start mb-2">

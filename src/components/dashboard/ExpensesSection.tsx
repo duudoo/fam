@@ -46,11 +46,14 @@ export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) =
   };
 
   const handleViewExpense = (id: string) => {
-    navigate(`/expenses/${id}`);
+    // Updated to use the correct route for viewing expense details
+    navigate(`/expense/${id}`);
   };
 
   const handleEditExpense = (id: string) => {
-    navigate(`/expenses/${id}/edit`);
+    // We don't have a dedicated edit route in App.tsx, so we'll navigate to the expense page
+    // Users can edit from there
+    navigate(`/expense/${id}`);
   };
 
   if (isLoading) {
