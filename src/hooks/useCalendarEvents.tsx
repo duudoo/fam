@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useEventQueries } from './calendar/useEventQueries';
 import { useEventMutations } from './calendar/useEventMutations';
@@ -6,7 +5,9 @@ import { useCalendarState } from './calendar/useCalendarState';
 import { useAuth } from './useAuth';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { CalendarSource } from '@/utils/types';
+
+// Define CalendarSource type directly since it's not exported from utils/types
+type CalendarSource = 'google' | 'outlook';
 
 /**
  * Combined hook for calendar functionality

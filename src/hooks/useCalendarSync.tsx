@@ -120,7 +120,7 @@ export const useCalendarSync = () => {
     } catch (error) {
       console.error(`Error syncing ${provider} Calendar:`, error);
       setSyncStatus(prev => ({ ...prev, [provider]: 'error' }));
-      toast.error(`Failed to sync ${provider === 'google' ? 'Google' : 'Outlook'} Calendar`);
+      toast.error(`Failed to sync ${provider} Calendar`);
     }
   };
   

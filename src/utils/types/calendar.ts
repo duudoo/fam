@@ -1,4 +1,3 @@
-
 /**
  * Calendar-related types for the Famacle application
  */
@@ -16,9 +15,7 @@ export type EventPriority =
 /**
  * External calendar sources
  */
-export type CalendarSource = 
-  | 'google'
-  | 'outlook';
+export type CalendarSource = 'google' | 'outlook';
 
 /**
  * Recurring event types

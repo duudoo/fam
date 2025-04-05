@@ -30,14 +30,19 @@ serve(async (req) => {
     const url = new URL(req.url);
     const path = url.pathname.split('/').pop();
 
-    // Authorization endpoints
+    console.log(`Processing request for path: ${path}`);
+
+    // Authorization endpoints - No auth required
     if (path === 'google-auth') {
+      console.log('Handling Google auth request');
       return handleGoogleAuth(url);
     } else if (path === 'outlook-auth') {
+      console.log('Handling Outlook auth request');
       return handleOutlookAuth(url);
     }
-    // Callback endpoints
+    // Callback endpoints - No auth required
     else if (path === 'callback') {
+      console.log('Handling auth callback');
       const provider = url.searchParams.get('provider');
       const code = url.searchParams.get('code');
       const state = url.searchParams.get('state');
@@ -54,8 +59,9 @@ serve(async (req) => {
         return await handleOutlookCallback(code, redirectUrl);
       }
     }
-    // Sync endpoints
+    // Sync endpoints - Auth required for these operations
     else if (path === 'sync') {
+      console.log('Handling sync request');
       const { provider, token, userId } = await req.json();
       
       if (!provider || !token || !userId) {
