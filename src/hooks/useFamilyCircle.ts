@@ -44,6 +44,7 @@ export const useFamilyCircle = () => {
       setLoading(true);
       console.log("Fetching invites for user ID:", user.id);
       
+      // Fixed: Query co_parent_invites directly without joining to users
       const { data, error } = await supabase
         .from('co_parent_invites')
         .select('*')
