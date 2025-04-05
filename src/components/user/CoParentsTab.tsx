@@ -43,23 +43,14 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
         return;
       }
 
-      console.log("Checking for existing invites...", { email, userId: currentUser.id });
+      console.log("Checking for existing invites in client-side...");
       
-      // Check if invitation already exists
-      const { data: existingInvites, error: checkError } = await supabase
-        .from('co_parent_invites')
-        .select('id')
-        .eq('email', email)
-        .eq('invited_by', currentUser.id);
+      // Check existing invites from local state first to improve UX
+      const existingInvite = invites.find(invite => invite.email.toLowerCase() === email.toLowerCase());
       
-      if (checkError) {
-        console.error("Error checking existing invites:", checkError);
-        toast.error("Failed to check existing invitations");
-        return;
-      }
-      
-      if (existingInvites && existingInvites.length > 0) {
+      if (existingInvite) {
         toast.error("You have already invited this email address");
+        setSubmitting(false);
         return;
       }
 
@@ -79,12 +70,14 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
       if (inviteError) {
         console.error("Error creating invitation:", inviteError);
         toast.error("Failed to create invitation");
+        setSubmitting(false);
         return;
       }
 
       if (!newInvite || newInvite.length === 0) {
         console.error("No data returned from invitation insert");
         toast.error("Failed to create invitation record");
+        setSubmitting(false);
         return;
       }
 

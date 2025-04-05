@@ -1,83 +1,17 @@
 
-import { useState, useEffect, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ChildrenTab from "@/components/user/ChildrenTab";
 import CoParentsTab from "@/components/user/CoParentsTab";
-import { CoParentInvite, Parent } from "@/utils/types";
 import { useAuth } from "@/hooks/useAuth";
-import type { Database } from "@/integrations/supabase/database.types";
+import { useFamilyCircle } from "@/hooks/useFamilyCircle";
 import Navbar from "@/components/Navbar";
 
-type Tables = Database['public']['Tables'];
-type ProfileRow = Tables['profiles']['Row'];
-type CoParentInviteRow = Tables['co_parent_invites']['Row'];
-
 const UserManagementPage = () => {
-  const { user, profile, loading: authLoading } = useAuth();
-  const [invites, setInvites] = useState<CoParentInvite[]>([]);
-  const [currentUser, setCurrentUser] = useState<Parent | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Convert profile data to Parent type when profile changes
-    if (profile) {
-      setCurrentUser({
-        id: profile.id,
-        name: profile.full_name || profile.first_name || '',
-        email: profile.email,
-        phone: profile.phone || undefined,
-        avatar: profile.avatar_url,
-      });
-    }
-  }, [profile]);
-
-  useEffect(() => {
-    if (user) {
-      fetchInvites();
-    }
-  }, [user]);
-
-  const fetchInvites = useCallback(async () => {
-    try {
-      if (!user) return;
-
-      console.log("Fetching invites for user ID:", user.id);
-      setLoading(true);
-      
-      const { data, error } = await supabase
-        .from('co_parent_invites')
-        .select('*')
-        .eq('invited_by', user.id);
-
-      if (error) {
-        console.error('Error in fetchInvites query:', error);
-        toast.error("Failed to load co-parent invites");
-        return;
-      }
-
-      console.log("Fetched invites:", data);
-      if (data) {
-        setInvites(data.map((invite) => ({
-          id: invite.id,
-          email: invite.email,
-          status: invite.status as any,
-          invitedBy: invite.invited_by,
-          invitedAt: invite.invited_at,
-          message: invite.message || undefined,
-          respondedAt: invite.responded_at || undefined
-        })));
-      }
-    } catch (error) {
-      console.error('Error fetching invites:', error);
-      toast.error("Failed to load co-parent invites");
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
-  if (authLoading) {
+  const { user, loading: authLoading } = useAuth();
+  const { currentUser, invites, setInvites, loading, fetchInvites } = useFamilyCircle();
+  
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
