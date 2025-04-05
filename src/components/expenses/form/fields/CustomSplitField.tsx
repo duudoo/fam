@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Slider } from "@/components/ui/slider";
 import { UseFormReturn } from 'react-hook-form';
@@ -103,7 +104,7 @@ const CustomSplitField = ({ form, visible }: CustomSplitFieldProps) => {
       const currentSplitAmounts = form.getValues().splitAmounts;
       const currentChildSplitAmounts = form.getValues().childSplitAmounts;
       
-      if (currentChildSplitAmounts) {
+      if (currentChildSplitAmounts && Object.keys(currentChildSplitAmounts).length > 0) {
         setSplitType('perChild');
         
         const stringChildSplits: Record<string, string> = {};

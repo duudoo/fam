@@ -1,11 +1,12 @@
 
-import { useState, useEffect } from 'react';
-import { useFormContext, Control } from 'react-hook-form';
-import { Card, CardContent } from '@/components/ui/card';
-import { useCurrency } from '@/contexts/CurrencyContext';
-import { useAuth } from '@/hooks/useAuth';
+import { useMemo } from 'react';
+import { Control, useWatch } from 'react-hook-form';
 import { FormValues } from './schema';
+import { Card, CardContent } from '@/components/ui/card';
+import { useAuth } from '@/hooks/useAuth';
+import { useChildren } from '@/hooks/children';
 import { formatCurrency } from '@/utils/expenseUtils';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface SplitPreviewProps {
   control: Control<FormValues>;
@@ -13,130 +14,120 @@ interface SplitPreviewProps {
 
 const SplitPreview = ({ control }: SplitPreviewProps) => {
   const { user } = useAuth();
-  const { watch } = useFormContext();
+  const { data: children = [] } = useChildren();
   const { currency } = useCurrency();
   
-  const [userAmount, setUserAmount] = useState<number>(0);
-  const [coParentAmount, setCoParentAmount] = useState<number>(0);
-  const [childrenAmounts, setChildrenAmounts] = useState<{[key: string]: number}>({});
+  // Watch the form values we need
+  const amount = parseFloat(useWatch({ control, name: 'amount' }) || '0');
+  const splitMethod = useWatch({ control, name: 'splitMethod' });
+  const splitPercentage = useWatch({ control, name: 'splitPercentage' });
+  const splitAmounts = useWatch({ control, name: 'splitAmounts' });
+  const childSplitAmounts = useWatch({ control, name: 'childSplitAmounts' });
+  const childIds = useWatch({ control, name: 'childIds' }) || [];
   
-  // Watch for form value changes
-  const amount = watch('amount');
-  const parsedAmount = parseFloat(amount) || 0;
-  const splitMethod = watch('splitMethod');
-  const splitPercentage = watch('splitPercentage');
-  const splitAmounts = watch('splitAmounts');
-  const childSplitAmounts = watch('childSplitAmounts');
-  const selectedChildIds = watch('childIds') || [];
-  
-  // Calculate split amounts whenever relevant fields change
-  useEffect(() => {
-    // Reset values
-    setUserAmount(0);
-    setCoParentAmount(0);
-    setChildrenAmounts({});
-    
-    if (!user || parsedAmount <= 0) return;
+  // Calculate the split based on the selected method
+  const splitSummary = useMemo(() => {
+    if (!user) return null;
     
     if (splitMethod === 'none') {
-      setUserAmount(parsedAmount);
-    } 
-    else if (splitMethod === '50/50') {
-      const halfAmount = parsedAmount / 2;
-      setUserAmount(halfAmount);
-      setCoParentAmount(halfAmount);
-    } 
-    else if (splitMethod === 'custom') {
-      if (splitPercentage && Object.keys(splitPercentage).length > 0) {
-        // Percentage-based split
-        const userPercent = splitPercentage[user.id] || 0;
-        const coParentPercent = splitPercentage['coParent'] || 0;
-        
-        setUserAmount((userPercent / 100) * parsedAmount);
-        setCoParentAmount((coParentPercent / 100) * parsedAmount);
-      } 
-      else if (splitAmounts && Object.keys(splitAmounts).length > 0) {
-        // Fixed amount split
-        setUserAmount(splitAmounts[user.id] || 0);
-        setCoParentAmount(splitAmounts['coParent'] || 0);
-      }
-      else if (childSplitAmounts && Object.keys(childSplitAmounts).length > 0) {
-        // Child-specific split
-        setChildrenAmounts(childSplitAmounts);
-      }
-      else if (selectedChildIds.length > 0) {
-        // Default to equal split among children
-        const perChildAmount = parsedAmount / selectedChildIds.length;
-        const newChildAmounts: {[key: string]: number} = {};
-        
-        selectedChildIds.forEach(childId => {
-          newChildAmounts[childId] = perChildAmount;
-        });
-        
-        setChildrenAmounts(newChildAmounts);
-      }
+      return {
+        userAmount: amount,
+        coParentAmount: 0,
+        childAmounts: {}
+      };
     }
-  }, [parsedAmount, splitMethod, splitPercentage, splitAmounts, childSplitAmounts, user, selectedChildIds]);
+    
+    if (splitMethod === '50/50') {
+      const halfAmount = amount / 2;
+      return {
+        userAmount: halfAmount,
+        coParentAmount: halfAmount,
+        childAmounts: {}
+      };
+    }
+    
+    if (splitMethod === 'custom' && splitPercentage) {
+      const userPercentage = splitPercentage[user.id] || 0;
+      const coParentPercentage = splitPercentage['coParent'] || 0;
+      
+      return {
+        userAmount: (userPercentage / 100) * amount,
+        coParentAmount: (coParentPercentage / 100) * amount,
+        childAmounts: {}
+      };
+    }
+    
+    if (splitMethod === 'custom' && splitAmounts) {
+      return {
+        userAmount: splitAmounts[user.id] || 0,
+        coParentAmount: splitAmounts['coParent'] || 0,
+        childAmounts: {}
+      };
+    }
+    
+    if (splitMethod === 'custom' && childSplitAmounts && Object.keys(childSplitAmounts).length > 0) {
+      return {
+        userAmount: 0, // When using child split, the parent split is not used
+        coParentAmount: 0,
+        childAmounts: childSplitAmounts
+      };
+    }
+    
+    // Default case - equal split
+    const halfAmount = amount / 2;
+    return {
+      userAmount: halfAmount,
+      coParentAmount: halfAmount,
+      childAmounts: {}
+    };
+  }, [amount, splitMethod, splitPercentage, splitAmounts, childSplitAmounts, user]);
   
-  // Display nothing if no amount or split method
-  if (parsedAmount <= 0 || !splitMethod) {
+  if (!user || !splitSummary) return null;
+  
+  // Filter children to only include those in childIds
+  const selectedChildren = children.filter(child => childIds.includes(child.id));
+  
+  // If no split is configured yet, don't show preview
+  if (amount === 0 || (!splitSummary.userAmount && !splitSummary.coParentAmount && 
+      Object.keys(splitSummary.childAmounts).length === 0)) {
     return null;
   }
   
-  // Get total of all splits to verify correctness
-  const totalAmount = userAmount + coParentAmount + 
-    Object.values(childrenAmounts).reduce((sum, val) => sum + val, 0);
-  
-  // Check if the split amount is different from total
-  const hasSplitDiscrepancy = Math.abs(totalAmount - parsedAmount) > 0.01;
+  const hasChildSplits = Object.keys(splitSummary.childAmounts).length > 0;
   
   return (
-    <Card className="mt-2">
-      <CardContent className="pt-5">
-        <div className="space-y-2">
-          <h4 className="text-sm font-medium">Split Preview</h4>
-          
-          {(userAmount > 0 || splitMethod === 'none') && (
-            <div className="flex justify-between text-sm">
+    <Card className="bg-blue-50 border-blue-200">
+      <CardContent className="pt-4">
+        <h3 className="text-sm font-medium mb-2">Split Preview</h3>
+        
+        {!hasChildSplits ? (
+          <div className="space-y-2">
+            <div className="flex justify-between">
               <span>You pay:</span>
-              <span className="font-medium">{formatCurrency(userAmount, currency.symbol)}</span>
+              <span className="font-medium">{formatCurrency(splitSummary.userAmount, currency.symbol)}</span>
             </div>
-          )}
-          
-          {coParentAmount > 0 && (
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between">
               <span>Co-parent pays:</span>
-              <span className="font-medium">{formatCurrency(coParentAmount, currency.symbol)}</span>
-            </div>
-          )}
-          
-          {Object.keys(childrenAmounts).length > 0 && (
-            <>
-              <div className="text-sm font-medium mt-2">Child expenses:</div>
-              {Object.entries(childrenAmounts).map(([childId, amount]) => (
-                <div key={childId} className="flex justify-between text-sm pl-2">
-                  <span>Child {childId.substring(0, 4)}:</span>
-                  <span>{formatCurrency(amount, currency.symbol)}</span>
-                </div>
-              ))}
-            </>
-          )}
-          
-          <div className="border-t pt-2 mt-2">
-            <div className="flex justify-between text-sm font-medium">
-              <span>Total:</span>
-              <span className={hasSplitDiscrepancy ? "text-red-500" : ""}>
-                {formatCurrency(totalAmount, currency.symbol)}
-                {hasSplitDiscrepancy && ` (expected: ${formatCurrency(parsedAmount, currency.symbol)})`}
-              </span>
+              <span className="font-medium">{formatCurrency(splitSummary.coParentAmount, currency.symbol)}</span>
             </div>
           </div>
-          
-          {hasSplitDiscrepancy && (
-            <div className="text-xs text-red-500 mt-1">
-              Warning: Split amounts don't add up to the total expense amount.
-            </div>
-          )}
+        ) : (
+          <div className="space-y-2">
+            <p className="text-sm text-gray-600 mb-2">Expense split by child:</p>
+            {selectedChildren.map(child => (
+              <div key={child.id} className="flex justify-between">
+                <span>{child.name || child.initials}:</span>
+                <span className="font-medium">
+                  {formatCurrency(splitSummary.childAmounts[child.id] || 0, currency.symbol)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        <div className="pt-2 mt-2 border-t border-blue-200 flex justify-between">
+          <span>Total:</span>
+          <span className="font-medium">{formatCurrency(amount, currency.symbol)}</span>
         </div>
       </CardContent>
     </Card>

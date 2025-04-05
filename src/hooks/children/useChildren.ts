@@ -1,45 +1,61 @@
 
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { Child } from '@/utils/types';
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Child } from "@/utils/types";
+import { useAuth } from "@/hooks/useAuth";
 
+/**
+ * Hook to fetch children data
+ */
 export const useChildren = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   
   return useQuery({
     queryKey: ['children', user?.id],
     queryFn: async () => {
       if (!user) return [];
       
-      const { data: parentChildrenData, error: pcError } = await supabase
+      // Query children associated with the current user
+      const { data: parentChildrenData, error: relationError } = await supabase
         .from('parent_children')
         .select('child_id')
         .eq('parent_id', user.id);
-        
-      if (pcError) throw pcError;
       
-      if (!parentChildrenData || parentChildrenData.length === 0) return [];
+      if (relationError) {
+        console.error("Error fetching parent-child relations:", relationError);
+        throw relationError;
+      }
       
-      const childIds = parentChildrenData.map(pc => pc.child_id);
+      // If no children found, return empty array
+      if (!parentChildrenData || parentChildrenData.length === 0) {
+        return [];
+      }
       
+      // Extract child IDs
+      const childIds = parentChildrenData.map(rel => rel.child_id);
+      
+      // Fetch the actual child records
       const { data: childrenData, error: childrenError } = await supabase
         .from('children')
         .select('*')
         .in('id', childIds);
-        
-      if (childrenError) throw childrenError;
       
-      if (!childrenData) return [];
+      if (childrenError) {
+        console.error("Error fetching children:", childrenError);
+        throw childrenError;
+      }
       
-      return childrenData.map(child => ({
+      // Map database model to application model
+      return (childrenData || []).map(child => ({
         id: child.id,
-        name: child.name || undefined,
-        dateOfBirth: child.date_of_birth || undefined,
+        name: child.name || null,
         initials: child.initials,
-        parentIds: [user.id] // We only have the current parent's ID
-      }));
+        dateOfBirth: child.date_of_birth || null,
+        parentIds: [user.id] // For now, just include the current user
+      })) as Child[];
     },
-    enabled: !!user,
+    enabled: !!user, // Only run query if user is authenticated
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
   });
 };

@@ -1,28 +1,32 @@
 
-import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus } from "lucide-react";
 
 interface EmptyChildrenStateProps {
   onAddClick: () => void;
   disabled?: boolean;
 }
 
-const EmptyChildrenState = ({ onAddClick, disabled = false }: EmptyChildrenStateProps) => {
+const EmptyChildrenState = ({ onAddClick, disabled }: EmptyChildrenStateProps) => {
   return (
-    <Card className="p-6 text-center">
-      <Users className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-      <h3 className="text-lg font-medium">No children added yet</h3>
-      <p className="text-gray-600 mt-2">
-        Add a child to get started with co-parenting management
-      </p>
-      <Button 
-        className="mt-4" 
-        onClick={onAddClick}
-        disabled={disabled}
-      >
-        Add First Child
-      </Button>
+    <Card className="bg-gray-50">
+      <CardHeader>
+        <CardTitle>No Children Added Yet</CardTitle>
+        <CardDescription>
+          Add children to manage their expenses and track activities
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex justify-center pb-6">
+        <Button 
+          onClick={onAddClick} 
+          disabled={disabled}
+          className="flex items-center"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add Your First Child
+        </Button>
+      </CardContent>
     </Card>
   );
 };
