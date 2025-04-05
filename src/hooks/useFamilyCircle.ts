@@ -41,28 +41,31 @@ export const useFamilyCircle = () => {
       setLoading(true);
       setError(null);
       
+      let hasError = false;
+      
       try {
-        // Use the dedicated API function to fetch sent invites
         const sentInviteData = await fetchSentInvites(user.id);
         setInvites(sentInviteData);
       } catch (err) {
         console.error('Error fetching sent invites:', err);
-        setInvites([]);
-        // Don't set global error yet, try to fetch received invites
+        hasError = true;
+        setError("Unable to load sent invites");
       }
       
-      // Also fetch received invites if user has an email
-      try {
-        if (user.email) {
+      if (user.email) {
+        try {
           const receivedInviteData = await fetchReceivedInvites(user.email);
           setReceivedInvites(receivedInviteData);
-        } else {
-          setReceivedInvites([]);
+        } catch (err) {
+          console.error('Error fetching received invites:', err);
+          hasError = true;
+          setError("Unable to load received invites");
         }
-      } catch (err) {
-        console.error('Error fetching received invites:', err);
+      } else {
         setReceivedInvites([]);
-        setError("Unable to load co-parent invites");
+      }
+
+      if (hasError) {
         toast.error("Failed to load co-parent invites");
       }
       
