@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Expense, ExpenseStatus } from "@/utils/types";
 
@@ -20,6 +19,7 @@ export const createExpense = async (userId: string, newExpense: Omit<Expense, 'i
       split_method: newExpense.splitMethod,
       split_percentage: newExpense.splitPercentage,
       split_amounts: newExpense.splitAmounts,
+      child_split_amounts: newExpense.childSplitAmounts,
       notes: newExpense.notes,
       dispute_notes: newExpense.disputeNotes
     })
@@ -79,6 +79,7 @@ export const updateExpense = async (
   if (updates.splitMethod !== undefined) dbUpdates.split_method = updates.splitMethod;
   if (updates.splitPercentage !== undefined) dbUpdates.split_percentage = updates.splitPercentage;
   if (updates.splitAmounts !== undefined) dbUpdates.split_amounts = updates.splitAmounts;
+  if (updates.childSplitAmounts !== undefined) dbUpdates.child_split_amounts = updates.childSplitAmounts;
   if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
   if (updates.disputeNotes !== undefined) dbUpdates.dispute_notes = updates.disputeNotes;
 

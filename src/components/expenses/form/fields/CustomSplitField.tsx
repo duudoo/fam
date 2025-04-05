@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Slider } from "@/components/ui/slider";
 import { UseFormReturn } from 'react-hook-form';
@@ -9,6 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { FormDescription } from '@/components/ui/form';
+import { useChildren } from '@/hooks/children';
 
 interface CustomSplitFieldProps {
   form: UseFormReturn<FormValues, any, undefined>;
@@ -19,13 +19,21 @@ const CustomSplitField = ({ form, visible }: CustomSplitFieldProps) => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const [parentAPercentage, setParentAPercentage] = useState(50);
-  const [splitType, setSplitType] = useState<'percentage' | 'amount'>('percentage');
+  const [splitType, setSplitType] = useState<'percentage' | 'amount' | 'perChild'>('percentage');
   const [yourAmount, setYourAmount] = useState('');
   const [coParentAmount, setCoParentAmount] = useState('');
+  const [childSplits, setChildSplits] = useState<Record<string, string>>({});
+  const { data: children = [] } = useChildren();
+  
+  const selectedChildIds = form.getValues().childIds || [];
+  const selectedChildren = children.filter(child => selectedChildIds.includes(child.id));
   
   const totalAmount = parseFloat(form.getValues().amount) || 0;
   
-  // Calculate co-parent amount when your amount changes
+  const equalSplitAmount = selectedChildren.length > 0 
+    ? (totalAmount / selectedChildren.length).toFixed(2)
+    : '0.00';
+  
   useEffect(() => {
     if (splitType === 'amount' && yourAmount !== '') {
       const yourAmountNum = parseFloat(yourAmount) || 0;
@@ -34,7 +42,18 @@ const CustomSplitField = ({ form, visible }: CustomSplitFieldProps) => {
     }
   }, [yourAmount, totalAmount, splitType]);
   
-  // Update the form with split percentages when slider changes
+  useEffect(() => {
+    if (selectedChildren.length > 0 && (splitType === 'perChild' || Object.keys(childSplits).length === 0)) {
+      const newChildSplits: Record<string, string> = {};
+      
+      selectedChildren.forEach(child => {
+        newChildSplits[child.id] = childSplits[child.id] || equalSplitAmount;
+      });
+      
+      setChildSplits(newChildSplits);
+    }
+  }, [selectedChildren, equalSplitAmount, splitType]);
+  
   useEffect(() => {
     if (visible && user) {
       if (splitType === 'percentage') {
@@ -45,8 +64,8 @@ const CustomSplitField = ({ form, visible }: CustomSplitFieldProps) => {
         
         form.setValue('splitPercentage', splitPercentage);
         form.setValue('splitAmounts', undefined);
+        form.setValue('childSplitAmounts', undefined);
         
-        // Log for debugging
         console.log('Updated split percentages:', splitPercentage);
       } else if (splitType === 'amount') {
         const yourAmountNum = parseFloat(yourAmount) || 0;
@@ -59,20 +78,41 @@ const CustomSplitField = ({ form, visible }: CustomSplitFieldProps) => {
         
         form.setValue('splitAmounts', splitAmounts);
         form.setValue('splitPercentage', undefined);
+        form.setValue('childSplitAmounts', undefined);
         
-        // Log for debugging
         console.log('Updated split amounts:', splitAmounts);
+      } else if (splitType === 'perChild') {
+        const childSplitAmounts: Record<string, number> = {};
+        
+        Object.entries(childSplits).forEach(([childId, amount]) => {
+          childSplitAmounts[childId] = parseFloat(amount) || 0;
+        });
+        
+        form.setValue('childSplitAmounts', childSplitAmounts);
+        form.setValue('splitPercentage', undefined);
+        form.setValue('splitAmounts', undefined);
+        
+        console.log('Updated child split amounts:', childSplitAmounts);
       }
     }
-  }, [parentAPercentage, yourAmount, coParentAmount, user, visible, form, splitType]);
+  }, [parentAPercentage, yourAmount, coParentAmount, childSplits, user, visible, form, splitType]);
   
-  // Initialize from existing values if available
   useEffect(() => {
     if (visible && user) {
       const currentSplitPercentage = form.getValues().splitPercentage;
       const currentSplitAmounts = form.getValues().splitAmounts;
+      const currentChildSplitAmounts = form.getValues().childSplitAmounts;
       
-      if (currentSplitAmounts && currentSplitAmounts[user.id]) {
+      if (currentChildSplitAmounts) {
+        setSplitType('perChild');
+        
+        const stringChildSplits: Record<string, string> = {};
+        Object.entries(currentChildSplitAmounts).forEach(([childId, amount]) => {
+          stringChildSplits[childId] = amount.toString();
+        });
+        
+        setChildSplits(stringChildSplits);
+      } else if (currentSplitAmounts && currentSplitAmounts[user.id]) {
         setSplitType('amount');
         setYourAmount(currentSplitAmounts[user.id].toString());
         if (currentSplitAmounts.coParent) {
@@ -85,26 +125,44 @@ const CustomSplitField = ({ form, visible }: CustomSplitFieldProps) => {
     }
   }, [visible, user, form]);
   
+  const handleChildAmountChange = (childId: string, amount: string) => {
+    setChildSplits(prev => ({
+      ...prev,
+      [childId]: amount
+    }));
+  };
+  
+  const childSplitTotal = Object.values(childSplits)
+    .reduce((total, amount) => total + (parseFloat(amount) || 0), 0);
+  
+  const isChildSplitOverBudget = childSplitTotal > totalAmount;
+  
   if (!visible) return null;
   
   return (
     <div className={`space-y-4 mt-4 p-4 border rounded-md bg-gray-50 ${isMobile ? 'mx-0' : ''}`}>
       <RadioGroup 
         value={splitType} 
-        onValueChange={(value) => setSplitType(value as 'percentage' | 'amount')}
+        onValueChange={(value) => setSplitType(value as 'percentage' | 'amount' | 'perChild')}
         className="flex flex-col space-y-2"
       >
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="percentage" id="percentage" />
-          <Label htmlFor="percentage">By Percentage</Label>
+          <Label htmlFor="percentage">By Percentage (between parents)</Label>
         </div>
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="amount" id="amount" />
-          <Label htmlFor="amount">By Amount</Label>
+          <Label htmlFor="amount">By Amount (between parents)</Label>
         </div>
+        {selectedChildren.length > 0 && (
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="perChild" id="perChild" />
+            <Label htmlFor="perChild">By Child</Label>
+          </div>
+        )}
       </RadioGroup>
       
-      {splitType === 'percentage' ? (
+      {splitType === 'percentage' && (
         <div className="mt-4">
           <div className="flex justify-between items-center">
             <div className="text-sm">
@@ -127,7 +185,9 @@ const CustomSplitField = ({ form, visible }: CustomSplitFieldProps) => {
             className={`mt-2 ${isMobile ? 'touch-manipulation' : ''}`}
           />
         </div>
-      ) : (
+      )}
+      
+      {splitType === 'amount' && (
         <div className="mt-4 space-y-4">
           <div>
             <Label htmlFor="yourAmount">Your Amount</Label>
@@ -157,6 +217,44 @@ const CustomSplitField = ({ form, visible }: CustomSplitFieldProps) => {
               This is automatically calculated based on the total amount ({totalAmount.toFixed(2)})
             </FormDescription>
           </div>
+        </div>
+      )}
+      
+      {splitType === 'perChild' && (
+        <div className="mt-4 space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <span className="font-medium">Total per child:</span>
+              <span className="ml-2">{equalSplitAmount}</span>
+            </div>
+            <div className={`text-sm ${isChildSplitOverBudget ? 'text-red-500' : 'text-gray-500'}`}>
+              Used: {childSplitTotal.toFixed(2)} / {totalAmount.toFixed(2)}
+            </div>
+          </div>
+          
+          {selectedChildren.map(child => (
+            <div key={child.id}>
+              <Label htmlFor={`child-amount-${child.id}`}>
+                {child.name || child.initials}
+              </Label>
+              <Input
+                id={`child-amount-${child.id}`}
+                type="number"
+                value={childSplits[child.id] || ''}
+                onChange={(e) => handleChildAmountChange(child.id, e.target.value)}
+                className="mt-1"
+                placeholder={equalSplitAmount}
+                min="0"
+                step="0.01"
+              />
+            </div>
+          ))}
+          
+          {isChildSplitOverBudget && (
+            <div className="text-red-500 text-sm mt-1">
+              Warning: Total split amount exceeds the expense total
+            </div>
+          )}
         </div>
       )}
     </div>

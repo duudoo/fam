@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -37,21 +36,37 @@ interface ChildExpenseReportProps {
 const ChildExpenseReport = ({ expenses = [] }: ChildExpenseReportProps) => {
   const { data: children = [] } = useChildren();
   const [selectedChildId, setSelectedChildId] = useState<string>("");
-  const [childExpenses, setChildExpenses] = useState<Expense[]>([]);
+  const [childExpenses, setChildExpenses] = useState<{expense: Expense, allocatedAmount: number}[]>([]);
   const { currency } = useCurrency();
+  
+  const getChildAllocation = (expense: Expense, childId: string): number => {
+    if (expense.childSplitAmounts && expense.childSplitAmounts[childId]) {
+      return expense.childSplitAmounts[childId];
+    }
+    
+    if (expense.childIds && expense.childIds.length > 0) {
+      return expense.amount / expense.childIds.length;
+    }
+    
+    return expense.amount;
+  };
   
   useEffect(() => {
     if (selectedChildId && expenses) {
-      const filtered = expenses.filter(expense => 
-        expense.childIds?.includes(selectedChildId)
-      );
+      const filtered = expenses
+        .filter(expense => expense.childIds?.includes(selectedChildId))
+        .map(expense => ({
+          expense,
+          allocatedAmount: getChildAllocation(expense, selectedChildId)
+        }));
+        
       setChildExpenses(filtered);
     } else {
       setChildExpenses([]);
     }
   }, [selectedChildId, expenses]);
   
-  const totalAmount = childExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const totalAmount = childExpenses.reduce((sum, item) => sum + item.allocatedAmount, 0);
   
   if (children.length === 0) {
     return (
@@ -104,16 +119,18 @@ const ChildExpenseReport = ({ expenses = [] }: ChildExpenseReportProps) => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Description</TableHead>
-                      <TableHead>Amount</TableHead>
+                      <TableHead>Child Amount</TableHead>
+                      <TableHead>Total Amount</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Category</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {childExpenses.map(expense => (
+                    {childExpenses.map(({ expense, allocatedAmount }) => (
                       <TableRow key={expense.id}>
                         <TableCell className="font-medium">{expense.description}</TableCell>
+                        <TableCell className="font-medium">{formatCurrency(allocatedAmount, currency.symbol)}</TableCell>
                         <TableCell>{formatCurrency(expense.amount, currency.symbol)}</TableCell>
                         <TableCell>{format(new Date(expense.date), 'MMM d, yyyy')}</TableCell>
                         <TableCell><CategoryBadge category={expense.category} /></TableCell>

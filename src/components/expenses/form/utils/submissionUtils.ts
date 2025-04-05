@@ -92,6 +92,7 @@ const handleExpenseUpdate = async (
     splitMethod: values.splitMethod,
     splitPercentage: values.splitPercentage,
     splitAmounts: values.splitAmounts,
+    childSplitAmounts: values.childSplitAmounts,
     notes: values.notes || undefined,
     receiptUrl: receiptUrl || undefined,
     childIds: values.childIds || []
@@ -116,6 +117,22 @@ const handleExpenseCreation = async (
 ) => {
   console.log("Creating new expense with values:", values);
   
+  // Calculate child split amounts if not provided and children are selected
+  let childSplitAmounts = values.childSplitAmounts;
+  
+  if (values.childIds && values.childIds.length > 0 && !childSplitAmounts) {
+    // Equal split among children
+    const amount = parseFloat(values.amount);
+    const perChildAmount = amount / values.childIds.length;
+    
+    childSplitAmounts = {};
+    values.childIds.forEach(childId => {
+      childSplitAmounts![childId] = perChildAmount;
+    });
+    
+    console.log("Auto-calculated child split amounts:", childSplitAmounts);
+  }
+  
   // Ensure we're properly including the split information based on the splitMethod
   const newExpenseData = {
     description: values.description,
@@ -126,6 +143,7 @@ const handleExpenseCreation = async (
     splitMethod: values.splitMethod,
     splitPercentage: values.splitMethod === 'custom' ? values.splitPercentage : undefined,
     splitAmounts: values.splitMethod === 'custom' ? values.splitAmounts : undefined,
+    childSplitAmounts: childSplitAmounts,
     notes: values.notes || undefined,
     receiptUrl: receiptUrl || undefined,
     paidBy: user.id,

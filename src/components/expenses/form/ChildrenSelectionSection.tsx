@@ -6,6 +6,8 @@ import { FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/for
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useFormContext } from 'react-hook-form';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { formatCurrency } from '@/utils/expenseUtils';
 
 interface ChildrenSelectionSectionProps {
   defaultSelectedIds?: string[];
@@ -15,10 +17,27 @@ const ChildrenSelectionSection = ({ defaultSelectedIds = [] }: ChildrenSelection
   const { data: children = [], isLoading } = useChildren();
   const [selectedIds, setSelectedIds] = useState<string[]>(defaultSelectedIds);
   const form = useFormContext();
+  const { currency } = useCurrency();
   
+  // Get total expense amount
+  const totalAmount = parseFloat(form.getValues()?.amount) || 0;
+  
+  // Calculate per-child amount (equal split)
+  const perChildAmount = selectedIds.length > 0 
+    ? totalAmount / selectedIds.length
+    : 0;
+    
   // Effect to update form value when selectedIds changes
   useEffect(() => {
+    // Update the childIds in the form
     form.setValue('childIds', selectedIds);
+    
+    // If using custom split with per-child amounts, reset that when children change
+    const splitMethod = form.getValues()?.splitMethod;
+    if (splitMethod === 'custom') {
+      // Clear any existing child split amounts when children selection changes
+      form.setValue('childSplitAmounts', undefined);
+    }
   }, [selectedIds, form]);
   
   // Effect to auto-select the only child if there's just one and none are selected
@@ -65,7 +84,14 @@ const ChildrenSelectionSection = ({ defaultSelectedIds = [] }: ChildrenSelection
       name="childIds"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Related Children</FormLabel>
+          <div className="flex justify-between items-center">
+            <FormLabel>Related Children</FormLabel>
+            {selectedIds.length > 0 && totalAmount > 0 && (
+              <span className="text-sm text-gray-500">
+                {formatCurrency(perChildAmount, currency.symbol)} per child
+              </span>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
             {children.map(child => (
               <Button

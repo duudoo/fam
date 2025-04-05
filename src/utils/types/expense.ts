@@ -57,6 +57,8 @@ export type Expense = {
   splitPercentage?: Record<string, number>;
   /** For exact split amounts, monetary allocation by parent ID */
   splitAmounts?: Record<string, number>;
+  /** For child-specific expense amounts */
+  childSplitAmounts?: Record<string, number>;
   /** Optional notes about the expense */
   notes?: string;
   /** Additional notes for disputes */
