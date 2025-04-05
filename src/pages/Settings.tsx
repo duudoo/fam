@@ -12,6 +12,7 @@ import CalendarSyncSettings from '@/components/calendar/CalendarSyncSettings';
 import { Spinner } from '@/components/ui/spinner';
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import { Circle, Calendar, Settings as SettingsIcon, Bell, DollarSign, Calculator } from 'lucide-react';
+import Navbar from '@/components/Navbar';
 
 const SettingsPage = () => {
   const { user, loading } = useAuth();
@@ -44,6 +45,7 @@ const SettingsPage = () => {
 
   return (
     <CurrencyProvider>
+      <Navbar />
       <div className="container mx-auto py-6 pt-24">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-famacle-slate">Settings</h1>
