@@ -51,9 +51,8 @@ export const fetchReceivedInvites = async (email: string): Promise<CoParentInvit
     
     const { data, error } = await supabase
       .from('co_parent_invites')
-      .select('*')
-      .eq('email', email)
-      .eq('status', 'pending');
+      .select('*, invited_by:profiles!co_parent_invites_invited_by_fkey(full_name, avatar_url)')
+      .eq('email', email);
       
     if (error) {
       console.error('Error fetching received invites:', error);
@@ -74,7 +73,9 @@ export const fetchReceivedInvites = async (email: string): Promise<CoParentInvit
       invitedBy: invite.invited_by,
       invitedAt: invite.invited_at,
       respondedAt: invite.responded_at,
-      message: invite.message || undefined
+      message: invite.message || undefined,
+      // Include inviter's name if available
+      inviterName: invite.invited_by?.full_name || 'Unknown'
     }));
   } catch (err) {
     console.error('Failed to fetch received invites:', err);
@@ -89,7 +90,25 @@ export const createInvite = async (email: string, userId: string, message?: stri
   try {
     console.log("Creating invitation:", { email, userId, message });
     
-    // Create a new invitation without checking for existing users
+    // Check if there's an existing pending invite for this email from this user
+    const { data: existingInvites, error: checkError } = await supabase
+      .from('co_parent_invites')
+      .select('*')
+      .eq('email', email)
+      .eq('invited_by', userId)
+      .eq('status', 'pending');
+      
+    if (checkError) {
+      console.error("Error checking existing invitations:", checkError);
+      return { error: `Failed to check for existing invitations: ${checkError.message}` };
+    }
+    
+    // If there's already a pending invite, don't create a new one
+    if (existingInvites && existingInvites.length > 0) {
+      return { error: `You already have a pending invitation for ${email}` };
+    }
+    
+    // Create a new invitation
     const { data, error } = await supabase
       .from('co_parent_invites')
       .insert({
@@ -178,5 +197,40 @@ export const declineInvite = async (inviteId: string) => {
   } catch (error) {
     console.error("Error declining invitation:", error);
     throw error;
+  }
+};
+
+/**
+ * Check for pending invitations for a user's email
+ */
+export const checkPendingInvites = async (email: string): Promise<CoParentInvite[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('co_parent_invites')
+      .select('*')
+      .eq('email', email)
+      .eq('status', 'pending');
+      
+    if (error) {
+      console.error("Error checking pending invites:", error);
+      return [];
+    }
+    
+    if (!data || data.length === 0) {
+      return [];
+    }
+    
+    return data.map(invite => ({
+      id: invite.id,
+      email: invite.email,
+      status: invite.status as any,
+      invitedBy: invite.invited_by,
+      invitedAt: invite.invited_at,
+      respondedAt: invite.responded_at,
+      message: invite.message || undefined
+    }));
+  } catch (error) {
+    console.error("Error checking pending invites:", error);
+    return [];
   }
 };

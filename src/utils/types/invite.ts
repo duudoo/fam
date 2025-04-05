@@ -15,6 +15,7 @@ export type CoParentInvite = {
   invitedAt: string;
   respondedAt?: string;
   message?: string;
+  inviterName?: string;
 };
 
 /**

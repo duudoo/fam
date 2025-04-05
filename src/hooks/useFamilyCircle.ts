@@ -73,11 +73,40 @@ export const useFamilyCircle = () => {
     }
   }, [user]);
 
-  // Fetch invites when user changes
+  // Set up real-time subscription for co-parent invites
   useEffect(() => {
-    if (user) {
-      fetchInvites();
-    }
+    if (!user) return;
+    
+    // Subscribe to changes in co-parent_invites table
+    const channel = supabase
+      .channel('co-parent-invites-changes')
+      .on('postgres_changes', {
+        event: '*', 
+        schema: 'public',
+        table: 'co_parent_invites',
+        filter: `invited_by=eq.${user.id}`
+      }, (payload) => {
+        console.log('Received invite update:', payload);
+        fetchInvites();
+      })
+      .on('postgres_changes', {
+        event: '*', 
+        schema: 'public',
+        table: 'co_parent_invites',
+        filter: user.email ? `email=eq.${user.email}` : undefined
+      }, (payload) => {
+        console.log('Received invite update (as recipient):', payload);
+        fetchInvites();
+      })
+      .subscribe();
+    
+    // Fetch initial data
+    fetchInvites();
+    
+    // Cleanup subscription
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user, fetchInvites]);
 
   const createInvite = useCallback(async (email: string, message?: string) => {
@@ -98,15 +127,42 @@ export const useFamilyCircle = () => {
         return { error: result.error };
       }
       
-      // If successful, refresh the invites list
-      await fetchInvites();
-      
       return { data: result.data };
     } catch (error) {
       console.error("Error creating invitation:", error);
       return { error: "Failed to create invitation" };
     }
-  }, [user, fetchInvites]);
+  }, [user]);
+
+  // Function to handle resending invitations
+  const resendInvite = useCallback(async (inviteId: string, email: string, message?: string) => {
+    try {
+      if (!user) {
+        return { error: "You must be signed in to send invitations" };
+      }
+      
+      // First, update the original invitation to declined/expired status
+      const { error: updateError } = await supabase
+        .from('co_parent_invites')
+        .update({
+          status: 'expired',
+          responded_at: new Date().toISOString()
+        })
+        .eq('id', inviteId);
+        
+      if (updateError) {
+        console.error("Error updating invitation:", updateError);
+        return { error: "Failed to process invitation resend" };
+      }
+      
+      // Create a new invitation
+      return await createInvite(email, message);
+      
+    } catch (error) {
+      console.error("Error resending invitation:", error);
+      return { error: "Failed to resend invitation" };
+    }
+  }, [user, createInvite]);
 
   return {
     currentUser,
@@ -117,6 +173,7 @@ export const useFamilyCircle = () => {
     loading,
     error,
     fetchInvites,
-    createInvite
+    createInvite,
+    resendInvite
   };
 };

@@ -4,11 +4,12 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import CoParentInvite from "@/components/user/CoParentInvite";
-import CoParentsList from "@/components/user/CoParentsList";
 import { CoParentInvite as CoParentInviteType, Parent } from "@/utils/types";
 import { useFamilyCircle } from "@/hooks/useFamilyCircle";
 import { emailAPI } from "@/lib/api/email";
+import CoParentsList from "@/components/user/CoParentsList";
+import CoParentInviteForm from "@/components/invite/CoParentInviteForm";
+import InvitesList from "@/components/invite/InvitesList";
 
 interface CoParentsTabProps {
   currentUser: Parent;
@@ -28,54 +29,35 @@ const CoParentsTab = ({
   onInviteSent
 }: CoParentsTabProps) => {
   const [inviting, setInviting] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const { createInvite } = useFamilyCircle();
+  const { resendInvite } = useFamilyCircle();
 
   const handleSendInvite = async (email: string, message?: string) => {
+    // Invitation handling now happens directly in the CoParentInviteForm component
+    setInviting(false);
+    
+    // Update UI
+    if (onInviteSent) {
+      onInviteSent();
+    }
+  };
+
+  const handleResendInvite = async (inviteId: string, email: string) => {
     try {
-      setSubmitting(true);
-      
-      // Use the createInvite function from useFamilyCircle
-      const result = await createInvite(email, message);
+      const result = await resendInvite(inviteId, email);
       
       if (result.error) {
         toast.error(result.error);
         return;
       }
       
-      const invite = result.data;
-      
-      // Send email invitation
-      const inviteLink = `${window.location.origin}/accept-invite?id=${invite.id}`;
-      
-      try {
-        await emailAPI.sendCoParentInviteEmail(
-          email, 
-          currentUser.name || 'A co-parent', 
-          message || '',
-          inviteLink
-        );
-        console.log("Invitation email sent successfully");
-      } catch (emailError) {
-        console.error("Error sending invitation email:", emailError);
-        // Don't block the invite creation if the email fails
-        toast.warning("Invitation created but email notification might not have been sent.");
-      }
-      
-      // Close the form and show success message
-      setInviting(false);
-      toast.success(`Invitation sent to ${email}`);
-      
-      // Update UI
       if (onInviteSent) {
         onInviteSent();
       }
       
+      toast.success(`New invitation sent to ${email}`);
     } catch (error) {
-      console.error("Error sending invitation:", error);
-      toast.error("Failed to send invitation. Please try again.");
-    } finally {
-      setSubmitting(false);
+      console.error("Error resending invitation:", error);
+      toast.error("Failed to resend invitation");
     }
   };
 
@@ -100,19 +82,49 @@ const CoParentsTab = ({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <CoParentInvite 
-              onSubmit={handleSendInvite} 
-              onCancel={() => setInviting(false)} 
-              isSubmitting={submitting}
+            <CoParentInviteForm 
+              onSuccess={() => {
+                setInviting(false);
+                if (onInviteSent) onInviteSent();
+              }}
+              onCancel={() => setInviting(false)}
             />
           </CardContent>
         </Card>
       ) : null}
       
+      {/* Received invites section */}
+      {receivedInvites && receivedInvites.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-lg font-medium mb-3">Invitations For You</h3>
+          <InvitesList 
+            invites={receivedInvites}
+            type="received"
+            onStatusChange={() => {
+              if (onInviteSent) onInviteSent();
+            }}
+          />
+        </div>
+      )}
+      
+      {/* Sent invites section */}
+      <div>
+        <h3 className="text-lg font-medium mb-3">Invitations Sent</h3>
+        <InvitesList 
+          invites={invites}
+          type="sent"
+          onStatusChange={() => {
+            if (onInviteSent) onInviteSent();
+          }}
+          onResend={handleResendInvite}
+        />
+      </div>
+      
+      {/* Active co-parents section */}
       <CoParentsList 
         currentUser={currentUser} 
-        sentInvites={invites} 
-        receivedInvites={receivedInvites}
+        sentInvites={invites.filter(invite => invite.status === 'accepted')} 
+        receivedInvites={receivedInvites.filter(invite => invite.status === 'accepted')}
       />
     </div>
   );
