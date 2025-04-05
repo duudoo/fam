@@ -43,8 +43,6 @@ const ExpenseFormContent = ({ form }: ExpenseFormContentProps) => {
         existingReceiptUrl={expense?.receiptUrl}
       />
       
-      <NotesSection form={form} />
-      
       <FormActions 
         onCancel={onCancel} 
         isSubmitting={isSubmitting} 

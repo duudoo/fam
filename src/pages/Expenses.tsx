@@ -135,7 +135,6 @@ const ExpensesPage = () => {
             <ExpenseOverview expenses={expenses} />
             
             <div className="mb-6">
-              {/* Fix: Ensure Tabs component wraps all TabsContent */}
               <ExpenseFilters 
                 filter={filter}
                 setFilter={setFilter}
@@ -145,7 +144,7 @@ const ExpensesPage = () => {
                 setSearchQuery={setSearchQuery}
               />
               
-              {/* Render the expense lists based on filter */}
+              {/* Render the expense lists based on filter value */}
               {filter === 'all' && (
                 <ExpenseList 
                   expenses={expenses} 

@@ -44,7 +44,11 @@ const ExpenseFilters = ({
 
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-      <Tabs value={filter} onValueChange={setFilter as (value: string) => void} className="w-full md:w-auto">
+      <Tabs 
+        value={filter} 
+        onValueChange={setFilter as (value: string) => void} 
+        className="w-full md:w-auto"
+      >
         <TabsList className="w-full md:w-auto">
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="pending">Pending</TabsTrigger>
