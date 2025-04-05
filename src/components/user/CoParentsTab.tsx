@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import CoParentInvite from "@/components/user/CoParentInvite";
 import CoParentsList from "@/components/user/CoParentsList";
 import { CoParentInvite as CoParentInviteType, Parent } from "@/utils/types";
+import { emailAPI } from "@/lib/api/email";
 
 interface CoParentsTabProps {
   currentUser: Parent;
@@ -84,6 +85,23 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
       }
 
       const invite = newInvite[0];
+      
+      // Send email invitation
+      const inviteLink = `${window.location.origin}/accept-invite?id=${invite.id}`;
+      
+      try {
+        await emailAPI.sendCoParentInviteEmail(
+          email, 
+          currentUser.name || 'A co-parent', 
+          message || '',
+          inviteLink
+        );
+        console.log("Invitation email sent successfully");
+      } catch (emailError) {
+        console.error("Error sending invitation email:", emailError);
+        // Don't block the invite creation if the email fails
+        toast.warning("Invitation created but email notification might not have been sent.");
+      }
       
       // Close the form and show success message
       setInviting(false);

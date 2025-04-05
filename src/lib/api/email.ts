@@ -180,32 +180,60 @@ export const emailAPI = {
    * Send a co-parent invitation email
    */
   sendCoParentInviteEmail: async (to: string, inviterName: string, inviteMessage: string = "", inviteLink: string) => {
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background-color: #4F46E5; color: white; padding: 20px; text-align: center;">
-          <h1>You've Been Invited to Famacle</h1>
-        </div>
-        <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none;">
-          <p>Hello,</p>
-          <p>${inviterName} has invited you to join Famacle as a co-parent.</p>
-          
-          ${inviteMessage ? `<p><strong>Message from ${inviterName}:</strong></p>
-          <p style="padding: 10px; background-color: #f9fafb; border-left: 4px solid #4F46E5; font-style: italic;">${inviteMessage}</p>` : ''}
-          
-          <p>Famacle helps parents coordinate expenses, schedules, and communications in one place.</p>
-          <div style="margin: 30px 0; text-align: center;">
-            <a href="${inviteLink}" style="background-color: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Accept Invitation</a>
-          </div>
-          <p style="margin-top: 30px;">Best regards,<br>The Famacle Team</p>
-        </div>
-      </div>
-    `;
+    try {
+      // First try using the edge function
+      try {
+        const { data, error } = await supabase.functions.invoke("send-coparent-invite", {
+          body: {
+            email: to,
+            inviterName,
+            inviteMessage,
+            inviteLink
+          },
+        });
 
-    return emailAPI.sendEmail({
-      to,
-      subject: `${inviterName} invited you to Famacle`,
-      html,
-      text: `Hello, ${inviterName} has invited you to join Famacle as a co-parent. ${inviteMessage ? `Message: ${inviteMessage}` : ''} Please visit this link to accept the invitation: ${inviteLink}`,
-    });
+        if (!error && data?.success) {
+          return data;
+        }
+        
+        // If there's an error with the edge function, fall back to the general email function
+        console.warn("Falling back to general email API", error || data?.error);
+      } catch (edgeFnError) {
+        console.warn("Edge function error, falling back to general email API", edgeFnError);
+      }
+      
+      // Fallback to general email function
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #4F46E5; color: white; padding: 20px; text-align: center;">
+            <h1>You've Been Invited to Famacle</h1>
+          </div>
+          <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none;">
+            <p>Hello,</p>
+            <p>${inviterName} has invited you to join Famacle as a co-parent.</p>
+            
+            ${inviteMessage ? `<p><strong>Message from ${inviterName}:</strong></p>
+            <p style="padding: 10px; background-color: #f9fafb; border-left: 4px solid #4F46E5; font-style: italic;">${inviteMessage}</p>` : ''}
+            
+            <p>Famacle helps parents coordinate expenses, schedules, and communications in one place.</p>
+            <div style="margin: 30px 0; text-align: center;">
+              <a href="${inviteLink}" style="background-color: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Accept Invitation</a>
+            </div>
+            <p style="margin-top: 30px;">Best regards,<br>The Famacle Team</p>
+          </div>
+        </div>
+      `;
+
+      return emailAPI.sendEmail({
+        to,
+        subject: `${inviterName} invited you to Famacle`,
+        html,
+        text: `Hello, ${inviterName} has invited you to join Famacle as a co-parent. ${inviteMessage ? `Message: ${inviteMessage}` : ''} Please visit this link to accept the invitation: ${inviteLink}`,
+      });
+    } catch (error) {
+      console.error("Failed to send co-parent invite email:", error);
+      // Don't fail if the email fails
+      return { error };
+    }
   }
 };
