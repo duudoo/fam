@@ -73,6 +73,65 @@ export const fetchReceivedInvites = async (email: string): Promise<CoParentInvit
 };
 
 /**
+ * Create an invitation to a co-parent
+ */
+export const createInvite = async (email: string, userId: string, message?: string): Promise<{data?: any, error?: string}> => {
+  try {
+    console.log("Creating invitation:", { email, userId, message });
+    
+    // Check if email already has an invite from this user
+    const { data: existingInvites, error: checkError } = await supabase
+      .from('co_parent_invites')
+      .select('id')
+      .eq('email', email)
+      .eq('invited_by', userId);
+    
+    if (checkError) {
+      console.error("Error checking existing invites:", checkError);
+      return { error: `Failed to check existing invitations: ${checkError.message}` };
+    }
+    
+    if (existingInvites && existingInvites.length > 0) {
+      return { error: "You have already invited this email address" };
+    }
+
+    // Create a new invitation
+    const { data, error } = await supabase
+      .from('co_parent_invites')
+      .insert({
+        email: email,
+        invited_by: userId,
+        status: 'pending',
+        message: message || null
+      })
+      .select();
+    
+    if (error) {
+      console.error("Error creating invitation:", error);
+      return { error: `Failed to create invitation: ${error.message}` };
+    }
+    
+    if (!data || data.length === 0) {
+      return { error: "Failed to create invitation record" };
+    }
+    
+    return { 
+      data: {
+        id: data[0].id,
+        email: data[0].email,
+        status: data[0].status,
+        invitedBy: data[0].invited_by,
+        invitedAt: data[0].invited_at,
+        message: data[0].message || undefined,
+      }
+    };
+  } catch (error) {
+    console.error("Error in createInvite:", error);
+    return { error: `Failed to create invitation: ${error instanceof Error ? error.message : 'Unknown error'}` };
+  }
+};
+
+/**
  * Accept an invitation
  */
 export const acceptInvite = async (inviteId: string) => {

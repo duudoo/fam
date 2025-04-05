@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { CoParentInvite, Parent } from "@/utils/types";
 import { toast } from "sonner";
-import { fetchSentInvites, fetchReceivedInvites } from "@/lib/api/invites";
+import { fetchSentInvites, fetchReceivedInvites, createInvite as apiCreateInvite } from "@/lib/api/invites";
 
 export const useFamilyCircle = () => {
   const { user, profile } = useAuth();
@@ -95,61 +95,22 @@ export const useFamilyCircle = () => {
         return { error: "You cannot invite yourself" };
       }
       
-      // Check existing invites from local state first to improve UX
-      const existingInvite = invites.find(invite => invite.email.toLowerCase() === email.toLowerCase());
-      if (existingInvite) {
-        return { error: "You have already invited this email address" };
-      }
-
-      console.log("Creating invitation for:", email);
+      // Now use our API function to create the invitation
+      const result = await apiCreateInvite(email, user.id, message);
       
-      // Try to create the invitation with direct RLS permissions check
-      try {
-        const { data: newInvite, error: inviteError } = await supabase
-          .from('co_parent_invites')
-          .insert({
-            email: email,
-            invited_by: user.id,
-            status: 'pending',
-            message: message || null
-          })
-          .select();
-        
-        if (inviteError) {
-          // Check specific error codes
-          if (inviteError.code === '23505') {
-            return { error: "This email has already been invited" };
-          }
-          console.error("Error creating invitation:", inviteError);
-          return { error: "Failed to create invitation: " + inviteError.message };
-        }
-        
-        if (!newInvite || newInvite.length === 0) {
-          return { error: "Failed to create invitation record" };
-        }
-        
-        // If successful, refresh the invites list
-        await fetchInvites();
-        
-        return { 
-          data: {
-            id: newInvite[0].id,
-            email: newInvite[0].email,
-            status: newInvite[0].status as any,
-            invitedBy: newInvite[0].invited_by,
-            invitedAt: newInvite[0].invited_at,
-            message: newInvite[0].message || undefined,
-          }
-        };
-      } catch (err) {
-        console.error("Error in supabase operation:", err);
-        return { error: "Failed to create invitation: Database error" };
+      if (result.error) {
+        return { error: result.error };
       }
+      
+      // If successful, refresh the invites list
+      await fetchInvites();
+      
+      return { data: result.data };
     } catch (error) {
       console.error("Error creating invitation:", error);
       return { error: "Failed to create invitation" };
     }
-  }, [user, invites, fetchInvites]);
+  }, [user, fetchInvites]);
 
   return {
     currentUser,

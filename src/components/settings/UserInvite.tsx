@@ -47,9 +47,11 @@ const UserInvite = ({ onInviteSent }: UserInviteProps) => {
     setErrorMessage(null);
     
     try {
+      console.log("Sending invitation to:", data.email);
       const result = await createInvite(data.email);
       
       if (result.error) {
+        console.error("Invitation error:", result.error);
         setErrorMessage(result.error);
         toast.error(result.error);
         return;
@@ -63,7 +65,8 @@ const UserInvite = ({ onInviteSent }: UserInviteProps) => {
       }
     } catch (error) {
       console.error("Error sending invitation:", error);
-      setErrorMessage("Failed to send invitation. Please try again later.");
+      const errorMsg = error instanceof Error ? error.message : "Failed to send invitation. Please try again later.";
+      setErrorMessage(errorMsg);
       toast.error("Failed to send invitation");
     } finally {
       setIsLoading(false);
