@@ -16,6 +16,7 @@ import {
   FormMessage 
 } from '@/components/ui/form';
 import { useFamilyCircle } from '@/hooks/useFamilyCircle';
+import { AlertCircle } from 'lucide-react';
 
 const inviteFormSchema = z.object({
   email: z.string().email({
@@ -32,6 +33,7 @@ interface UserInviteProps {
 const UserInvite = ({ onInviteSent }: UserInviteProps) => {
   const { createInvite } = useFamilyCircle();
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   const form = useForm<InviteFormValues>({
     resolver: zodResolver(inviteFormSchema),
@@ -42,10 +44,13 @@ const UserInvite = ({ onInviteSent }: UserInviteProps) => {
 
   const sendInvite = async (data: InviteFormValues) => {
     setIsLoading(true);
+    setErrorMessage(null);
+    
     try {
       const result = await createInvite(data.email);
       
       if (result.error) {
+        setErrorMessage(result.error);
         toast.error(result.error);
         return;
       }
@@ -58,6 +63,7 @@ const UserInvite = ({ onInviteSent }: UserInviteProps) => {
       }
     } catch (error) {
       console.error("Error sending invitation:", error);
+      setErrorMessage("Failed to send invitation. Please try again later.");
       toast.error("Failed to send invitation");
     } finally {
       setIsLoading(false);
@@ -86,6 +92,13 @@ const UserInvite = ({ onInviteSent }: UserInviteProps) => {
             </FormItem>
           )}
         />
+
+        {errorMessage && (
+          <div className="flex items-center gap-2 text-sm text-red-500 mt-2">
+            <AlertCircle size={16} />
+            <span>{errorMessage}</span>
+          </div>
+        )}
       </form>
     </Form>
   );
