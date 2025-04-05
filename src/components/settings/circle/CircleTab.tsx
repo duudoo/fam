@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFamilyCircle } from "@/hooks/useFamilyCircle";
@@ -15,7 +14,8 @@ const CircleTab = () => {
     invites, 
     receivedInvites,
     loading, 
-    error, 
+    error,
+    receiveError,
     fetchInvites
   } = useFamilyCircle();
 
@@ -44,14 +44,6 @@ const CircleTab = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        
         <Tabs defaultValue="coparents">
           <TabsList className="mb-4">
             <TabsTrigger value="coparents">Co-Parents</TabsTrigger>
@@ -64,6 +56,8 @@ const CircleTab = () => {
               sentInvites={invites}
               receivedInvites={receivedInvites}
               onInviteSent={fetchInvites}
+              error={error}
+              receiveError={receiveError}
             />
           </TabsContent>
           

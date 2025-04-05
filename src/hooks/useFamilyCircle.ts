@@ -13,13 +13,14 @@ export const useFamilyCircle = () => {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<Parent | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [receiveError, setReceiveError] = useState<string | null>(null);
 
   // Set up the current user data when profile is loaded
   useEffect(() => {
     if (profile && user) {
       setCurrentUser({
         id: user.id,
-        name: profile.full_name || profile.first_name || 'User',
+        name: profile.full_name || profile.first_name || user.email?.split('@')[0] || 'User',
         email: user.email || '',
         avatar: profile.avatar_url,
         phone: profile.phone
@@ -40,15 +41,13 @@ export const useFamilyCircle = () => {
       
       setLoading(true);
       setError(null);
-      
-      let hasError = false;
+      setReceiveError(null);
       
       try {
         const sentInviteData = await fetchSentInvites(user.id);
         setInvites(sentInviteData);
       } catch (err) {
         console.error('Error fetching sent invites:', err);
-        hasError = true;
         setError("Unable to load sent invites");
       }
       
@@ -58,23 +57,18 @@ export const useFamilyCircle = () => {
           setReceivedInvites(receivedInviteData);
         } catch (err) {
           console.error('Error fetching received invites:', err);
-          hasError = true;
-          setError("Unable to load received invites");
+          setReceiveError("Unable to load received invites");
+          // We don't want to show error toasts for this as the primary user may not have any invites
+          // and that's normal behavior
         }
       } else {
         setReceivedInvites([]);
-      }
-
-      if (hasError) {
-        toast.error("Failed to load co-parent invites");
       }
       
     } catch (error) {
       console.error('Error fetching invites:', error);
       setError("Unable to load co-parent invites");
       toast.error("Failed to load co-parent invites");
-      setInvites([]);
-      setReceivedInvites([]);
     } finally {
       setLoading(false);
     }
@@ -123,6 +117,7 @@ export const useFamilyCircle = () => {
     setReceivedInvites,
     loading,
     error,
+    receiveError, // Add the receive error state to the return value
     fetchInvites,
     createInvite
   };

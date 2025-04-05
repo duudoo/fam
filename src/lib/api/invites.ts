@@ -20,7 +20,7 @@ export const fetchSentInvites = async (userId: string): Promise<CoParentInvite[]
     }
 
     if (!data) {
-      throw new Error('No data returned from sent invites query');
+      return [];
     }
 
     console.log("Received sent invites:", data);
@@ -51,11 +51,16 @@ export const fetchReceivedInvites = async (email: string): Promise<CoParentInvit
     const { data, error } = await supabase
       .from('co_parent_invites')
       .select('*')
-      .eq('email', email);
+      .eq('email', email)
+      .eq('status', 'pending');
       
     if (error) {
       console.error('Error fetching received invites:', error);
       throw error;
+    }
+
+    if (!data) {
+      return [];
     }
 
     console.log("Received invites:", data);
@@ -88,7 +93,8 @@ export const createInvite = async (email: string, userId: string, message?: stri
       .from('co_parent_invites')
       .select('id')
       .eq('email', email)
-      .eq('invited_by', userId);
+      .eq('invited_by', userId)
+      .eq('status', 'pending');
     
     if (checkError) {
       console.error("Error checking existing invites:", checkError);

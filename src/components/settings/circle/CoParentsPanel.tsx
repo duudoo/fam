@@ -13,28 +13,38 @@ interface CoParentsPanelProps {
   sentInvites: CoParentInvite[];
   receivedInvites: CoParentInvite[];
   onInviteSent: () => void;
+  error?: string | null;
+  receiveError?: string | null;
 }
 
 const CoParentsPanel = ({ 
   currentUser, 
   sentInvites, 
   receivedInvites,
-  onInviteSent 
+  onInviteSent,
+  error,
+  receiveError
 }: CoParentsPanelProps) => {
   const [showInviteForm, setShowInviteForm] = useState(false);
   
   return (
     <div className="space-y-6">
-      {/* Received Invites Section */}
-      {receivedInvites && receivedInvites.length > 0 && (
+      {/* Received Invites Section - Only show if there are invites or a specific error for received invites */}
+      {((receivedInvites && receivedInvites.length > 0) || receiveError) && (
         <Card className="bg-blue-50 border-blue-200">
           <CardContent className="pt-4">
             <h3 className="text-lg font-medium mb-3">Invitations for You</h3>
-            <InvitesList 
-              invites={receivedInvites} 
-              type="received" 
-              onStatusChange={onInviteSent}
-            />
+            {receiveError ? (
+              <Alert variant="destructive">
+                <AlertDescription>{receiveError}</AlertDescription>
+              </Alert>
+            ) : (
+              <InvitesList 
+                invites={receivedInvites} 
+                type="received" 
+                onStatusChange={onInviteSent}
+              />
+            )}
           </CardContent>
         </Card>
       )}
@@ -61,6 +71,10 @@ const CoParentsPanel = ({
           }}
           onCancel={() => setShowInviteForm(false)}
         />
+      ) : error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       ) : (
         sentInvites && sentInvites.length > 0 ? (
           <InvitesList 
