@@ -13,7 +13,6 @@ export const useFamilyCircle = () => {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<Parent | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [receiveError, setReceiveError] = useState<string | null>(null);
 
   // Set up the current user data when profile is loaded
   useEffect(() => {
@@ -56,8 +55,6 @@ export const useFamilyCircle = () => {
         try {
           const receivedInviteData = await fetchReceivedInvites(user.email);
           setReceivedInvites(receivedInviteData);
-          // Clear any previous errors since we successfully fetched
-          setReceiveError(null);
         } catch (err) {
           console.error('Error fetching received invites:', err);
           // We're now suppressing this error in the UI
@@ -119,7 +116,6 @@ export const useFamilyCircle = () => {
     setReceivedInvites,
     loading,
     error,
-    receiveError, 
     fetchInvites,
     createInvite
   };

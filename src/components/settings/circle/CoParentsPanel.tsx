@@ -14,7 +14,6 @@ interface CoParentsPanelProps {
   receivedInvites: CoParentInvite[];
   onInviteSent: () => void;
   error?: string | null;
-  receiveError?: string | null;
 }
 
 const CoParentsPanel = ({ 
@@ -23,7 +22,6 @@ const CoParentsPanel = ({
   receivedInvites,
   onInviteSent,
   error,
-  receiveError
 }: CoParentsPanelProps) => {
   const [showInviteForm, setShowInviteForm] = useState(false);
   
