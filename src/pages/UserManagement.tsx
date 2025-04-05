@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -39,11 +39,13 @@ const UserManagementPage = () => {
     }
   }, [user]);
 
-  const fetchInvites = async () => {
+  const fetchInvites = useCallback(async () => {
     try {
       if (!user) return;
 
-      console.log("Fetching invites for user:", user.id);
+      console.log("Fetching invites for user ID:", user.id);
+      setLoading(true);
+      
       const { data, error } = await supabase
         .from('co_parent_invites')
         .select('*')
@@ -51,7 +53,8 @@ const UserManagementPage = () => {
 
       if (error) {
         console.error('Error in fetchInvites query:', error);
-        throw error;
+        toast.error("Failed to load co-parent invites");
+        return;
       }
 
       console.log("Fetched invites:", data);
@@ -72,7 +75,7 @@ const UserManagementPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   if (authLoading) {
     return (

@@ -24,9 +24,34 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, inviterName, inviteMessage, inviteLink }: InviteEmailRequest = await req.json();
+    console.log("Received request to send co-parent invite email");
+    
+    // Parse request body
+    const requestBody = await req.text();
+    console.log("Request body:", requestBody);
+    
+    let jsonData: InviteEmailRequest;
+    try {
+      jsonData = JSON.parse(requestBody);
+    } catch (parseError) {
+      console.error("Failed to parse request body:", parseError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: "Invalid JSON in request body" 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+    
+    const { email, inviterName, inviteMessage, inviteLink } = jsonData;
 
+    // Validate required fields
     if (!email || !inviterName || !inviteLink) {
+      console.error("Missing required fields:", { email, inviterName, inviteLink });
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -39,6 +64,8 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    console.log("Preparing email to:", email);
+    
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #4F46E5; color: white; padding: 20px; text-align: center;">
@@ -60,20 +87,48 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    const emailResponse = await resend.emails.send({
-      from: "Famacle <onboarding@resend.dev>",
-      to: [email],
-      subject: `${inviterName} invited you to Famacle`,
-      html,
-      text: `Hello, ${inviterName} has invited you to join Famacle as a co-parent. ${inviteMessage ? `Message: ${inviteMessage}` : ''} Please visit this link to accept the invitation: ${inviteLink}`,
-    });
+    console.log("Sending email with Resend...");
+    
+    try {
+      const emailResponse = await resend.emails.send({
+        from: "Famacle <onboarding@resend.dev>",
+        to: [email],
+        subject: `${inviterName} invited you to Famacle`,
+        html,
+        text: `Hello, ${inviterName} has invited you to join Famacle as a co-parent. ${inviteMessage ? `Message: ${inviteMessage}` : ''} Please visit this link to accept the invitation: ${inviteLink}`,
+      });
 
-    if (emailResponse.error) {
-      console.error("Email sending error:", emailResponse.error);
+      if (emailResponse.error) {
+        console.error("Email sending error:", emailResponse.error);
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: emailResponse.error 
+          }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          }
+        );
+      }
+
+      console.log("Email sent successfully:", emailResponse);
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          data: emailResponse 
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    } catch (emailError) {
+      console.error("Email sending error:", emailError);
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: emailResponse.error 
+          error: emailError instanceof Error ? emailError.message : "Unknown email error" 
         }),
         { 
           status: 500, 
@@ -81,23 +136,12 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        data: emailResponse 
-      }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      }
-    );
   } catch (error: any) {
     console.error("Error in send-coparent-invite function:", error);
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message 
+        error: error instanceof Error ? error.message : "Unknown error" 
       }),
       { 
         status: 500, 

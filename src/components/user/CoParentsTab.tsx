@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,7 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
       }
       
       if (!currentUser || !currentUser.id) {
-        console.error("No current user found");
+        console.error("No current user found", currentUser);
         toast.error("You must be logged in to send invitations");
         return;
       }
@@ -43,6 +43,8 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
         return;
       }
 
+      console.log("Checking for existing invites...", { email, userId: currentUser.id });
+      
       // Check if invitation already exists
       const { data: existingInvites, error: checkError } = await supabase
         .from('co_parent_invites')
@@ -61,6 +63,8 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
         return;
       }
 
+      console.log("Creating new invitation...");
+      
       // Create the invitation
       const { data: newInvite, error: inviteError } = await supabase
         .from('co_parent_invites')
@@ -85,6 +89,7 @@ const CoParentsTab = ({ currentUser, invites, setInvites, onInviteSent }: CoPare
       }
 
       const invite = newInvite[0];
+      console.log("Invitation created successfully:", invite);
       
       // Send email invitation
       const inviteLink = `${window.location.origin}/accept-invite?id=${invite.id}`;

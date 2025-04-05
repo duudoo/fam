@@ -181,18 +181,28 @@ export const emailAPI = {
    */
   sendCoParentInviteEmail: async (to: string, inviterName: string, inviteMessage: string = "", inviteLink: string) => {
     try {
+      console.log("Sending co-parent invite email to:", to);
+      
       // First try using the edge function
       try {
+        console.log("Attempting to use edge function...");
+        const payload = {
+          email: to,
+          inviterName,
+          inviteMessage,
+          inviteLink
+        };
+        
+        console.log("Edge function payload:", payload);
+        
         const { data, error } = await supabase.functions.invoke("send-coparent-invite", {
-          body: {
-            email: to,
-            inviterName,
-            inviteMessage,
-            inviteLink
-          },
+          body: payload,
         });
 
+        console.log("Edge function response:", { data, error });
+
         if (!error && data?.success) {
+          console.log("Edge function success");
           return data;
         }
         
@@ -203,6 +213,7 @@ export const emailAPI = {
       }
       
       // Fallback to general email function
+      console.log("Using fallback email function");
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background-color: #4F46E5; color: white; padding: 20px; text-align: center;">
@@ -224,12 +235,15 @@ export const emailAPI = {
         </div>
       `;
 
-      return emailAPI.sendEmail({
+      const emailResult = await emailAPI.sendEmail({
         to,
         subject: `${inviterName} invited you to Famacle`,
         html,
         text: `Hello, ${inviterName} has invited you to join Famacle as a co-parent. ${inviteMessage ? `Message: ${inviteMessage}` : ''} Please visit this link to accept the invitation: ${inviteLink}`,
       });
+      
+      console.log("Fallback email result:", emailResult);
+      return emailResult;
     } catch (error) {
       console.error("Failed to send co-parent invite email:", error);
       // Don't fail if the email fails

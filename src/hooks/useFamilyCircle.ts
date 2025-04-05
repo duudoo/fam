@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { CoParentInvite, Parent } from "@/utils/types";
@@ -31,11 +31,15 @@ export const useFamilyCircle = () => {
     }
   }, [user]);
 
-  const fetchInvites = async () => {
+  const fetchInvites = useCallback(async () => {
     try {
-      if (!user) return;
+      if (!user) {
+        console.log("Cannot fetch invites: No user logged in");
+        return;
+      }
       
       setLoading(true);
+      console.log("Fetching invites for user ID:", user.id);
       
       // Query co_parent_invites where the current user is the inviter
       const { data, error } = await supabase
@@ -49,6 +53,8 @@ export const useFamilyCircle = () => {
         setLoading(false);
         return;
       }
+      
+      console.log("Fetched invites:", data);
       
       if (data) {
         setInvites(data.map((invite) => ({
@@ -67,7 +73,7 @@ export const useFamilyCircle = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   return {
     currentUser,
