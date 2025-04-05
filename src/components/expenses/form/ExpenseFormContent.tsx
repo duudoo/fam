@@ -9,7 +9,6 @@ import FormActions from './FormActions';
 import { UseFormReturn } from 'react-hook-form';
 import { FormValues } from './schema';
 import { SplitMethod } from '@/utils/types';
-import CustomSplitField from './fields/CustomSplitField';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ExpenseFormContentProps {
@@ -18,8 +17,6 @@ interface ExpenseFormContentProps {
 
 const ExpenseFormContent = ({ form }: ExpenseFormContentProps) => {
   const { 
-    categories, 
-    splitMethods, 
     expense, 
     setReceiptUrl, 
     onCancel,
@@ -33,16 +30,6 @@ const ExpenseFormContent = ({ form }: ExpenseFormContentProps) => {
     form.getValues().splitMethod === 'custom'
   );
   
-  // Format the split methods to have value and label properties
-  const formattedSplitMethods = splitMethods.map(method => {
-    return {
-      value: method,
-      label: method === 'none' ? 'None' : 
-             method === '50/50' ? '50/50' : 
-             method === 'custom' ? 'Custom' : method
-    };
-  });
-  
   const handleSplitMethodChange = (method: SplitMethod) => {
     console.log(`Split method changed to: ${method}, showing custom field: ${method === 'custom'}`);
     setShowCustomSplit(method === 'custom');
@@ -50,18 +37,7 @@ const ExpenseFormContent = ({ form }: ExpenseFormContentProps) => {
 
   return (
     <>
-      <ExpenseDetailsSection 
-        form={form} 
-        categories={categories} 
-        splitMethods={formattedSplitMethods} 
-        onSplitMethodChange={handleSplitMethodChange}
-        isMobile={isMobile}
-      />
-      
-      <CustomSplitField 
-        form={form} 
-        visible={showCustomSplit} 
-      />
+      <ExpenseDetailsSection control={form.control} />
       
       <ChildrenSelectionSection 
         defaultSelectedIds={expense?.childIds}

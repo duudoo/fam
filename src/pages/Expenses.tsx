@@ -136,7 +136,7 @@ const ExpensesPage = () => {
             <ExpenseOverview expenses={expenses} />
             
             <div className="mb-6">
-              <Tabs defaultValue="all" onValueChange={value => setFilter(value as any)}>
+              <Tabs defaultValue={filter}>
                 <ExpenseFilters 
                   filter={filter}
                   setFilter={setFilter}
@@ -153,15 +153,37 @@ const ExpensesPage = () => {
                   />
                 </TabsContent>
                 
-                {["pending", "approved", "paid", "disputed"].map((status) => (
-                  <TabsContent key={status} value={status} className="mt-0">
-                    <ExpenseList 
-                      expenses={expenses} 
-                      filteredStatus={status} 
-                      onAddNewClick={() => setShowForm(true)} 
-                    />
-                  </TabsContent>
-                ))}
+                <TabsContent value="pending" className="mt-0">
+                  <ExpenseList 
+                    expenses={expenses} 
+                    filteredStatus="pending"
+                    onAddNewClick={() => setShowForm(true)} 
+                  />
+                </TabsContent>
+                
+                <TabsContent value="approved" className="mt-0">
+                  <ExpenseList 
+                    expenses={expenses} 
+                    filteredStatus="approved"
+                    onAddNewClick={() => setShowForm(true)} 
+                  />
+                </TabsContent>
+                
+                <TabsContent value="paid" className="mt-0">
+                  <ExpenseList 
+                    expenses={expenses} 
+                    filteredStatus="paid"
+                    onAddNewClick={() => setShowForm(true)} 
+                  />
+                </TabsContent>
+                
+                <TabsContent value="disputed" className="mt-0">
+                  <ExpenseList 
+                    expenses={expenses} 
+                    filteredStatus="disputed"
+                    onAddNewClick={() => setShowForm(true)} 
+                  />
+                </TabsContent>
               </Tabs>
             </div>
           </div>
