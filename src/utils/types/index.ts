@@ -6,4 +6,8 @@ export * from './notification';
 export * from './calendar';
 export * from './message';
 // Import everything except the types that cause ambiguity
-export * from './invite';
+export type { 
+  Invite, 
+  InviteWithUserDetails,
+  InviteResponse
+} from './invite';

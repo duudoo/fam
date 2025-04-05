@@ -5,6 +5,7 @@ import { FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
+import { Slider } from "@/components/ui/slider";
 import { useAuth } from '@/hooks/useAuth';
 import { useChildren } from '@/hooks/children';
 import { FormValues } from './schema';
@@ -19,7 +20,7 @@ const CustomSplitField = ({ control, selectedChildIds }: CustomSplitFieldProps) 
   const { data: children = [] } = useChildren();
   const { setValue, getValues } = useFormContext();
   const [activeTab, setActiveTab] = useState('percentage');
-  const [percentageValues, setPercentageValues] = useState<Record<string, number>>({});
+  const [percentageValue, setPercentageValue] = useState<number>(50);
   const [amountValues, setAmountValues] = useState<Record<string, number>>({});
   const [childAmounts, setChildAmounts] = useState<Record<string, number>>({});
   const amount = parseFloat(useWatch({ control, name: 'amount' }) || '0');
@@ -30,20 +31,27 @@ const CustomSplitField = ({ control, selectedChildIds }: CustomSplitFieldProps) 
     
     // Initialize with any existing values or defaults
     if (activeTab === 'percentage') {
-      let initialPercentages: Record<string, number> = {};
-      
       if (currentSplitValues.splitPercentage && Object.keys(currentSplitValues.splitPercentage).length > 0) {
-        initialPercentages = { ...currentSplitValues.splitPercentage };
+        if (user && currentSplitValues.splitPercentage[user.id]) {
+          setPercentageValue(currentSplitValues.splitPercentage[user.id]);
+        }
       } else {
         // Default: User pays 50%, other parent pays 50%
-        if (user) {
-          initialPercentages[user.id] = 50;
-          initialPercentages['coParent'] = 50;
-        }
+        setPercentageValue(50);
       }
       
-      setPercentageValues(initialPercentages);
-      setValue('splitPercentage', initialPercentages);
+      // Update form values
+      if (user) {
+        const updatedPercentages = {
+          [user.id]: percentageValue,
+          'coParent': 100 - percentageValue
+        };
+        setValue('splitPercentage', updatedPercentages);
+      }
+      
+      // Clear the other split method values when using percentages
+      setValue('splitAmounts', undefined);
+      setValue('childSplitAmounts', undefined);
     } 
     else if (activeTab === 'amount') {
       let initialAmounts: Record<string, number> = {};
@@ -61,6 +69,10 @@ const CustomSplitField = ({ control, selectedChildIds }: CustomSplitFieldProps) 
       
       setAmountValues(initialAmounts);
       setValue('splitAmounts', initialAmounts);
+      
+      // Clear the other split method values when using fixed amounts
+      setValue('splitPercentage', undefined);
+      setValue('childSplitAmounts', undefined);
     }
     else if (activeTab === 'children') {
       let initialChildAmounts: Record<string, number> = {};
@@ -77,23 +89,31 @@ const CustomSplitField = ({ control, selectedChildIds }: CustomSplitFieldProps) 
       
       setChildAmounts(initialChildAmounts);
       setValue('childSplitAmounts', initialChildAmounts);
+      
+      // Clear the other split method values when using child amounts
+      setValue('splitPercentage', undefined);
+      setValue('splitAmounts', undefined);
     }
   }, [activeTab, user, amount, setValue, getValues, selectedChildIds]);
 
-  // Handle percentage change
-  const handlePercentageChange = (key: string, value: string) => {
-    const numValue = value === '' ? 0 : parseFloat(value);
+  // Handle percentage change from the slider
+  const handlePercentageChange = (values: number[]) => {
+    const newValue = values[0];
+    setPercentageValue(newValue);
     
-    // Update the state
-    const updatedPercentages = { ...percentageValues, [key]: numValue };
-    setPercentageValues(updatedPercentages);
-    
-    // Update the form value
-    setValue('splitPercentage', updatedPercentages);
-    
-    // Clear the other split method values when using percentages
-    setValue('splitAmounts', undefined);
-    setValue('childSplitAmounts', undefined);
+    if (user) {
+      const updatedPercentages = {
+        [user.id]: newValue,
+        'coParent': 100 - newValue
+      };
+      
+      // Update the form value
+      setValue('splitPercentage', updatedPercentages);
+      
+      // Clear the other split method values when using percentages
+      setValue('splitAmounts', undefined);
+      setValue('childSplitAmounts', undefined);
+    }
   };
 
   // Handle amount change
@@ -148,31 +168,17 @@ const CustomSplitField = ({ control, selectedChildIds }: CustomSplitFieldProps) 
           <Card>
             <CardContent className="pt-6">
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <FormLabel>You (%)</FormLabel>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={percentageValues[user?.id || ''] || 0}
-                      onChange={(e) => handlePercentageChange(user?.id || '', e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <FormLabel>Co-parent (%)</FormLabel>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={percentageValues['coParent'] || 0}
-                      onChange={(e) => handlePercentageChange('coParent', e.target.value)}
-                    />
-                  </div>
+                <div className="flex justify-between mb-2">
+                  <span>You: {percentageValue}%</span>
+                  <span>Co-parent: {100 - percentageValue}%</span>
                 </div>
-                <div className="text-xs text-gray-500">
-                  Total: {Object.values(percentageValues).reduce((sum, val) => sum + val, 0)}%
-                </div>
+                <Slider
+                  value={[percentageValue]}
+                  onValueChange={handlePercentageChange}
+                  max={100}
+                  step={5}
+                  className="mb-2"
+                />
               </div>
             </CardContent>
           </Card>
