@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/expenseUtils";
@@ -26,7 +25,6 @@ export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) =
 
   useEffect(() => {
     if (expenses && expenses.length > 0) {
-      // Sort expenses by date (newest first) and take the first MAX_EXPENSES
       const sorted = [...expenses]
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, MAX_EXPENSES);
@@ -46,13 +44,10 @@ export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) =
   };
 
   const handleViewExpense = (id: string) => {
-    // Updated to use the correct route for viewing expense details
     navigate(`/expense/${id}`);
   };
 
   const handleEditExpense = (id: string) => {
-    // We don't have a dedicated edit route in App.tsx, so we'll navigate to the expense page
-    // Users can edit from there
     navigate(`/expense/${id}`);
   };
 
@@ -117,7 +112,6 @@ export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) =
         ) : (
           <div className="space-y-4">
             {isMobile ? (
-              // Mobile view with cards
               displayedExpenses.map((expense) => (
                 <div 
                   key={expense.id} 
@@ -143,7 +137,6 @@ export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) =
                 </div>
               ))
             ) : (
-              // Desktop view with table
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>

@@ -1,152 +1,153 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Expense } from "@/utils/types";
+import { useAuth } from "@/hooks/useAuth";
+import { useExpenseDetail } from "@/hooks/expenses/useExpenseDetail";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ArrowLeft, ExternalLink } from "lucide-react";
-import StatusBadge from "@/components/expenses/StatusBadge";
-import CategoryBadge from "@/components/expenses/CategoryBadge";
-import { formatCurrency } from "@/utils/expenseUtils";
+import { ArrowLeft, Edit, Trash } from "lucide-react";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import ExpenseDetailContent from "@/components/expenses/detail/ExpenseDetailContent";
+import ExpenseDetailSkeleton from "@/components/expenses/detail/ExpenseDetailSkeleton";
+import ExpenseNotFound from "@/components/expenses/detail/ExpenseNotFound";
+import ExpenseDetailError from "@/components/expenses/detail/ExpenseDetailError";
+import ExpenseForm from "@/components/expenses/form/ExpenseForm";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const ExpenseDetail = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [expense, setExpense] = useState<Expense | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { currency } = useCurrency();
+  const { user } = useAuth();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  
+  const { 
+    expense, 
+    loading, 
+    error,
+    isDeleting,
+    handleDelete,
+    handleStatusChange
+  } = useExpenseDetail(id);
 
-  useEffect(() => {
-    const fetchExpense = async () => {
-      try {
-        if (!id) {
-          setError("No expense ID provided");
-          setLoading(false);
-          return;
-        }
+  const canEdit = expense?.status !== 'paid' && expense?.paidBy === user?.id;
 
-        const { data, error } = await supabase
-          .from("expenses")
-          .select("*")
-          .eq("id", id)
-          .single();
-
-        if (error) {
-          console.error("Error fetching expense:", error);
-          setError("Could not load expense details");
-        } else {
-          setExpense(data);
-        }
-      } catch (err) {
-        console.error("Error:", err);
-        setError("An unexpected error occurred");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchExpense();
-  }, [id]);
+  const handleDeleteConfirm = async () => {
+    if (expense) {
+      await handleDelete(expense.id);
+    }
+  };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-8 flex justify-center items-center">
-        <div className="animate-spin h-10 w-10 border-4 border-famacle-blue border-t-transparent rounded-full"></div>
-      </div>
-    );
+    return <ExpenseDetailSkeleton />;
   }
 
-  if (error || !expense) {
+  if (error) {
+    return <ExpenseDetailError error={error} />;
+  }
+
+  if (!expense) {
+    return <ExpenseNotFound />;
+  }
+
+  if (isEditing) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
-        <Card className="max-w-lg mx-auto p-6">
-          <h1 className="text-xl font-bold text-red-500 mb-4">Error</h1>
-          <p className="text-gray-700 mb-6">{error || "Expense not found"}</p>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={() => navigate("/")}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Go Home
-          </Button>
-        </Card>
+      <div className="container py-8 max-w-4xl mx-auto">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="mb-4 flex items-center gap-2" 
+          onClick={() => setIsEditing(false)}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Details
+        </Button>
+        <ExpenseForm
+          expense={expense}
+          onExpenseAdded={() => {
+            setIsEditing(false);
+          }}
+          onCancel={() => setIsEditing(false)}
+        />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <Card className="max-w-2xl mx-auto p-6">
-        <div className="flex justify-between items-start mb-6">
-          <h1 className="text-2xl font-bold text-famacle-slate">
-            Expense Details
-          </h1>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-            onClick={() => navigate("/")}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </Button>
-        </div>
-
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold mb-2">{expense.description}</h2>
-            <div className="flex flex-wrap gap-2 mb-4">
-              <StatusBadge status={expense.status} />
-              <CategoryBadge category={expense.category} />
-            </div>
+    <div className="container py-8 max-w-4xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="flex items-center gap-2" 
+          onClick={() => navigate("/expenses")}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Expenses
+        </Button>
+        {canEdit && (
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-2"
+              onClick={() => setIsEditing(true)}
+            >
+              <Edit className="w-4 h-4" />
+              Edit Expense
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-2 text-red-600 hover:text-red-700"
+              onClick={() => setShowDeleteDialog(true)}
+              disabled={isDeleting}
+            >
+              <Trash className="w-4 h-4" />
+              Delete
+            </Button>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-500">Amount</p>
-              <p className="text-lg font-medium">
-                {formatCurrency(expense.amount)}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Date</p>
-              <p className="text-lg font-medium">
-                {new Date(expense.date).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-
-          {expense.notes && (
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Notes</p>
-              <p className="text-gray-700 bg-gray-50 p-3 rounded-md">
-                {expense.notes}
-              </p>
-            </div>
-          )}
-
-          {expense.receiptUrl && (
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Receipt</p>
-              <a
-                href={expense.receiptUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-famacle-blue hover:underline flex items-center gap-1"
-              >
-                View Receipt <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-          )}
-
-          <div className="pt-4 border-t">
-            <p className="text-sm text-gray-500 mb-1">Split Method</p>
-            <p className="text-gray-700">{expense.splitMethod}</p>
-          </div>
-        </div>
-      </Card>
+        )}
+      </div>
+      
+      <ExpenseDetailContent 
+        expense={expense}
+        currentUserId={user?.id || ''}
+        currency={currency}
+        isDeleting={isDeleting}
+        onStatusChange={handleStatusChange}
+        onDelete={() => setShowDeleteDialog(true)}
+      />
+      
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Expense</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this expense? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm} 
+              className="bg-red-600 hover:bg-red-700"
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
