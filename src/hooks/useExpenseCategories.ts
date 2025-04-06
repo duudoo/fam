@@ -1,11 +1,15 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
-import { getUserExpenseCategories, addExpenseCategory, deleteExpenseCategory } from '@/lib/api/expenseCategories';
+import { useCategoryApi } from './useCategoryApi';
 import { toast } from 'sonner';
 
+/**
+ * Hook to manage expense categories for the current user
+ */
 export const useExpenseCategories = () => {
   const { user } = useAuth();
+  const { fetchUserCategories, addUserCategory, removeUserCategory } = useCategoryApi();
   const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -25,7 +29,7 @@ export const useExpenseCategories = () => {
       setIsLoading(true);
       setError(null);
       console.log('Fetching expense categories for user:', user.id);
-      const data = await getUserExpenseCategories(user.id);
+      const data = await fetchUserCategories(user.id);
       console.log('Fetched categories:', data);
       
       // Only update state if component is still mounted
@@ -45,7 +49,7 @@ export const useExpenseCategories = () => {
         setIsLoading(false);
       }
     }
-  }, [user, isMounted]);
+  }, [user, isMounted, fetchUserCategories]);
 
   // Fetch categories on mount and when user changes
   useEffect(() => {
@@ -72,7 +76,7 @@ export const useExpenseCategories = () => {
       }
       
       console.log('Adding new category:', formattedCategory);
-      await addExpenseCategory(user.id, formattedCategory);
+      await addUserCategory(user.id, formattedCategory);
       
       // Add the new category to the local state immediately for better UX
       setCategories(prev => {
@@ -93,7 +97,7 @@ export const useExpenseCategories = () => {
     if (!user) return false;
 
     try {
-      await deleteExpenseCategory(user.id, category);
+      await removeUserCategory(user.id, category);
       setCategories(prev => prev.filter(c => c !== category));
       toast.success(`Category "${category}" deleted`);
       return true;

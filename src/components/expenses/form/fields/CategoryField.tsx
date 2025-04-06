@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { capitalizeCategory } from "@/utils/categoryUtils";
 
 interface CategoryFieldProps {
   control: Control<any>;
@@ -23,10 +24,6 @@ const CategoryField = ({ control, required = true, description }: CategoryFieldP
   const [newCategory, setNewCategory] = useState("");
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   
-  const capitalizeFirstLetter = (string: string) => {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  };
-
   const handleAddNewCategory = async () => {
     if (!newCategory.trim()) {
       toast.error("Please enter a category name");
@@ -39,7 +36,7 @@ const CategoryField = ({ control, required = true, description }: CategoryFieldP
       if (result) {
         setNewCategory("");
         setShowAddNewDialog(false);
-        toast.success(`Category "${capitalizeFirstLetter(newCategory)}" added successfully`);
+        toast.success(`Category "${capitalizeCategory(newCategory)}" added successfully`);
       }
     } catch (error) {
       console.error("Error adding category:", error);
@@ -84,7 +81,7 @@ const CategoryField = ({ control, required = true, description }: CategoryFieldP
                       ) : (
                         categories.map((category) => (
                           <SelectItem key={category} value={category}>
-                            {capitalizeFirstLetter(category)}
+                            {capitalizeCategory(category)}
                           </SelectItem>
                         ))
                       )}
@@ -108,54 +105,83 @@ const CategoryField = ({ control, required = true, description }: CategoryFieldP
         )}
       />
 
-      <Dialog open={showAddNewDialog} onOpenChange={setShowAddNewDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add New Category</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <Input 
-              value={newCategory} 
-              onChange={(e) => setNewCategory(e.target.value)}
-              placeholder="Enter new category name"
-              className="w-full"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddNewCategory();
-                }
-              }}
-              autoFocus
-            />
-          </div>
-          <DialogFooter>
-            <Button 
-              variant="ghost" 
-              onClick={() => {
-                setShowAddNewDialog(false);
-                setNewCategory("");
-              }}
-              disabled={isAddingCategory}
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleAddNewCategory}
-              disabled={isAddingCategory}
-            >
-              {isAddingCategory ? (
-                <>
-                  <Spinner size="sm" className="mr-2" />
-                  Adding...
-                </>
-              ) : (
-                'Add Category'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CategoryDialog
+        open={showAddNewDialog}
+        onOpenChange={setShowAddNewDialog}
+        newCategory={newCategory}
+        setNewCategory={setNewCategory}
+        isAddingCategory={isAddingCategory}
+        handleAddNewCategory={handleAddNewCategory}
+      />
     </>
+  );
+};
+
+interface CategoryDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  newCategory: string;
+  setNewCategory: (value: string) => void;
+  isAddingCategory: boolean;
+  handleAddNewCategory: () => Promise<void>;
+}
+
+const CategoryDialog = ({
+  open,
+  onOpenChange,
+  newCategory,
+  setNewCategory,
+  isAddingCategory,
+  handleAddNewCategory
+}: CategoryDialogProps) => {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add New Category</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <Input 
+            value={newCategory} 
+            onChange={(e) => setNewCategory(e.target.value)}
+            placeholder="Enter new category name"
+            className="w-full"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleAddNewCategory();
+              }
+            }}
+            autoFocus
+          />
+        </div>
+        <DialogFooter>
+          <Button 
+            variant="ghost" 
+            onClick={() => {
+              onOpenChange(false);
+              setNewCategory("");
+            }}
+            disabled={isAddingCategory}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleAddNewCategory}
+            disabled={isAddingCategory}
+          >
+            {isAddingCategory ? (
+              <>
+                <Spinner size="sm" className="mr-2" />
+                Adding...
+              </>
+            ) : (
+              'Add Category'
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

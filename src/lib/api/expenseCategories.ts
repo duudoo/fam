@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -36,6 +35,26 @@ export const addExpenseCategory = async (userId: string, category: string) => {
   console.log('Adding expense category:', formattedCategory, 'for user:', userId);
   
   try {
+    // First check if the category already exists
+    const { data: existingData, error: checkError } = await supabase
+      .from('user_expense_categories')
+      .select('category')
+      .eq('user_id', userId)
+      .eq('category', formattedCategory)
+      .maybeSingle();
+    
+    if (checkError) {
+      console.error('Error checking existing category:', checkError);
+      throw checkError;
+    }
+    
+    // If category already exists, just return it
+    if (existingData) {
+      console.log('Category already exists, returning existing category');
+      return { category: formattedCategory };
+    }
+    
+    // Otherwise add the new category
     const { data, error } = await supabase
       .from('user_expense_categories')
       .insert({ 
@@ -46,11 +65,6 @@ export const addExpenseCategory = async (userId: string, category: string) => {
       .single();
 
     if (error) {
-      // If the category already exists, just return it
-      if (error.code === '23505') { // Unique violation
-        console.log('Category already exists, returning existing category');
-        return { category: formattedCategory };
-      }
       console.error('Error adding expense category:', error);
       throw error;
     }
