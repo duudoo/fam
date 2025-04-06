@@ -34,14 +34,14 @@ const CategoryField = ({ control, required = true, description }: CategoryFieldP
               value={field.value}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a category">
-                  {isLoading ? (
-                    <div className="flex items-center">
-                      <Spinner size="sm" className="mr-2" />
-                      <span>Loading...</span>
-                    </div>
-                  ) : field.value}
-                </SelectValue>
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <Spinner size="sm" className="mr-2" />
+                    <span>Loading...</span>
+                  </div>
+                ) : (
+                  <SelectValue placeholder="Select a category" />
+                )}
               </SelectTrigger>
               <SelectContent>
                 {categories.map((category) => (
