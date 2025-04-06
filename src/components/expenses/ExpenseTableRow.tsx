@@ -63,6 +63,24 @@ const ExpenseTableRow = ({ expense, currency }: ExpenseTableRowProps) => {
 
   const canEdit = expense.status !== 'paid';
 
+  const formatSplitMethod = () => {
+    if (expense.splitMethod === '50/50') {
+      return '50/50 Split';
+    } else if (expense.splitMethod === 'custom') {
+      if (expense.splitPercentage && Object.keys(expense.splitPercentage).length > 0) {
+        return `Custom Split (%)`;
+      } else if (expense.splitAmounts && Object.keys(expense.splitAmounts).length > 0) {
+        return `Custom Split ($)`;
+      } else if (expense.childSplitAmounts && Object.keys(expense.childSplitAmounts).length > 0) {
+        return `Split by Child`;
+      } else {
+        return 'Custom Split';
+      }
+    } else {
+      return expense.splitMethod;
+    }
+  };
+
   if (isEditing) {
     return (
       <TableRow>
@@ -87,7 +105,7 @@ const ExpenseTableRow = ({ expense, currency }: ExpenseTableRowProps) => {
         <TableCell>{format(new Date(expense.date), 'MMM d, yyyy')}</TableCell>
         <TableCell><CategoryBadge category={expense.category} /></TableCell>
         <TableCell><StatusBadge status={expense.status} /></TableCell>
-        <TableCell>{expense.splitMethod}</TableCell>
+        <TableCell>{formatSplitMethod()}</TableCell>
         <TableCell className="text-right">
           <div className="flex items-center justify-end space-x-2">
             <Button variant="ghost" size="sm" onClick={() => navigate(`/expense/${expense.id}`)}>

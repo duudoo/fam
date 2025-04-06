@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Expense } from "@/utils/types";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +12,7 @@ import ExpenseCardDetails from "./ExpenseCardDetails";
 import ExpenseCardActions from "./ExpenseCardActions";
 import ExpenseForm from "./form/ExpenseForm";
 import { useChildren } from "@/hooks/children";
+import { formatCurrency } from "@/utils/expenseUtils";
 
 interface ExpenseCardProps {
   expense: Expense;
@@ -25,6 +25,28 @@ const ExpenseCard = ({ expense, showActions = true, className }: ExpenseCardProp
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const { data: children = [] } = useChildren();
+
+  // Helper function to format the split method display
+  const formatSplitMethod = () => {
+    if (expense.splitMethod === '50/50') {
+      return '50/50 Split';
+    } else if (expense.splitMethod === 'custom') {
+      if (expense.splitPercentage && Object.keys(expense.splitPercentage).length > 0) {
+        // For percentage-based splits
+        return `Custom (%)`;
+      } else if (expense.splitAmounts && Object.keys(expense.splitAmounts).length > 0) {
+        // For amount-based splits
+        return `Custom ($)`;
+      } else if (expense.childSplitAmounts && Object.keys(expense.childSplitAmounts).length > 0) {
+        // For child-specific splits
+        return `By Child`;
+      } else {
+        return 'Custom';
+      }
+    } else {
+      return expense.splitMethod;
+    }
+  };
 
   if (isEditing) {
     return (
@@ -72,7 +94,7 @@ const ExpenseCard = ({ expense, showActions = true, className }: ExpenseCardProp
         
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2 text-gray-600">
-            <span className="font-medium text-famacle-slate">${expense.amount.toFixed(2)}</span>
+            <span className="font-medium text-famacle-slate">{formatCurrency(expense.amount, "$")}</span>
           </div>
           
           <CategoryBadge category={expense.category} />
@@ -86,7 +108,7 @@ const ExpenseCard = ({ expense, showActions = true, className }: ExpenseCardProp
           
           <div className="flex items-center gap-1 col-span-2">
             <FileText className="w-4 h-4 text-gray-400" />
-            <span>Split: {expense.splitMethod}</span>
+            <span>Split: {formatSplitMethod()}</span>
           </div>
           
           {relatedChildren.length > 0 && (

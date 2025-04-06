@@ -33,6 +33,35 @@ const ExpenseDetailDialog = ({ expense, open, onOpenChange, onEdit }: ExpenseDet
     expense.childIds?.includes(child.id)
   );
 
+  // Helper function to render the split details
+  const renderSplitDetails = () => {
+    if (expense.splitMethod === '50/50') {
+      const halfAmount = expense.amount / 2;
+      return `Equal 50/50 split (${formatCurrency(halfAmount, currency.symbol)} each)`;
+    } else if (expense.splitMethod === 'custom') {
+      if (expense.splitPercentage && Object.keys(expense.splitPercentage).length > 0) {
+        // For percentage-based splits
+        const percentages = Object.entries(expense.splitPercentage)
+          .map(([key, value]) => `${key === 'coParent' ? 'Co-parent' : 'You'}: ${value}%`)
+          .join(', ');
+        return `Custom percentage split (${percentages})`;
+      } else if (expense.splitAmounts && Object.keys(expense.splitAmounts).length > 0) {
+        // For amount-based splits
+        const amounts = Object.entries(expense.splitAmounts)
+          .map(([key, value]) => `${key === 'coParent' ? 'Co-parent' : 'You'}: ${formatCurrency(value, currency.symbol)}`)
+          .join(', ');
+        return `Custom amount split (${amounts})`;
+      } else if (expense.childSplitAmounts && Object.keys(expense.childSplitAmounts).length > 0) {
+        // For child-specific splits
+        return `Split by child allocation`;
+      } else {
+        return 'Custom split';
+      }
+    } else {
+      return expense.splitMethod;
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -59,12 +88,17 @@ const ExpenseDetailDialog = ({ expense, open, onOpenChange, onEdit }: ExpenseDet
             <FileText className="w-4 h-4 mt-0.5 text-gray-500" />
             <div>
               <p className="font-medium">Split Method</p>
-              <p className="text-sm text-gray-500">{expense.splitMethod}</p>
-              {expense.splitPercentage && (
-                <div className="text-xs text-gray-500 mt-1">
-                  {Object.entries(expense.splitPercentage).map(([id, percentage]) => (
-                    <div key={id}>User {id}: {percentage}%</div>
-                  ))}
+              <p className="text-sm text-gray-500">{renderSplitDetails()}</p>
+              {expense.childSplitAmounts && Object.keys(expense.childSplitAmounts).length > 0 && (
+                <div className="mt-1 text-xs space-y-1">
+                  {Object.entries(expense.childSplitAmounts).map(([childId, amount]) => {
+                    const child = children.find(c => c.id === childId);
+                    return (
+                      <p key={childId}>
+                        {child ? (child.name || child.initials) : 'Child'}: {formatCurrency(Number(amount), currency.symbol)}
+                      </p>
+                    );
+                  })}
                 </div>
               )}
             </div>
