@@ -53,6 +53,11 @@ export const getStatusText = (status: ExpenseStatus): string => {
 
 // Format currency with a given symbol or default to $
 export const formatCurrency = (amount: number, currencySymbol = '$'): string => {
+  // Handle null, undefined, or NaN values
+  if (amount === null || amount === undefined || isNaN(amount)) {
+    return `${currencySymbol}0.00`;
+  }
+  
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD', // This isn't as important as the symbol we display

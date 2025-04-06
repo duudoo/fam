@@ -7,6 +7,7 @@ import { useMonthlySummary } from '@/hooks/useMonthlySummary';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
+import { formatCurrency } from '@/utils/expenseUtils';
 
 const MonthlySummary = () => {
   const { categories, categoryByChild, children, loading, expensesByChild } = useMonthlySummary();
@@ -74,7 +75,7 @@ const MonthlySummary = () => {
                           <span className="font-medium">{child.name || child.initials}</span>
                         </div>
                         <div className="text-sm font-medium">
-                          {currency.symbol}{childAmount.toFixed(2)} ({percentage.toFixed(1)}%)
+                          {formatCurrency(childAmount, currency.symbol)} ({percentage.toFixed(1)}%)
                         </div>
                       </div>
                       <div className="w-full bg-gray-100 rounded-full h-2.5">
@@ -90,7 +91,7 @@ const MonthlySummary = () => {
                 <div className="mt-6 pt-4 border-t border-gray-200">
                   <div className="flex justify-between items-center">
                     <span className="font-semibold">Total Expenses</span>
-                    <span className="font-semibold">{currency.symbol}{totalExpenses.toFixed(2)}</span>
+                    <span className="font-semibold">{formatCurrency(totalExpenses, currency.symbol)}</span>
                   </div>
                 </div>
               </div>

@@ -2,6 +2,7 @@
 import { Control, useWatch } from 'react-hook-form';
 import { FormValues } from './schema';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { formatCurrency } from '@/utils/expenseUtils';
 
 interface SplitPreviewProps {
   control: Control<FormValues>;
@@ -23,24 +24,24 @@ const SplitPreview = ({ control }: SplitPreviewProps) => {
         const halfAmount = numericAmount / 2;
         return (
           <div className="text-sm">
-            <p>You pay: {currency.symbol}{halfAmount.toFixed(2)}</p>
-            <p>Co-parent pays: {currency.symbol}{halfAmount.toFixed(2)}</p>
+            <p>You pay: {formatCurrency(halfAmount, currency.symbol)}</p>
+            <p>Co-parent pays: {formatCurrency(halfAmount, currency.symbol)}</p>
           </div>
         );
       case 'custom':
-        const yourAmount = (numericAmount * (splitPercentage.you / 100)).toFixed(2);
-        const theirAmount = (numericAmount * (splitPercentage.coparent / 100)).toFixed(2);
+        const yourAmount = numericAmount * (splitPercentage.you / 100);
+        const theirAmount = numericAmount * (splitPercentage.coparent / 100);
         return (
           <div className="text-sm">
-            <p>You pay: {currency.symbol}{yourAmount} ({splitPercentage.you}%)</p>
-            <p>Co-parent pays: {currency.symbol}{theirAmount} ({splitPercentage.coparent}%)</p>
+            <p>You pay: {formatCurrency(yourAmount, currency.symbol)} ({splitPercentage.you}%)</p>
+            <p>Co-parent pays: {formatCurrency(theirAmount, currency.symbol)} ({splitPercentage.coparent}%)</p>
           </div>
         );
       default:
         return (
           <div className="text-sm">
-            <p>You pay: {currency.symbol}{numericAmount.toFixed(2)}</p>
-            <p>Co-parent pays: {currency.symbol}0.00</p>
+            <p>You pay: {formatCurrency(numericAmount, currency.symbol)}</p>
+            <p>Co-parent pays: {formatCurrency(0, currency.symbol)}</p>
           </div>
         );
     }

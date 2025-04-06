@@ -51,7 +51,8 @@ export const useSummaryData = () => {
           splitMethod: exp.split_method,
           notes: exp.notes || undefined,
           createdAt: exp.created_at,
-          updatedAt: exp.updated_at
+          updatedAt: exp.updated_at,
+          childIds: exp.child_ids || []
         })));
       }
       

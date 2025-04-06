@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/expenseUtils";
@@ -7,7 +8,6 @@ import { CheckCircle2, Clock, Edit3, Eye, MoreHorizontal, Plus } from "lucide-re
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import ExpenseCard from "../expenses/ExpenseCard";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const MAX_EXPENSES = 3;
@@ -89,13 +89,13 @@ export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) =
           <Button
             variant="outline"
             size="sm"
-            onClick={handleViewAllExpenses}
+            onClick={() => navigate("/expenses")}
           >
             View All
           </Button>
           <Button
             size="sm"
-            onClick={handleAddExpense}
+            onClick={() => navigate("/expenses?newExpense=true")}
           >
             <Plus className="h-4 w-4 mr-1" /> Add
           </Button>
@@ -105,7 +105,7 @@ export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) =
         {displayedExpenses.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <p className="mb-4 text-gray-500">No expenses found</p>
-            <Button onClick={handleAddExpense} variant="default">
+            <Button onClick={() => navigate("/expenses?newExpense=true")} variant="default">
               <Plus className="h-4 w-4 mr-2" /> Add Your First Expense
             </Button>
           </div>
@@ -116,7 +116,7 @@ export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) =
                 <div 
                   key={expense.id} 
                   className="p-4 border rounded-lg bg-white shadow-sm cursor-pointer hover:border-primary"
-                  onClick={() => handleViewExpense(expense.id)}
+                  onClick={() => navigate(`/expense/${expense.id}`)}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div className="font-medium truncate pr-2">{expense.description}</div>
@@ -168,11 +168,11 @@ export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) =
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleViewExpense(expense.id)}>
+                              <DropdownMenuItem onClick={() => navigate(`/expense/${expense.id}`)}>
                                 <Eye className="h-4 w-4 mr-2" />
                                 View Details
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleEditExpense(expense.id)}>
+                              <DropdownMenuItem onClick={() => navigate(`/expense/${expense.id}`)}>
                                 <Edit3 className="h-4 w-4 mr-2" />
                                 Edit
                               </DropdownMenuItem>

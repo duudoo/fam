@@ -1,4 +1,3 @@
-
 import { Expense } from "@/utils/types";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
@@ -91,11 +90,11 @@ const ExpenseTableRow = ({ expense, currency }: ExpenseTableRowProps) => {
         <TableCell>{expense.splitMethod}</TableCell>
         <TableCell className="text-right">
           <div className="flex items-center justify-end space-x-2">
-            <Button variant="ghost" size="sm" onClick={handleViewDetails}>
+            <Button variant="ghost" size="sm" onClick={() => navigate(`/expense/${expense.id}`)}>
               <Eye className="h-4 w-4" />
             </Button>
             {canEdit && (
-              <Button variant="ghost" size="sm" onClick={handleEdit}>
+              <Button variant="ghost" size="sm" onClick={() => navigate(`/expense/${expense.id}`)}>
                 <Edit2 className="h-4 w-4" />
               </Button>
             )}
@@ -115,7 +114,7 @@ const ExpenseTableRow = ({ expense, currency }: ExpenseTableRowProps) => {
               currentStatus={expense.status}
               isProcessing={isDeleting || isUpdating}
               onStatusChange={() => setIsUpdating(true)}
-              onDelete={handleDelete}
+              onDelete={() => setIsDeleting(true)}
               expense={expense}
             />
           </div>
@@ -143,7 +142,19 @@ const ExpenseTableRow = ({ expense, currency }: ExpenseTableRowProps) => {
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction 
-              onClick={handleDelete} 
+              onClick={async () => {
+                try {
+                  setIsDeleting(true);
+                  await deleteExpense.mutateAsync(expense.id);
+                  setShowDeleteDialog(false);
+                  toast.success(`Expense "${expense.description}" deleted successfully`);
+                } catch (error) {
+                  console.error("Error deleting expense:", error);
+                  toast.error("Failed to delete expense");
+                } finally {
+                  setIsDeleting(false);
+                }
+              }} 
               className="bg-red-600 hover:bg-red-700"
               disabled={isDeleting}
             >

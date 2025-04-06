@@ -17,6 +17,7 @@ import ExpenseTableRow from "./ExpenseTableRow";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "@/utils/expenseUtils";
 
 interface ExpenseListProps {
   expenses: Expense[] | undefined;
@@ -75,7 +76,7 @@ const ExpenseList = ({ expenses = [], filteredStatus, onAddNewClick }: ExpenseLi
             </div>
             
             <div className="text-lg font-semibold mb-2">
-              {currency.symbol}{expense.amount.toFixed(2)}
+              {formatCurrency(expense.amount, currency.symbol)}
             </div>
             
             <div className="flex justify-between items-center text-sm text-gray-500 mb-2">
