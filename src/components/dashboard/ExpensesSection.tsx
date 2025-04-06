@@ -15,9 +15,10 @@ const MAX_EXPENSES = 3;
 interface ExpensesSectionProps {
   expenses: Expense[];
   isLoading: boolean;
+  onExpenseClick?: (expense: Expense) => void; // Make this prop optional
 }
 
-export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) => {
+export const ExpensesSection = ({ expenses, isLoading, onExpenseClick }: ExpensesSectionProps) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { currency } = useCurrency();
@@ -49,6 +50,15 @@ export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) =
 
   const handleEditExpense = (id: string) => {
     navigate(`/expense/${id}`);
+  };
+
+  // Handle the expense click with the optional prop
+  const handleExpenseClick = (expense: Expense) => {
+    if (onExpenseClick) {
+      onExpenseClick(expense);
+    } else {
+      navigate(`/expense/${expense.id}`);
+    }
   };
 
   if (isLoading) {
@@ -116,7 +126,7 @@ export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) =
                 <div 
                   key={expense.id} 
                   className="p-4 border rounded-lg bg-white shadow-sm cursor-pointer hover:border-primary"
-                  onClick={() => navigate(`/expense/${expense.id}`)}
+                  onClick={() => handleExpenseClick(expense)}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div className="font-medium truncate pr-2">{expense.description}</div>
@@ -168,7 +178,7 @@ export const ExpensesSection = ({ expenses, isLoading }: ExpensesSectionProps) =
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => navigate(`/expense/${expense.id}`)}>
+                              <DropdownMenuItem onClick={() => handleExpenseClick(expense)}>
                                 <Eye className="h-4 w-4 mr-2" />
                                 View Details
                               </DropdownMenuItem>
