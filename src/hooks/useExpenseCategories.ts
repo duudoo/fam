@@ -45,9 +45,11 @@ export const useExpenseCategories = () => {
       }
     } finally {
       if (isMounted) {
-        // Add a slight delay before changing loading state to prevent UI jumps
+        // Small delay to prevent UI flicker
         setTimeout(() => {
-          setIsLoading(false);
+          if (isMounted) {
+            setIsLoading(false);
+          }
         }, 300);
       }
     }
@@ -58,10 +60,21 @@ export const useExpenseCategories = () => {
     if (!newCategory.trim()) return null;
 
     try {
-      await addExpenseCategory(user.id, newCategory);
-      await fetchCategories(); // Refresh the categories list
-      toast.success(`Category "${newCategory}" added`);
-      return newCategory;
+      await addExpenseCategory(user.id, newCategory.trim());
+      
+      // Add the new category to the local state immediately
+      const formattedCategory = newCategory.trim().toLowerCase();
+      setCategories(prev => {
+        if (!prev.includes(formattedCategory)) {
+          return [...prev, formattedCategory].sort();
+        }
+        return prev;
+      });
+      
+      // Still refetch to ensure consistency with server
+      setTimeout(() => fetchCategories(), 500);
+      
+      return formattedCategory;
     } catch (err) {
       console.error('Error adding category:', err);
       toast.error(`Failed to add category: ${err instanceof Error ? err.message : 'Unknown error'}`);
