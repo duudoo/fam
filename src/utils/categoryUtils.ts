@@ -5,6 +5,7 @@
 
 /**
  * Capitalizes the first letter of each word in a string
+ * Memoization could be added if this becomes a performance bottleneck
  */
 export const capitalizeCategory = (category: string): string => {
   if (!category) return '';
@@ -34,4 +35,11 @@ export const formatCategoryForStorage = (category: string): string => {
 export const categoryExists = (categories: string[], category: string): boolean => {
   const normalizedCategory = formatCategoryForStorage(category);
   return categories.map(c => c.toLowerCase()).includes(normalizedCategory);
+};
+
+/**
+ * Sort categories alphabetically
+ */
+export const sortCategories = (categories: string[]): string[] => {
+  return [...categories].sort((a, b) => a.localeCompare(b));
 };

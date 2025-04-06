@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback, memo } from "react";
 import { Plus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -18,13 +18,14 @@ interface CategoryFieldProps {
   description?: string;
 }
 
-const CategoryField = ({ control, required = true, description }: CategoryFieldProps) => {
+// Use memo to prevent unnecessary re-renders
+const CategoryField = memo(({ control, required = true, description }: CategoryFieldProps) => {
   const { categories, isLoading, addCategory } = useExpenseCategories();
   const [showAddNewDialog, setShowAddNewDialog] = useState(false);
   const [newCategory, setNewCategory] = useState("");
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   
-  const handleAddNewCategory = async () => {
+  const handleAddNewCategory = useCallback(async () => {
     if (!newCategory.trim()) {
       toast.error("Please enter a category name");
       return;
@@ -44,7 +45,7 @@ const CategoryField = ({ control, required = true, description }: CategoryFieldP
     } finally {
       setIsAddingCategory(false);
     }
-  };
+  }, [newCategory, addCategory]);
 
   return (
     <>
@@ -61,7 +62,7 @@ const CategoryField = ({ control, required = true, description }: CategoryFieldP
                     disabled={isLoading} 
                     onValueChange={field.onChange} 
                     defaultValue={field.value}
-                    value={field.value}
+                    value={field.value || ""}
                   >
                     <SelectTrigger className="w-full h-10">
                       {isLoading ? (
@@ -115,7 +116,9 @@ const CategoryField = ({ control, required = true, description }: CategoryFieldP
       />
     </>
   );
-};
+});
+
+CategoryField.displayName = "CategoryField";
 
 interface CategoryDialogProps {
   open: boolean;
@@ -126,7 +129,8 @@ interface CategoryDialogProps {
   handleAddNewCategory: () => Promise<void>;
 }
 
-const CategoryDialog = ({
+// Also memoize the dialog component
+const CategoryDialog = memo(({
   open,
   onOpenChange,
   newCategory,
@@ -183,6 +187,8 @@ const CategoryDialog = ({
       </DialogContent>
     </Dialog>
   );
-};
+});
+
+CategoryDialog.displayName = "CategoryDialog";
 
 export default CategoryField;

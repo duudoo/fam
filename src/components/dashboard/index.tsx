@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useCallback, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import DashboardHeader from "./DashboardHeader";
 import SummaryCards from "./SummaryCards";
@@ -13,7 +13,8 @@ import AddEventDialog from "../calendar/AddEventDialog";
 import ExpenseDetailDialog from "../expenses/ExpenseDetailDialog";
 import { Expense } from "@/utils/types";
 
-const Dashboard = () => {
+// Memoize the Dashboard component to prevent unnecessary re-renders
+const Dashboard = memo(() => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { expenses = [], isLoading } = useExpenses();
@@ -21,14 +22,14 @@ const Dashboard = () => {
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
-  const handleScheduleEvent = () => {
+  const handleScheduleEvent = useCallback(() => {
     setOpenAddEvent(true);
-  };
+  }, []);
 
-  const handleExpenseClick = (expense: Expense) => {
+  const handleExpenseClick = useCallback((expense: Expense) => {
     setSelectedExpense(expense);
     setDetailDialogOpen(true);
-  };
+  }, []);
 
   if (!user) {
     return (
@@ -39,8 +40,9 @@ const Dashboard = () => {
     );
   }
 
+  // Use CSS to prevent layout shifts
   return (
-    <div className="container mx-auto p-4 pb-16">
+    <div className="container mx-auto p-4 pb-16 min-h-[calc(100vh-4rem)]">
       <DashboardHeader onScheduleEvent={handleScheduleEvent} />
 
       <SummaryCards />
@@ -53,7 +55,8 @@ const Dashboard = () => {
             <CardContent className="pt-6">
               <ExpensesSection 
                 expenses={expenses} 
-                isLoading={isLoading} 
+                isLoading={isLoading}
+                onExpenseClick={handleExpenseClick} 
               />
             </CardContent>
           </Card>
@@ -80,6 +83,8 @@ const Dashboard = () => {
       )}
     </div>
   );
-};
+});
+
+Dashboard.displayName = "Dashboard";
 
 export default Dashboard;

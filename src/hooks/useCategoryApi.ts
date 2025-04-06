@@ -1,5 +1,5 @@
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { 
   getUserExpenseCategories, 
   addExpenseCategory, 
@@ -22,9 +22,10 @@ export const useCategoryApi = () => {
     return await deleteExpenseCategory(userId, category);
   }, []);
 
-  return {
+  // Memoize the returned object to prevent unnecessary re-renders
+  return useMemo(() => ({
     fetchUserCategories,
     addUserCategory,
     removeUserCategory
-  };
+  }), [fetchUserCategories, addUserCategory, removeUserCategory]);
 };
