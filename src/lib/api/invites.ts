@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CoParentInvite } from "@/utils/types";
 
@@ -86,10 +85,10 @@ export const fetchReceivedInvites = async (email: string): Promise<CoParentInvit
         updatedAt: invite.updated_at,
         message: invite.message,
         inviter: {
-          id: inviter.id || invite.invited_by,
-          name: inviter.full_name || "Unknown user",
-          email: inviter.email || "",
-          avatar: inviter.avatar_url,
+          id: typeof inviter === 'object' && 'id' in inviter ? inviter.id : invite.invited_by,
+          name: typeof inviter === 'object' && 'full_name' in inviter ? inviter.full_name : "Unknown user",
+          email: typeof inviter === 'object' && 'email' in inviter ? inviter.email : "",
+          avatar: typeof inviter === 'object' && 'avatar_url' in inviter ? inviter.avatar_url : null,
         },
       };
     });
@@ -105,7 +104,6 @@ export const createInvite = async (
   message?: string
 ): Promise<InviteResponse> => {
   try {
-    // Check if invite already exists
     const { data: existingInvites } = await supabase
       .from("co_parent_invites")
       .select("id, status")
@@ -115,14 +113,12 @@ export const createInvite = async (
     if (existingInvites && existingInvites.length > 0) {
       const existingInvite = existingInvites[0];
       
-      // If invitation is still pending, return error
       if (existingInvite.status === "pending") {
         return {
           error: "You have already invited this user",
         };
       }
       
-      // If invitation was declined or expired, update it to pending
       const { data, error } = await supabase
         .from("co_parent_invites")
         .update({
@@ -146,7 +142,6 @@ export const createInvite = async (
       };
     }
     
-    // Create new invitation
     const { data, error } = await supabase
       .from("co_parent_invites")
       .insert({
@@ -160,7 +155,6 @@ export const createInvite = async (
     if (error) {
       console.error("Error creating invitation:", error);
       
-      // Check for specific errors
       if (error.code === '23505') {
         return { error: "This user has already been invited" };
       }
@@ -181,7 +175,6 @@ export const createInvite = async (
   }
 };
 
-// Add the missing functions for accepting and declining invites
 export const acceptInvite = async (inviteId: string): Promise<InviteResponse> => {
   return respondToInvite(inviteId, "accepted");
 };
