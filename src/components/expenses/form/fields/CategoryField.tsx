@@ -35,16 +35,16 @@ const CategoryField = ({ control, required = true, description }: CategoryFieldP
             >
               <SelectTrigger className="w-full">
                 {isLoading ? (
-                  <div className="flex items-center">
-                    <Spinner size="sm" className="mr-2" />
-                    <span>Loading...</span>
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-muted-foreground">Loading categories...</span>
+                    <Spinner size="sm" />
                   </div>
                 ) : (
                   <SelectValue placeholder="Select a category" />
                 )}
               </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
+              <SelectContent className="min-w-[200px]">
+                {!isLoading && categories.map((category) => (
                   <SelectItem key={category} value={category}>
                     {capitalizeFirstLetter(category)}
                   </SelectItem>
