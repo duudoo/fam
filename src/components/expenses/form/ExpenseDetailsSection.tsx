@@ -1,3 +1,4 @@
+
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -74,7 +75,7 @@ const ExpenseDetailsSection = ({ control }: ExpenseDetailsSectionProps) => {
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "pl-3 text-left font-normal",
+                        "pl-3 text-left font-normal h-10",
                         !field.value && "text-muted-foreground"
                       )}
                     >
