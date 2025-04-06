@@ -2,235 +2,211 @@
 import { supabase } from "@/integrations/supabase/client";
 import { CoParentInvite } from "@/utils/types";
 
-/**
- * Fetch invitations sent by the current user
- */
+interface InviteResponse {
+  data?: any;
+  error?: string;
+}
+
 export const fetchSentInvites = async (userId: string): Promise<CoParentInvite[]> => {
   try {
-    console.log("Fetching sent invites for user:", userId);
-    
-    // Using the co_parent_invites table directly without joining to auth.users
     const { data, error } = await supabase
-      .from('co_parent_invites')
-      .select('*')
-      .eq('invited_by', userId);
-      
+      .from("co_parent_invites")
+      .select(`
+        id,
+        email,
+        status,
+        invited_by,
+        created_at,
+        responded_at,
+        updated_at,
+        message
+      `)
+      .eq("invited_by", userId);
+
     if (error) {
-      console.error('Error fetching sent invites:', error);
+      console.error("Error fetching sent invites:", error);
       return []; // Return empty array instead of throwing
     }
 
-    if (!data) {
-      return [];
-    }
-
-    console.log("Received sent invites:", data);
-
-    // Transform DB results to match our CoParentInvite type
-    return data.map(invite => ({
+    return (data || []).map((invite) => ({
       id: invite.id,
       email: invite.email,
-      status: invite.status as any,
+      status: invite.status,
       invitedBy: invite.invited_by,
-      invitedAt: invite.invited_at,
+      createdAt: invite.created_at,
       respondedAt: invite.responded_at,
-      message: invite.message || undefined
+      updatedAt: invite.updated_at,
+      message: invite.message,
     }));
-  } catch (err) {
-    console.error('Failed to fetch sent invites:', err);
-    return []; // Return empty array instead of throwing
+  } catch (error) {
+    console.error("Unexpected error fetching sent invites:", error);
+    return []; // Return empty array for any error
   }
 };
 
-/**
- * Fetch invitations received by the user with the given email
- */
 export const fetchReceivedInvites = async (email: string): Promise<CoParentInvite[]> => {
   try {
     console.log("Fetching received invites for email:", email);
-    
     const { data, error } = await supabase
-      .from('co_parent_invites')
-      .select('*, invited_by:profiles!co_parent_invites_invited_by_fkey(full_name, avatar_url)')
-      .eq('email', email);
-      
+      .from("co_parent_invites")
+      .select(`
+        id,
+        email,
+        status,
+        invited_by,
+        profiles(
+          id,
+          full_name,
+          email,
+          avatar_url
+        ),
+        created_at,
+        responded_at,
+        updated_at,
+        message
+      `)
+      .eq("email", email);
+
     if (error) {
-      console.error('Error fetching received invites:', error);
+      console.error("Error fetching received invites:", error);
       return []; // Return empty array instead of throwing
     }
 
-    if (!data) {
-      return [];
-    }
-
-    console.log("Received invites:", data);
-
-    // Transform DB results to match our CoParentInvite type
-    return data.map(invite => ({
-      id: invite.id,
-      email: invite.email,
-      status: invite.status as any,
-      invitedBy: invite.invited_by,
-      invitedAt: invite.invited_at,
-      respondedAt: invite.responded_at,
-      message: invite.message || undefined,
-      // Include inviter's name if available
-      inviterName: invite.invited_by?.full_name || 'Unknown'
-    }));
-  } catch (err) {
-    console.error('Failed to fetch received invites:', err);
-    return []; // Return empty array instead of throwing
+    return (data || []).map((invite) => {
+      const inviter = invite.profiles || {};
+      return {
+        id: invite.id,
+        email: invite.email,
+        status: invite.status,
+        invitedBy: invite.invited_by,
+        inviter: {
+          id: inviter.id || invite.invited_by,
+          name: inviter.full_name || "Unknown user",
+          email: inviter.email || "",
+          avatar: inviter.avatar_url,
+        },
+        createdAt: invite.created_at,
+        respondedAt: invite.responded_at,
+        updatedAt: invite.updated_at,
+        message: invite.message,
+      };
+    });
+  } catch (error) {
+    console.error("Unexpected error fetching received invites:", error);
+    return []; // Return empty array for any error
   }
 };
 
-/**
- * Create an invitation to a co-parent
- */
-export const createInvite = async (email: string, userId: string, message?: string): Promise<{data?: any, error?: string}> => {
+export const createInvite = async (
+  email: string,
+  invitedBy: string, 
+  message?: string
+): Promise<InviteResponse> => {
   try {
-    console.log("Creating invitation:", { email, userId, message });
+    // Check if invite already exists
+    const { data: existingInvites } = await supabase
+      .from("co_parent_invites")
+      .select("id, status")
+      .eq("email", email)
+      .eq("invited_by", invitedBy);
     
-    // Check if there's an existing pending invite for this email from this user
-    const { data: existingInvites, error: checkError } = await supabase
-      .from('co_parent_invites')
-      .select('*')
-      .eq('email', email)
-      .eq('invited_by', userId)
-      .eq('status', 'pending');
-      
-    if (checkError) {
-      console.error("Error checking existing invitations:", checkError);
-      return { error: `Failed to check for existing invitations: ${checkError.message}` };
-    }
-    
-    // If there's already a pending invite, don't create a new one
     if (existingInvites && existingInvites.length > 0) {
-      return { error: `You already have a pending invitation for ${email}` };
+      const existingInvite = existingInvites[0];
+      
+      // If invitation is still pending, return error
+      if (existingInvite.status === "pending") {
+        return {
+          error: "You have already invited this user",
+        };
+      }
+      
+      // If invitation was declined or expired, update it to pending
+      const { data, error } = await supabase
+        .from("co_parent_invites")
+        .update({
+          status: "pending",
+          responded_at: null,
+          message: message || null,
+          created_at: new Date().toISOString(),
+        })
+        .eq("id", existingInvite.id)
+        .select();
+      
+      if (error) {
+        console.error("Error updating existing invitation:", error);
+        return {
+          error: "Failed to resend invitation",
+        };
+      }
+      
+      return {
+        data: data?.[0] || null,
+      };
     }
     
-    // Create a new invitation
+    // Create new invitation
     const { data, error } = await supabase
-      .from('co_parent_invites')
+      .from("co_parent_invites")
       .insert({
-        email: email,
-        invited_by: userId,
-        status: 'pending',
-        message: message || null
+        email,
+        invited_by: invitedBy,
+        status: "pending",
+        message: message || null,
       })
       .select();
     
     if (error) {
       console.error("Error creating invitation:", error);
-      return { error: `Failed to create invitation: ${error.message}` };
-    }
-    
-    if (!data || data.length === 0) {
-      return { error: "Failed to create invitation record" };
-    }
-    
-    return { 
-      data: {
-        id: data[0].id,
-        email: data[0].email,
-        status: data[0].status,
-        invitedBy: data[0].invited_by,
-        invitedAt: data[0].invited_at,
-        message: data[0].message || undefined,
+      
+      // Check for specific errors
+      if (error.code === '23505') {
+        return { error: "This user has already been invited" };
       }
+      
+      return {
+        error: "Failed to create invitation",
+      };
+    }
+    
+    return {
+      data: data?.[0] || null,
     };
-  } catch (error) {
-    console.error("Error in createInvite:", error);
-    return { error: `Failed to create invitation: ${error instanceof Error ? error.message : 'Unknown error'}` };
+  } catch (error: any) {
+    console.error("Unexpected error creating invitation:", error);
+    return {
+      error: error.message || "Failed to create invitation",
+    };
   }
 };
 
-/**
- * Accept an invitation
- */
-export const acceptInvite = async (inviteId: string) => {
-  try {
-    console.log("Accepting invite:", inviteId);
-    
-    const { error } = await supabase
-      .from('co_parent_invites')
-      .update({
-        status: 'accepted',
-        responded_at: new Date().toISOString()
-      })
-      .eq('id', inviteId);
-    
-    if (error) {
-      console.error("Error accepting invitation:", error);
-      throw error;
-    }
-    
-    console.log("Invitation accepted successfully");
-    return { success: true };
-  } catch (error) {
-    console.error("Error accepting invitation:", error);
-    throw error;
-  }
-};
-
-/**
- * Decline an invitation
- */
-export const declineInvite = async (inviteId: string) => {
-  try {
-    console.log("Declining invite:", inviteId);
-    
-    const { error } = await supabase
-      .from('co_parent_invites')
-      .update({
-        status: 'declined',
-        responded_at: new Date().toISOString()
-      })
-      .eq('id', inviteId);
-    
-    if (error) {
-      console.error("Error declining invitation:", error);
-      throw error;
-    }
-    
-    console.log("Invitation declined successfully");
-    return { success: true };
-  } catch (error) {
-    console.error("Error declining invitation:", error);
-    throw error;
-  }
-};
-
-/**
- * Check for pending invitations for a user's email
- */
-export const checkPendingInvites = async (email: string): Promise<CoParentInvite[]> => {
+export const respondToInvite = async (
+  inviteId: string, 
+  response: "accepted" | "declined"
+): Promise<InviteResponse> => {
   try {
     const { data, error } = await supabase
-      .from('co_parent_invites')
-      .select('*')
-      .eq('email', email)
-      .eq('status', 'pending');
-      
+      .from("co_parent_invites")
+      .update({
+        status: response,
+        responded_at: new Date().toISOString(),
+      })
+      .eq("id", inviteId)
+      .select();
+    
     if (error) {
-      console.error("Error checking pending invites:", error);
-      return [];
+      console.error("Error responding to invitation:", error);
+      return {
+        error: "Failed to respond to invitation",
+      };
     }
     
-    if (!data || data.length === 0) {
-      return [];
-    }
-    
-    return data.map(invite => ({
-      id: invite.id,
-      email: invite.email,
-      status: invite.status as any,
-      invitedBy: invite.invited_by,
-      invitedAt: invite.invited_at,
-      respondedAt: invite.responded_at,
-      message: invite.message || undefined
-    }));
-  } catch (error) {
-    console.error("Error checking pending invites:", error);
-    return [];
+    return {
+      data: data?.[0] || null,
+    };
+  } catch (error: any) {
+    console.error("Unexpected error responding to invitation:", error);
+    return {
+      error: error.message || "Failed to respond to invitation",
+    };
   }
 };

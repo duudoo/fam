@@ -20,21 +20,28 @@ export const useAuth = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   // Fetch user profile data
   const fetchUserProfile = useCallback(async (userId: string) => {
     try {
       setProfileLoading(true);
+      setProfileError(null);
       const data = await authAPI.getUserProfile(userId);
       setProfile(data);
       return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch user profile:', error);
-      return null;
+      setProfileError(error.message || 'Failed to load profile');
+      // Still return a minimal profile with just the ID so the app can function
+      return {
+        id: userId,
+        email: user?.email || '',
+      };
     } finally {
       setProfileLoading(false);
     }
-  }, []);
+  }, [user]);
 
   // Update user profile data
   const updateUserProfile = async (updates: Partial<UserProfile>) => {
@@ -133,6 +140,7 @@ export const useAuth = () => {
     user,
     session,
     profile,
+    profileError,
     loading,
     profileLoading,
     signOut,

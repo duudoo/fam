@@ -23,6 +23,13 @@ export const useFamilyCircle = () => {
         avatar: profile.avatar_url,
         phone: profile.phone
       });
+    } else if (user) {
+      // If we have a user but no profile, create a minimal user object
+      setCurrentUser({
+        id: user.id,
+        name: user.email?.split('@')[0] || 'User',
+        email: user.email || '',
+      });
     }
   }, [user, profile]);
 
@@ -40,22 +47,34 @@ export const useFamilyCircle = () => {
       setLoading(true);
       setError(null);
       
-      // Fetch sent invites - now returns empty array instead of throwing errors
-      const sentInviteData = await fetchSentInvites(user.id);
-      setInvites(sentInviteData);
+      try {
+        // Fetch sent invites - this now returns empty array on error
+        const sentInviteData = await fetchSentInvites(user.id);
+        setInvites(sentInviteData || []);
+      } catch (err: any) {
+        console.error('Error fetching sent invites:', err);
+        setInvites([]);
+        // Don't set error for silent failures in background fetching
+      }
       
       // Fetch received invites if user has email
       if (user.email) {
-        const receivedInviteData = await fetchReceivedInvites(user.email);
-        setReceivedInvites(receivedInviteData);
+        try {
+          console.log("Fetching received invites for email:", user.email);
+          const receivedInviteData = await fetchReceivedInvites(user.email);
+          setReceivedInvites(receivedInviteData || []);
+        } catch (err: any) {
+          console.error('Error fetching received invites:', err);
+          setReceivedInvites([]);
+          // Don't set error for silent failures in background fetching
+        }
       } else {
         setReceivedInvites([]);
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching invites:', error);
       setError("Unable to load co-parent invites");
-      toast.error("Failed to load co-parent invites");
     } finally {
       setLoading(false);
     }
@@ -90,9 +109,9 @@ export const useFamilyCircle = () => {
       await fetchInvites();
       
       return { data: result.data };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating invitation:", error);
-      return { error: "Failed to create invitation" };
+      return { error: error.message || "Failed to create invitation" };
     }
   }, [user, fetchInvites]);
 
@@ -103,6 +122,8 @@ export const useFamilyCircle = () => {
     loading,
     error,
     fetchInvites,
-    createInvite
+    createInvite,
+    setInvites,
+    setReceivedInvites
   };
 };

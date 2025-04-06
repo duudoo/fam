@@ -21,18 +21,44 @@ export const authAPI = {
    * Get user profile
    */
   getUserProfile: async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    
-    if (error) {
-      console.error('Error fetching user profile:', error);
-      throw new Error('Authentication Error: Unable to load your user profile');
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        
+        // Check if error is due to missing profile
+        if (error.code === 'PGRST116') {
+          // Profile doesn't exist, create one
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: userId,
+              email: (await supabase.auth.getUser()).data.user?.email || '',
+            })
+            .select()
+            .single();
+            
+          if (createError) {
+            console.error('Error creating profile:', createError);
+            throw new Error('Authentication Error: Unable to create your user profile');
+          }
+          
+          return newProfile;
+        }
+        
+        throw new Error('Authentication Error: Unable to load your user profile');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error in getUserProfile:', error);
+      throw error;
     }
-    
-    return data;
   },
 
   /**
