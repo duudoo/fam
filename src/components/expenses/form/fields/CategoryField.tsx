@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Control } from "react-hook-form";
 import { useExpenseCategories } from "@/hooks/useExpenseCategories";
-import { ExpenseCategory } from "@/utils/types";
+import { Spinner } from "@/components/ui/spinner";
 
 interface CategoryFieldProps {
   control: Control<any>;
@@ -33,8 +33,15 @@ const CategoryField = ({ control, required = true, description }: CategoryFieldP
               defaultValue={field.value}
               value={field.value}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a category">
+                  {isLoading ? (
+                    <div className="flex items-center">
+                      <Spinner size="sm" className="mr-2" />
+                      <span>Loading...</span>
+                    </div>
+                  ) : field.value}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {categories.map((category) => (

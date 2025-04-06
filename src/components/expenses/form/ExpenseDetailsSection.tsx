@@ -1,4 +1,3 @@
-
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import CategoryField from "./CategoryField";
+import CategoryField from "./fields/CategoryField";
 import SplitMethodField from "@/components/expenses/form/SplitMethodField";
 import { Control, useFormContext } from "react-hook-form";
 import { FormValues } from "./schema";
