@@ -9,6 +9,13 @@ export const useExpenseCategories = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Set mounted state on component mount
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
 
   // Fetch categories on mount
   useEffect(() => {
@@ -23,13 +30,26 @@ export const useExpenseCategories = () => {
     try {
       setIsLoading(true);
       const data = await getUserExpenseCategories(user.id);
-      setCategories(data);
-      setError(null);
+      
+      // Only update state if component is still mounted
+      if (isMounted) {
+        setCategories(data);
+        setError(null);
+      }
     } catch (err) {
       console.error('Error fetching categories:', err);
-      setError(err instanceof Error ? err : new Error('Failed to fetch categories'));
+      if (isMounted) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch categories'));
+        // Provide fallback categories in case of error
+        setCategories(['education', 'healthcare', 'clothing', 'activities', 'other']);
+      }
     } finally {
-      setIsLoading(false);
+      if (isMounted) {
+        // Add a slight delay before changing loading state to prevent UI jumps
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 300);
+      }
     }
   };
 

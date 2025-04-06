@@ -1,9 +1,9 @@
-
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Control } from "react-hook-form";
 import { useExpenseCategories } from "@/hooks/useExpenseCategories";
 import { Spinner } from "@/components/ui/spinner";
+import { useState, useEffect } from "react";
 
 interface CategoryFieldProps {
   control: Control<any>;
@@ -13,8 +13,14 @@ interface CategoryFieldProps {
 
 const CategoryField = ({ control, required = true, description }: CategoryFieldProps) => {
   const { categories, isLoading } = useExpenseCategories();
+  const [showLoadingState, setShowLoadingState] = useState(true);
   
-  // Capitalize first letter of category
+  useEffect(() => {
+    if (!isLoading && categories.length > 0) {
+      setShowLoadingState(false);
+    }
+  }, [isLoading, categories]);
+  
   const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
@@ -33,8 +39,8 @@ const CategoryField = ({ control, required = true, description }: CategoryFieldP
               defaultValue={field.value}
               value={field.value}
             >
-              <SelectTrigger className="w-full">
-                {isLoading ? (
+              <SelectTrigger className="w-full h-10">
+                {showLoadingState ? (
                   <div className="flex items-center justify-between w-full">
                     <span className="text-muted-foreground">Loading categories...</span>
                     <Spinner size="sm" />
@@ -44,7 +50,7 @@ const CategoryField = ({ control, required = true, description }: CategoryFieldP
                 )}
               </SelectTrigger>
               <SelectContent className="min-w-[200px]">
-                {!isLoading && categories.map((category) => (
+                {categories.map((category) => (
                   <SelectItem key={category} value={category}>
                     {capitalizeFirstLetter(category)}
                   </SelectItem>
