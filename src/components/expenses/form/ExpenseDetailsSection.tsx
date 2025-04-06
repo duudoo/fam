@@ -15,6 +15,7 @@ import { FormValues } from "./schema";
 import CustomSplitField from "./CustomSplitField";
 import SplitPreview from "./SplitPreview";
 import ChildrenSelectionSection from "./ChildrenSelectionSection";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface ExpenseDetailsSectionProps {
   control: Control<FormValues>;
@@ -22,6 +23,7 @@ interface ExpenseDetailsSectionProps {
 
 const ExpenseDetailsSection = ({ control }: ExpenseDetailsSectionProps) => {
   const { watch } = useFormContext();
+  const { currency } = useCurrency();
   const splitMethod = watch('splitMethod');
   const showCustomSplit = splitMethod === 'custom';
   const selectedChildIds = watch('childIds') || [];
@@ -48,7 +50,7 @@ const ExpenseDetailsSection = ({ control }: ExpenseDetailsSectionProps) => {
           name="amount"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Amount</FormLabel>
+              <FormLabel>Amount ({currency.symbol})</FormLabel>
               <FormControl>
                 <Input placeholder="0.00" type="number" step="0.01" min="0" {...field} />
               </FormControl>

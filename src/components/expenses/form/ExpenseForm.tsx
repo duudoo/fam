@@ -1,4 +1,3 @@
-
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +12,7 @@ import ExpenseFormContent from './ExpenseFormContent';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import ShareExpenseDialog from '../share/ShareExpenseDialog';
+import { CurrencyProvider } from '@/contexts/CurrencyContext';
 
 interface ExpenseFormProps {
   expense?: Expense;
@@ -62,7 +62,6 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
       return;
     }
     
-    // Get the action from the hidden input field
     const formElement = event.target as HTMLFormElement;
     const actionInput = formElement.querySelector('#form-action') as HTMLInputElement;
     const formAction = actionInput?.value;
@@ -83,14 +82,11 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
         formAction
       );
       
-      // Handle post-submission actions
       if (formAction === 'saveAndShare' && newExpense) {
         console.log("Save and share option selected, showing share dialog...");
         
-        // Make sure the newExpense has all the required properties for sharing
         setSharedExpense({
           ...newExpense,
-          // Ensure these are set correctly
           paidBy: user.id,
           description: values.description,
           category: values.category,
@@ -104,7 +100,6 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
         setShowShareDialog(true);
       } else if (formAction === 'saveAndAdd') {
         console.log("Save and add another option selected, resetting form...");
-        // Reset form but don't close it
         form.reset({
           description: "",
           amount: "",
@@ -118,7 +113,6 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
         });
         setReceiptUrl('');
       } else {
-        // Close form and reset
         console.log("Standard save option selected, closing form...");
         form.reset();
         setReceiptUrl('');
@@ -128,7 +122,6 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
       console.error("Error processing expense:", error);
     } finally {
       setIsSubmitting(false);
-      // Clear the action input value after form submission
       if (actionInput) {
         actionInput.value = '';
       }
@@ -143,28 +136,29 @@ const ExpenseForm = ({ expense, onExpenseAdded, onCancel }: ExpenseFormProps) =>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ExpenseFormProvider 
-          expense={expense}
-          onExpenseAdded={onExpenseAdded}
-          onCancel={onCancel}
-          isSubmitting={isSubmitting}
-          setIsSubmitting={setIsSubmitting}
-          receiptUrl={receiptUrl}
-          setReceiptUrl={setReceiptUrl}
-        >
-          <Form {...form}>
-            <form 
-              id="expense-form"
-              onSubmit={form.handleSubmit(handleSubmit)} 
-              className="space-y-6"
-            >
-              <ExpenseFormContent form={form} />
-              <input type="hidden" id="form-action" name="form-action" value="" />
-            </form>
-          </Form>
-        </ExpenseFormProvider>
+        <CurrencyProvider>
+          <ExpenseFormProvider 
+            expense={expense}
+            onExpenseAdded={onExpenseAdded}
+            onCancel={onCancel}
+            isSubmitting={isSubmitting}
+            setIsSubmitting={setIsSubmitting}
+            receiptUrl={receiptUrl}
+            setReceiptUrl={setReceiptUrl}
+          >
+            <Form {...form}>
+              <form 
+                id="expense-form"
+                onSubmit={form.handleSubmit(handleSubmit)} 
+                className="space-y-6"
+              >
+                <ExpenseFormContent form={form} />
+                <input type="hidden" id="form-action" name="form-action" value="" />
+              </form>
+            </Form>
+          </ExpenseFormProvider>
+        </CurrencyProvider>
         
-        {/* Share Expense Dialog */}
         <ShareExpenseDialog 
           expense={sharedExpense}
           open={showShareDialog}

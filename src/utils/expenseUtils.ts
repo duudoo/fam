@@ -58,7 +58,6 @@ export const formatCurrency = (amount: number, currencySymbol = '$'): string => 
     currency: 'USD', // This isn't as important as the symbol we display
     minimumFractionDigits: 2,
     // Use the provided symbol instead of the one from the locale
-    currencyDisplay: 'symbol',
   }).format(amount).replace('$', currencySymbol);
 };
 
