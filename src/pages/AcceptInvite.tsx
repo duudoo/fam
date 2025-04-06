@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -26,11 +25,8 @@ const AcceptInvite = () => {
         return;
       }
       
-      // If user is not logged in, redirect to sign up with return URL
       if (!user) {
-        // Store the invite ID in localStorage to process after login
         localStorage.setItem('pendingInviteId', inviteId);
-        // Redirect to sign up page
         navigate(`/signup?returnTo=${encodeURIComponent(`/accept-invite?id=${inviteId}`)}`);
         return;
       }
@@ -39,8 +35,6 @@ const AcceptInvite = () => {
         await acceptInvite(inviteId);
         setSuccess(true);
         toast.success('Invitation accepted successfully!');
-        
-        // Remove pending invite ID if it exists
         localStorage.removeItem('pendingInviteId');
       } catch (err) {
         console.error('Error accepting invitation:', err);
@@ -125,7 +119,6 @@ const AcceptInvite = () => {
     );
   }
   
-  // This should not be reached, but as a fallback
   return null;
 };
 

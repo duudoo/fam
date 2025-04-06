@@ -33,6 +33,7 @@ export const fetchSentInvites = async (userId: string): Promise<CoParentInvite[]
       email: invite.email,
       status: invite.status,
       invitedBy: invite.invited_by,
+      invitedAt: invite.created_at,
       createdAt: invite.created_at,
       respondedAt: invite.responded_at,
       updatedAt: invite.updated_at,
@@ -79,16 +80,17 @@ export const fetchReceivedInvites = async (email: string): Promise<CoParentInvit
         email: invite.email,
         status: invite.status,
         invitedBy: invite.invited_by,
+        invitedAt: invite.created_at,
+        createdAt: invite.created_at,
+        respondedAt: invite.responded_at,
+        updatedAt: invite.updated_at,
+        message: invite.message,
         inviter: {
           id: inviter.id || invite.invited_by,
           name: inviter.full_name || "Unknown user",
           email: inviter.email || "",
           avatar: inviter.avatar_url,
         },
-        createdAt: invite.created_at,
-        respondedAt: invite.responded_at,
-        updatedAt: invite.updated_at,
-        message: invite.message,
       };
     });
   } catch (error) {
@@ -177,6 +179,15 @@ export const createInvite = async (
       error: error.message || "Failed to create invitation",
     };
   }
+};
+
+// Add the missing functions for accepting and declining invites
+export const acceptInvite = async (inviteId: string): Promise<InviteResponse> => {
+  return respondToInvite(inviteId, "accepted");
+};
+
+export const declineInvite = async (inviteId: string): Promise<InviteResponse> => {
+  return respondToInvite(inviteId, "declined");
 };
 
 export const respondToInvite = async (
