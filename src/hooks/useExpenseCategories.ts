@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { getUserExpenseCategories, addExpenseCategory, deleteExpenseCategory } from '@/lib/api/expenseCategories';
 import { toast } from 'sonner';
@@ -17,19 +17,16 @@ export const useExpenseCategories = () => {
     return () => setIsMounted(false);
   }, []);
 
-  // Fetch categories on mount
-  useEffect(() => {
-    if (user) {
-      fetchCategories();
-    }
-  }, [user]);
-
-  const fetchCategories = async () => {
+  // Create a memoized fetchCategories function
+  const fetchCategories = useCallback(async () => {
     if (!user) return;
     
     try {
       setIsLoading(true);
+      setError(null);
+      console.log('Fetching expense categories for user:', user.id);
       const data = await getUserExpenseCategories(user.id);
+      console.log('Fetched categories:', data);
       
       // Only update state if component is still mounted
       if (isMounted) {
@@ -41,38 +38,48 @@ export const useExpenseCategories = () => {
       if (isMounted) {
         setError(err instanceof Error ? err : new Error('Failed to fetch categories'));
         // Provide fallback categories in case of error
-        setCategories(['education', 'healthcare', 'clothing', 'activities', 'other']);
+        setCategories(['education', 'healthcare', 'clothing', 'activities', 'food', 'other']);
       }
     } finally {
       if (isMounted) {
-        // Small delay to prevent UI flicker
-        setTimeout(() => {
-          if (isMounted) {
-            setIsLoading(false);
-          }
-        }, 300);
+        setIsLoading(false);
       }
     }
-  };
+  }, [user, isMounted]);
+
+  // Fetch categories on mount and when user changes
+  useEffect(() => {
+    if (user) {
+      fetchCategories();
+    } else {
+      // Reset states when there's no user
+      setCategories([]);
+      setIsLoading(false);
+    }
+  }, [user, fetchCategories]);
 
   const addCategory = async (newCategory: string) => {
     if (!user) return null;
     if (!newCategory.trim()) return null;
 
     try {
-      await addExpenseCategory(user.id, newCategory.trim());
-      
-      // Add the new category to the local state immediately
       const formattedCategory = newCategory.trim().toLowerCase();
-      setCategories(prev => {
-        if (!prev.includes(formattedCategory)) {
-          return [...prev, formattedCategory].sort();
-        }
-        return prev;
-      });
       
-      // Still refetch to ensure consistency with server
-      setTimeout(() => fetchCategories(), 500);
+      // Check if category already exists (case-insensitive)
+      if (categories.map(c => c.toLowerCase()).includes(formattedCategory)) {
+        toast.info(`Category "${newCategory}" already exists`);
+        return formattedCategory;
+      }
+      
+      console.log('Adding new category:', formattedCategory);
+      await addExpenseCategory(user.id, formattedCategory);
+      
+      // Add the new category to the local state immediately for better UX
+      setCategories(prev => {
+        const updatedCategories = [...prev, formattedCategory].sort();
+        console.log('Updated categories:', updatedCategories);
+        return updatedCategories;
+      });
       
       return formattedCategory;
     } catch (err) {

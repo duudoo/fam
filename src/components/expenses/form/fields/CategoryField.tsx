@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -21,6 +21,7 @@ const CategoryField = ({ control, required = true, description }: CategoryFieldP
   const { categories, isLoading, addCategory } = useExpenseCategories();
   const [showAddNewDialog, setShowAddNewDialog] = useState(false);
   const [newCategory, setNewCategory] = useState("");
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
   
   const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -32,11 +33,19 @@ const CategoryField = ({ control, required = true, description }: CategoryFieldP
       return;
     }
 
-    const result = await addCategory(newCategory.trim());
-    if (result) {
-      setNewCategory("");
-      setShowAddNewDialog(false);
-      toast.success(`Category "${newCategory}" added successfully`);
+    setIsAddingCategory(true);
+    try {
+      const result = await addCategory(newCategory.trim());
+      if (result) {
+        setNewCategory("");
+        setShowAddNewDialog(false);
+        toast.success(`Category "${capitalizeFirstLetter(newCategory)}" added successfully`);
+      }
+    } catch (error) {
+      console.error("Error adding category:", error);
+      toast.error("Failed to add category. Please try again.");
+    } finally {
+      setIsAddingCategory(false);
     }
   };
 
@@ -68,11 +77,17 @@ const CategoryField = ({ control, required = true, description }: CategoryFieldP
                       )}
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {capitalizeFirstLetter(category)}
-                        </SelectItem>
-                      ))}
+                      {categories.length === 0 && !isLoading ? (
+                        <div className="py-2 px-2 text-sm text-muted-foreground text-center">
+                          No categories found
+                        </div>
+                      ) : (
+                        categories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {capitalizeFirstLetter(category)}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </FormControl>
@@ -110,6 +125,7 @@ const CategoryField = ({ control, required = true, description }: CategoryFieldP
                   handleAddNewCategory();
                 }
               }}
+              autoFocus
             />
           </div>
           <DialogFooter>
@@ -119,11 +135,22 @@ const CategoryField = ({ control, required = true, description }: CategoryFieldP
                 setShowAddNewDialog(false);
                 setNewCategory("");
               }}
+              disabled={isAddingCategory}
             >
               Cancel
             </Button>
-            <Button onClick={handleAddNewCategory}>
-              Add Category
+            <Button 
+              onClick={handleAddNewCategory}
+              disabled={isAddingCategory}
+            >
+              {isAddingCategory ? (
+                <>
+                  <Spinner size="sm" className="mr-2" />
+                  Adding...
+                </>
+              ) : (
+                'Add Category'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
