@@ -34,20 +34,22 @@ const ExpenseDetailsSection = ({ control }: ExpenseDetailsSectionProps) => {
       <Card className="p-4 shadow-sm border-gray-100">
         <h3 className="text-base font-medium mb-4">Basic Information</h3>
         <div className="space-y-4">
+          <FormField
+            control={control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description <span className="text-red-500">*</span></FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., School supplies" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormField
-              control={control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description <span className="text-red-500">*</span></FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., School supplies" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <CategoryField control={control} />
             
             <FormField
               control={control}
@@ -64,51 +66,47 @@ const ExpenseDetailsSection = ({ control }: ExpenseDetailsSectionProps) => {
             />
           </div>
           
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <CategoryField control={control} />
-            
-            <FormField
-              control={control}
-              name="date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date <span className="text-red-500">*</span></FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "pl-3 text-left font-normal h-10 w-full",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormField
+            control={control}
+            name="date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date <span className="text-red-500">*</span></FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "pl-3 text-left font-normal h-10 w-full",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
       </Card>
       

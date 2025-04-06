@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -47,45 +47,46 @@ const CategoryField = ({ control, required = true, description }: CategoryFieldP
         name="category"
         render={({ field }) => (
           <FormItem className="w-full">
-            <div className="flex justify-between items-center">
-              <FormLabel>Category {required && <span className="text-red-500">*</span>}</FormLabel>
+            <FormLabel>Category {required && <span className="text-red-500">*</span>}</FormLabel>
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <FormControl>
+                  <Select 
+                    disabled={isLoading} 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                    value={field.value}
+                  >
+                    <SelectTrigger className="w-full h-10">
+                      {isLoading ? (
+                        <div className="flex items-center justify-between w-full">
+                          <span className="text-muted-foreground">Loading categories...</span>
+                          <Spinner size="sm" />
+                        </div>
+                      ) : (
+                        <SelectValue placeholder="Select a category" />
+                      )}
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {capitalizeFirstLetter(category)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+              </div>
               <Button 
                 type="button" 
-                variant="ghost" 
-                size="sm" 
-                className="h-6 px-2"
+                variant="outline" 
+                size="icon" 
+                className="h-10 w-10 shrink-0"
                 onClick={() => setShowAddNewDialog(true)}
               >
-                <Plus className="w-3 h-3 mr-1" />
-                Add
+                <Plus className="h-4 w-4" />
               </Button>
             </div>
-            <FormControl>
-              <Select 
-                disabled={isLoading} 
-                onValueChange={field.onChange} 
-                defaultValue={field.value}
-                value={field.value}
-              >
-                <SelectTrigger className="w-full h-10">
-                  {isLoading ? (
-                    <div className="flex items-center justify-between w-full">
-                      <span className="text-muted-foreground">Loading categories...</span>
-                      <Spinner size="sm" />
-                    </div>
-                  ) : (
-                    <SelectValue placeholder="Select a category" />
-                  )}
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {capitalizeFirstLetter(category)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormControl>
             {description && <FormDescription>{description}</FormDescription>}
             <FormMessage />
           </FormItem>
