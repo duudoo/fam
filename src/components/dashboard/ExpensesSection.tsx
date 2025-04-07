@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/expenseUtils";
 import { useNavigate } from "react-router-dom";
@@ -15,15 +15,17 @@ const MAX_EXPENSES = 3;
 interface ExpensesSectionProps {
   expenses: Expense[];
   isLoading: boolean;
-  onExpenseClick?: (expense: Expense) => void; // Make this prop optional
+  onExpenseClick?: (expense: Expense) => void;
 }
 
-export const ExpensesSection = ({ expenses, isLoading, onExpenseClick }: ExpensesSectionProps) => {
+// Use memo to prevent unnecessary re-renders
+export const ExpensesSection = memo(({ expenses, isLoading, onExpenseClick }: ExpensesSectionProps) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { currency } = useCurrency();
   const [displayedExpenses, setDisplayedExpenses] = useState<Expense[]>([]);
 
+  // Use useEffect with proper dependencies
   useEffect(() => {
     if (expenses && expenses.length > 0) {
       const sorted = [...expenses]
@@ -36,30 +38,31 @@ export const ExpensesSection = ({ expenses, isLoading, onExpenseClick }: Expense
     }
   }, [expenses]);
 
-  const handleViewAllExpenses = () => {
+  // Memoize handlers to prevent recreating functions on each render
+  const handleViewAllExpenses = useCallback(() => {
     navigate("/expenses");
-  };
+  }, [navigate]);
 
-  const handleAddExpense = () => {
+  const handleAddExpense = useCallback(() => {
     navigate("/expenses?newExpense=true");
-  };
+  }, [navigate]);
 
-  const handleViewExpense = (id: string) => {
+  const handleViewExpense = useCallback((id: string) => {
     navigate(`/expense/${id}`);
-  };
+  }, [navigate]);
 
-  const handleEditExpense = (id: string) => {
+  const handleEditExpense = useCallback((id: string) => {
     navigate(`/expense/${id}`);
-  };
+  }, [navigate]);
 
   // Handle the expense click with the optional prop
-  const handleExpenseClick = (expense: Expense) => {
+  const handleExpenseClick = useCallback((expense: Expense) => {
     if (onExpenseClick) {
       onExpenseClick(expense);
     } else {
       navigate(`/expense/${expense.id}`);
     }
-  };
+  }, [onExpenseClick, navigate]);
 
   if (isLoading) {
     return (
@@ -99,13 +102,13 @@ export const ExpensesSection = ({ expenses, isLoading, onExpenseClick }: Expense
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate("/expenses")}
+            onClick={handleViewAllExpenses}
           >
             View All
           </Button>
           <Button
             size="sm"
-            onClick={() => navigate("/expenses?newExpense=true")}
+            onClick={handleAddExpense}
           >
             <Plus className="h-4 w-4 mr-1" /> Add
           </Button>
@@ -115,7 +118,7 @@ export const ExpensesSection = ({ expenses, isLoading, onExpenseClick }: Expense
         {displayedExpenses.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <p className="mb-4 text-gray-500">No expenses found</p>
-            <Button onClick={() => navigate("/expenses?newExpense=true")} variant="default">
+            <Button onClick={handleAddExpense} variant="default">
               <Plus className="h-4 w-4 mr-2" /> Add Your First Expense
             </Button>
           </div>
@@ -182,7 +185,7 @@ export const ExpensesSection = ({ expenses, isLoading, onExpenseClick }: Expense
                                 <Eye className="h-4 w-4 mr-2" />
                                 View Details
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => navigate(`/expense/${expense.id}`)}>
+                              <DropdownMenuItem onClick={() => handleEditExpense(expense.id)}>
                                 <Edit3 className="h-4 w-4 mr-2" />
                                 Edit
                               </DropdownMenuItem>
@@ -200,6 +203,8 @@ export const ExpensesSection = ({ expenses, isLoading, onExpenseClick }: Expense
       </CardContent>
     </Card>
   );
-};
+});
+
+ExpensesSection.displayName = "ExpensesSection";
 
 export default ExpensesSection;
